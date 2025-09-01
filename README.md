@@ -1,4 +1,4 @@
-# 🎵 SyncBeats Pro
+# 🎵 Blueme
 
 **Share music with friends wirelessly via Bluetooth**
 
@@ -29,7 +29,7 @@ A modern web application that enables real-time music synchronization across mul
 1. **Clone or download the project**
    ```bash
    git clone <repository-url>
-   cd syncbeats-pro
+   cd blueme
    ```
 
 2. **Install dependencies**
