@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blueme - Shared Music Experience</title>
+    <title>BlueMe - Shared Music Experience</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
@@ -798,7 +798,7 @@
 <body>
     <div class="app-container">
         <div class="header">
-            <h1 class="logo">Blueme</h1>
+            <h1 class="logo">BlueMe</h1>
             <div class="pro-badge">
                 ✨ BLUETOOTH
             </div>
@@ -965,7 +965,7 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <script>
-        class Blueme {
+        class BlueMe {
             constructor() {
                 this.connectedDevices = new Map();
                 this.isScanning = false;
@@ -1984,12 +1984,12 @@
         // Initialize the app when the page loads
         let app;
         document.addEventListener('DOMContentLoaded', () => {
-            app = new Blueme();
+            app = new BlueMe();
             
             // Add some demo functionality
             setTimeout(() => {
                 if (app.statusMessage) {
-                    app.updateStatus('info', '🎧 Welcome to Blueme! Connect your friends and start sharing music');
+                    app.updateStatus('info', '🎧 Welcome to BlueMe! Connect your friends and start sharing music');
                 }
             }, 1000);
         });
