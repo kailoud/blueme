@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'healthy', 
-        message: 'SyncBeats Pro Server Running',
+        message: 'Blueme Server Running',
         timestamp: new Date().toISOString()
     });
 });
@@ -264,7 +264,7 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
-    console.log(`🎵 SyncBeats Pro Server running on port ${PORT}`);
+    console.log(`🎵 Blueme Server running on port ${PORT}`);
     console.log(`🌐 Open http://localhost:${PORT} to start syncing music!`);
     console.log(`📡 WebSocket server ready for real-time sync`);
 });
