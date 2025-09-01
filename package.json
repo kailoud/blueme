@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo 'Building for production...' && npm run build:static",
+    "build:static": "cp -r public/* dist/ && echo 'Static files copied to dist/'",
     "serve": "python3 -m http.server 8000",
-    "build": "echo 'Build complete'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
