@@ -1192,12 +1192,10 @@
                             'battery_service', 
                             0x180F,
                             0x110B, 0x110A, 0x1108, 0x111E,
-                            'audio_sink',
-                            'audio_source',
-                            'headset_profile',
-                            'hands_free_profile',
-                            'generic_access',
-                            'generic_attribute'
+                            '0000110b-0000-1000-8000-00805f9b34fb',
+                            '0000110a-0000-1000-8000-00805f9b34fb',
+                            '00001108-0000-1000-8000-00805f9b34fb',
+                            '0000111e-0000-1000-8000-00805f9b34fb'
                         ]
                     });
 
@@ -1209,6 +1207,8 @@
                     await this.connectToDevice(device);
                     
                 } catch (error) {
+                    console.error('Bluetooth connection error:', error);
+                    
                     if (error.name === 'NotFoundError') {
                         this.updateStatus('info', '📱 No device selected. Try again to pair your audio device!');
                     } else if (error.name === 'NotSupportedError') {
@@ -1217,8 +1217,10 @@
                         this.updateStatus('error', '🔐 Bluetooth permission needed. Please allow and try again.');
                     } else if (error.name === 'NetworkError') {
                         this.updateStatus('error', '🌐 Network error. Check your Bluetooth connection.');
+                    } else if (error.message.includes('Invalid Service name')) {
+                        this.updateStatus('error', '🔧 Bluetooth service error. Please try again or check device compatibility.');
                     } else {
-                        this.updateStatus('error', `💥 Connection failed: ${error.message}`);
+                        this.updateStatus('error', `💥 Connection failed: ${error.message.substring(0, 100)}...`);
                     }
                 } finally {
                     this.isScanning = false;
@@ -1322,10 +1324,11 @@
                 
                 return services.some(service => 
                     audioServices.includes(service.toLowerCase()) || 
-                    service.includes('110b') || 
-                    service.includes('110a') ||
-                    service.includes('1108') ||
-                    service.includes('111e')
+                    audioServices.includes(service.toUpperCase()) ||
+                    service.toLowerCase().includes('110b') || 
+                    service.toLowerCase().includes('110a') ||
+                    service.toLowerCase().includes('1108') ||
+                    service.toLowerCase().includes('111e')
                 );
             }
 
