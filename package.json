@@ -4,7 +4,7 @@
   "description": "BlueMe - Share music with friends wirelessly via Bluetooth",
   "main": "server.js",
   "scripts": {
-    "start": "node start-railway.js",
+    "start": "node minimal-server.js",
     "dev": "nodemon server.js",
     "build": "mkdir -p dist && cp -r public/* dist/",
     "build:backend": "echo 'Backend ready for deployment'",
@@ -12,7 +12,8 @@
     "serve": "python3 -m http.server 8000",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "echo 'Node.js version:' && node --version && echo 'npm version:' && npm --version",
-    "start:local": "node server.js"
+    "start:local": "node server.js",
+    "start:minimal": "node minimal-server.js"
   },
   "keywords": [
     "bluetooth",
@@ -45,7 +46,8 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": "18.x"
+    "node": "18.x",
+    "npm": ">=8.0.0"
   },
   "railway": {
     "nodeVersion": "18",
