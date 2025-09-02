@@ -618,13 +618,34 @@ app.get('/api/files', (req, res) => {
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
-// Basic root endpoint for health checking
+// Multiple health check endpoints for Railway
 app.get('/', (req, res) => {
     res.json({ 
         status: 'ok', 
         message: 'BlueMe Server is running',
         timestamp: new Date().toISOString(),
-        version: '2.0.0'
+        version: '2.0.0',
+        endpoint: 'root'
+    });
+});
+
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'healthy', 
+        message: 'BlueMe Server Health Check',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0',
+        endpoint: 'health'
+    });
+});
+
+app.get('/ping', (req, res) => {
+    res.json({ 
+        status: 'pong', 
+        message: 'Server is responding',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0',
+        endpoint: 'ping'
     });
 });
 
@@ -646,12 +667,45 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
+// Start server with comprehensive error handling
 server.listen(PORT, () => {
     console.log(`🎵 BlueMe Server running on port ${PORT}`);
     console.log(`🌐 Open http://localhost:${PORT} to start syncing music!`);
     console.log(`📡 WebSocket server ready for real-time sync`);
     console.log(`🔵 Bluetooth manager initialized`);
     console.log(`📱 API endpoints available at /api/*`);
+    console.log(`🏥 Health check available at /health and /`);
+    
+    // Log environment info for debugging
+    console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📦 Node version: ${process.version}`);
+    console.log(`🌍 Platform: ${process.platform}`);
+    console.log(`💾 Memory: ${JSON.stringify(process.memoryUsage())}`);
+});
+
+// Handle server errors gracefully
+server.on('error', (error) => {
+    console.error('🚨 Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+        console.error('❌ Port already in use. Please try a different port.');
+    }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('🔄 SIGTERM received, shutting down gracefully...');
+    server.close(() => {
+        console.log('✅ Server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('🔄 SIGINT received, shutting down gracefully...');
+    server.close(() => {
+        console.log('✅ Server closed');
+        process.exit(0);
+    });
 });
 
 module.exports = app;
