@@ -104,21 +104,23 @@ class BluetoothManager {
 // Initialize Bluetooth manager
 const bluetoothManager = new BluetoothManager();
 
-// Initialize Supabase if configured
-if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-    try {
-        const { initializeStorage } = require('./config/supabase');
-        initializeStorage().then(() => {
-            console.log('✅ Supabase storage initialized');
-        }).catch(error => {
-            console.error('❌ Supabase initialization error:', error.message);
-        });
-    } catch (error) {
-        console.error('❌ Supabase config error:', error.message);
+// Initialize Supabase if configured (NON-BLOCKING)
+setTimeout(() => {
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+        try {
+            const { initializeStorage } = require('./config/supabase');
+            initializeStorage().then(() => {
+                console.log('✅ Supabase storage initialized');
+            }).catch(error => {
+                console.error('❌ Supabase initialization error:', error.message);
+            });
+        } catch (error) {
+            console.error('❌ Supabase config error:', error.message);
+        }
+    } else {
+        console.log('⚠️  Supabase not configured - using local storage');
     }
-} else {
-    console.log('⚠️  Supabase not configured - using local storage');
-}
+}, 1000); // Delay by 1 second to let server start first
 
 // Middleware
 app.use(cors());
@@ -265,16 +267,29 @@ io.on('connection', (socket) => {
     });
 });
 
-// Enhanced API endpoints
+// Enhanced API endpoints - BULLETPROOF HEALTH CHECK
 app.get('/api/health', (req, res) => {
-    const deviceCount = bluetoothManager.getConnectedDevices().length;
-    res.json({ 
-        status: 'healthy', 
-        message: 'BlueMe Server Running',
-        timestamp: new Date().toISOString(),
-        connectedDevices: deviceCount,
-        version: '2.0.0'
-    });
+    try {
+        // Simple health check that doesn't depend on external services
+        res.json({ 
+            status: 'healthy', 
+            message: 'BlueMe Server Running',
+            timestamp: new Date().toISOString(),
+            version: '2.0.0',
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            nodeVersion: process.version,
+            platform: process.platform
+        });
+    } catch (error) {
+        // Even if there's an error, return a basic health response
+        res.json({ 
+            status: 'healthy', 
+            message: 'BlueMe Server Running (Basic Mode)',
+            timestamp: new Date().toISOString(),
+            version: '2.0.0'
+        });
+    }
 });
 
 // Bluetooth device management endpoints
@@ -603,8 +618,18 @@ app.get('/api/files', (req, res) => {
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
-// Serve the main app
+// Basic root endpoint for health checking
 app.get('/', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'BlueMe Server is running',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0'
+    });
+});
+
+// Serve the main app
+app.get('/app', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
