@@ -104,23 +104,21 @@ class BluetoothManager {
 // Initialize Bluetooth manager
 const bluetoothManager = new BluetoothManager();
 
-// Initialize Supabase if configured (NON-BLOCKING)
-setTimeout(() => {
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        try {
-            const { initializeStorage } = require('./config/supabase');
-            initializeStorage().then(() => {
-                console.log('✅ Supabase storage initialized');
-            }).catch(error => {
-                console.error('❌ Supabase initialization error:', error.message);
-            });
-        } catch (error) {
-            console.error('❌ Supabase config error:', error.message);
-        }
-    } else {
-        console.log('⚠️  Supabase not configured - using local storage');
+// Initialize Supabase if configured
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    try {
+        const { initializeStorage } = require('./config/supabase');
+        initializeStorage().then(() => {
+            console.log('✅ Supabase storage initialized');
+        }).catch(error => {
+            console.error('❌ Supabase initialization error:', error.message);
+        });
+    } catch (error) {
+        console.error('❌ Supabase config error:', error.message);
     }
-}, 1000); // Delay by 1 second to let server start first
+} else {
+    console.log('⚠️  Supabase not configured - using local storage');
+}
 
 // Middleware
 app.use(cors());
@@ -267,29 +265,14 @@ io.on('connection', (socket) => {
     });
 });
 
-// Enhanced API endpoints - BULLETPROOF HEALTH CHECK
+// Simple health check
 app.get('/api/health', (req, res) => {
-    try {
-        // Simple health check that doesn't depend on external services
-        res.json({ 
-            status: 'healthy', 
-            message: 'BlueMe Server Running',
-            timestamp: new Date().toISOString(),
-            version: '2.0.0',
-            uptime: process.uptime(),
-            memory: process.memoryUsage(),
-            nodeVersion: process.version,
-            platform: process.platform
-        });
-    } catch (error) {
-        // Even if there's an error, return a basic health response
-        res.json({ 
-            status: 'healthy', 
-            message: 'BlueMe Server Running (Basic Mode)',
-            timestamp: new Date().toISOString(),
-            version: '2.0.0'
-        });
-    }
+    res.json({ 
+        status: 'healthy', 
+        message: 'BlueMe Server Running',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0'
+    });
 });
 
 // Bluetooth device management endpoints
@@ -618,34 +601,13 @@ app.get('/api/files', (req, res) => {
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
-// Multiple health check endpoints for Railway
+// Simple root endpoint
 app.get('/', (req, res) => {
     res.json({ 
         status: 'ok', 
         message: 'BlueMe Server is running',
         timestamp: new Date().toISOString(),
-        version: '2.0.0',
-        endpoint: 'root'
-    });
-});
-
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'healthy', 
-        message: 'BlueMe Server Health Check',
-        timestamp: new Date().toISOString(),
-        version: '2.0.0',
-        endpoint: 'health'
-    });
-});
-
-app.get('/ping', (req, res) => {
-    res.json({ 
-        status: 'pong', 
-        message: 'Server is responding',
-        timestamp: new Date().toISOString(),
-        version: '2.0.0',
-        endpoint: 'ping'
+        version: '2.0.0'
     });
 });
 
@@ -667,45 +629,13 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-// Start server with comprehensive error handling
+// Start server
 server.listen(PORT, () => {
     console.log(`🎵 BlueMe Server running on port ${PORT}`);
     console.log(`🌐 Open http://localhost:${PORT} to start syncing music!`);
     console.log(`📡 WebSocket server ready for real-time sync`);
     console.log(`🔵 Bluetooth manager initialized`);
     console.log(`📱 API endpoints available at /api/*`);
-    console.log(`🏥 Health check available at /health and /`);
-    
-    // Log environment info for debugging
-    console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📦 Node version: ${process.version}`);
-    console.log(`🌍 Platform: ${process.platform}`);
-    console.log(`💾 Memory: ${JSON.stringify(process.memoryUsage())}`);
-});
-
-// Handle server errors gracefully
-server.on('error', (error) => {
-    console.error('🚨 Server error:', error);
-    if (error.code === 'EADDRINUSE') {
-        console.error('❌ Port already in use. Please try a different port.');
-    }
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('🔄 SIGTERM received, shutting down gracefully...');
-    server.close(() => {
-        console.log('✅ Server closed');
-        process.exit(0);
-    });
-});
-
-process.on('SIGINT', () => {
-    console.log('🔄 SIGINT received, shutting down gracefully...');
-    server.close(() => {
-        console.log('✅ Server closed');
-        process.exit(0);
-    });
 });
 
 module.exports = app;
