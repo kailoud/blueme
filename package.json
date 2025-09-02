@@ -10,7 +10,8 @@
     "build:backend": "echo 'Backend ready for deployment'",
     "deploy:backend": "echo 'Deploying backend to cloud platform...'",
     "serve": "python3 -m http.server 8000",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "echo 'Node.js version:' && node --version && echo 'npm version:' && npm --version"
   },
   "keywords": [
     "bluetooth",
@@ -43,7 +44,10 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": "18.x"
+  },
+  "railway": {
+    "nodeVersion": "18"
   },
   "repository": {
     "type": "git",
