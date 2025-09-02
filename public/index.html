@@ -987,7 +987,7 @@
             }
 
             initializeSocketIO() {
-                this.socket = io();
+                this.socket = io('https://blueme-production.up.railway.app');
                 
                 this.socket.on('connect', () => {
                     console.log('🔌 Connected to server:', this.socket.id);
