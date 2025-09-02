@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const socketIo = require('socket.io');
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 
 const app = express();
 const server = http.createServer(app);
@@ -434,21 +434,38 @@ app.post('/api/convert-youtube', async (req, res) => {
             return res.status(400).json({ error: 'YouTube URL is required' });
         }
 
-        if (!ytdl.validateURL(url)) {
-            return res.status(400).json({ error: 'Invalid YouTube URL' });
-        }
-
         console.log('🎵 Converting YouTube URL:', url);
 
-        // Get video info
-        const info = await ytdl.getInfo(url);
+        // Try to validate and get info with better error handling
+        let info;
+        try {
+            if (!ytdl.validateURL(url)) {
+                return res.status(400).json({ error: 'Invalid YouTube URL' });
+            }
+            
+            // Get video info
+            info = await ytdl.getInfo(url);
+        } catch (infoError) {
+            console.error('Failed to get video info:', infoError);
+            return res.status(500).json({ 
+                error: 'Unable to access this YouTube video. It may be private, restricted, or unavailable.' 
+            });
+        }
         const videoTitle = info.videoDetails.title;
         const sanitizedTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        
+        console.log('📺 Video title:', videoTitle);
+        console.log('🔧 Processing format:', format, 'quality:', quality);
 
-        // Download audio stream
+        // Download audio stream with better headers
         const audioStream = ytdl(url, {
             filter: 'audioonly',
-            quality: 'highestaudio'
+            quality: 'highestaudio',
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            }
         });
 
         // Convert stream to buffer instead of writing to local file
@@ -458,6 +475,7 @@ app.post('/api/convert-youtube', async (req, res) => {
         audioStream.on('end', async () => {
             try {
                 const audioBuffer = Buffer.concat(chunks);
+                console.log('✅ Audio buffer created, size:', audioBuffer.length);
                 
                 // If Supabase is configured, use it for storage
                 if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
@@ -481,6 +499,7 @@ app.post('/api/convert-youtube', async (req, res) => {
                         });
 
                         if (uploadResult.success) {
+                            console.log('☁️ File uploaded to Supabase successfully');
                             res.json({
                                 success: true,
                                 message: 'YouTube audio converted and stored successfully',
@@ -506,6 +525,7 @@ app.post('/api/convert-youtube', async (req, res) => {
                     }
                 } else {
                     // Fallback: send audio buffer directly
+                    console.log('📤 Sending audio buffer directly');
                     res.setHeader('Content-Type', `audio/${format}`);
                     res.setHeader('Content-Disposition', `attachment; filename="${sanitizedTitle}.${format}"`);
                     res.send(audioBuffer);
@@ -519,12 +539,36 @@ app.post('/api/convert-youtube', async (req, res) => {
 
         audioStream.on('error', (error) => {
             console.error('YouTube stream error:', error);
-            res.status(500).json({ error: 'YouTube audio stream failed' });
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'YouTube audio stream failed: ' + error.message });
+            }
         });
+
+        // Add timeout for the entire operation
+        setTimeout(() => {
+            if (!res.headersSent) {
+                console.error('YouTube conversion timeout');
+                res.status(500).json({ error: 'YouTube conversion timeout - please try again' });
+            }
+        }, 60000); // 60 second timeout
 
     } catch (error) {
         console.error('YouTube conversion error:', error);
-        res.status(500).json({ error: `YouTube conversion failed: ${error.message}` });
+        
+        // Provide more helpful error messages
+        if (error.message.includes('Could not extract functions')) {
+            res.status(500).json({ 
+                error: 'YouTube extraction failed - this video may be restricted or unavailable. Please try a different video.' 
+            });
+        } else if (error.message.includes('Video unavailable')) {
+            res.status(500).json({ 
+                error: 'This YouTube video is unavailable or private. Please try a different video.' 
+            });
+        } else {
+            res.status(500).json({ 
+                error: `YouTube conversion failed: ${error.message}` 
+            });
+        }
     }
 });
 
