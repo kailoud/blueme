@@ -1,8 +1,13 @@
-# 🎵 Blueme
+# 🎵 BlueMe
 
 **Share music with friends wirelessly via Bluetooth**
 
 A modern web application that enables real-time music synchronization across multiple Bluetooth devices. Built with Node.js, Express, Socket.IO, and Web Bluetooth API.
+
+## 🚀 Deployment Status
+- **Frontend**: ✅ Deployed to Netlify (blueme.app)
+- **Backend**: 🔄 Deploying to Railway with Supabase integration
+- **Database**: ✅ Supabase configured and ready
 
 ## ✨ Features
 
