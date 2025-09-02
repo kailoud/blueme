@@ -104,6 +104,22 @@ class BluetoothManager {
 // Initialize Bluetooth manager
 const bluetoothManager = new BluetoothManager();
 
+// Initialize Supabase if configured
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    try {
+        const { initializeStorage } = require('./config/supabase');
+        initializeStorage().then(() => {
+            console.log('✅ Supabase storage initialized');
+        }).catch(error => {
+            console.error('❌ Supabase initialization error:', error.message);
+        });
+    } catch (error) {
+        console.error('❌ Supabase config error:', error.message);
+    }
+} else {
+    console.log('⚠️  Supabase not configured - using local storage');
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -329,28 +345,80 @@ app.delete('/api/devices/:deviceId', async (req, res) => {
 });
 
 // Upload audio file
-app.post('/api/upload', upload.single('audio'), (req, res) => {
+app.post('/api/upload', upload.single('audio'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No audio file provided' });
         }
 
-        const fileInfo = {
-            filename: req.file.filename,
-            originalName: req.file.originalname,
-            size: req.file.size,
-            mimetype: req.file.mimetype,
-            path: req.file.path,
-            uploadTime: new Date().toISOString()
-        };
+        // If Supabase is configured, use it for storage
+        if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+            try {
+                const { audioManager } = require('./config/supabase');
+                
+                const uploadResult = await audioManager.uploadFile(req.file, {
+                    userId: req.body.userId || null
+                });
 
-        console.log('📁 Audio file uploaded:', fileInfo.filename);
-        
-        res.json({
-            success: true,
-            message: 'Audio file uploaded successfully',
-            file: fileInfo
-        });
+                if (uploadResult.success) {
+                    console.log('📁 Audio file uploaded to Supabase:', uploadResult.file.fileName);
+                    res.json({
+                        success: true,
+                        message: 'Audio file uploaded to cloud storage successfully',
+                        file: {
+                            id: uploadResult.file.id,
+                            filename: uploadResult.file.fileName,
+                            originalName: uploadResult.file.originalName,
+                            size: uploadResult.file.size,
+                            url: uploadResult.file.url,
+                            duration: uploadResult.file.duration,
+                            artist: uploadResult.file.artist,
+                            title: uploadResult.file.title,
+                            album: uploadResult.file.album
+                        }
+                    });
+                } else {
+                    throw new Error(uploadResult.error);
+                }
+            } catch (supabaseError) {
+                console.error('Supabase upload error:', supabaseError);
+                // Fallback to local storage
+                const fileInfo = {
+                    filename: req.file.filename,
+                    originalName: req.file.originalname,
+                    size: req.file.size,
+                    mimetype: req.file.mimetype,
+                    path: req.file.path,
+                    uploadTime: new Date().toISOString()
+                };
+
+                console.log('📁 Audio file uploaded locally:', fileInfo.filename);
+                
+                res.json({
+                    success: true,
+                    message: 'Audio file uploaded locally (Supabase not configured)',
+                    file: fileInfo
+                });
+            }
+        } else {
+            // Fallback to local storage
+            const fileInfo = {
+                filename: req.file.filename,
+                originalName: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype,
+                path: req.file.path,
+                uploadTime: new Date().toISOString()
+            };
+
+            console.log('📁 Audio file uploaded locally:', fileInfo.filename);
+            
+            res.json({
+                success: true,
+                message: 'Audio file uploaded locally (Supabase not configured)',
+                file: fileInfo
+            });
+        }
     } catch (error) {
         console.error('Upload error:', error);
         res.status(500).json({ error: 'Upload failed' });
@@ -383,35 +451,80 @@ app.post('/api/convert-youtube', async (req, res) => {
             quality: 'highestaudio'
         });
 
-        const outputPath = `uploads/${sanitizedTitle}-${Date.now()}.${format}`;
-        const writeStream = fs.createWriteStream(outputPath);
+        // Convert stream to buffer instead of writing to local file
+        const chunks = [];
+        audioStream.on('data', (chunk) => chunks.push(chunk));
+        
+        audioStream.on('end', async () => {
+            try {
+                const audioBuffer = Buffer.concat(chunks);
+                
+                // If Supabase is configured, use it for storage
+                if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+                    try {
+                        const { audioManager } = require('./config/supabase');
+                        
+                        // Create a mock file object for Supabase upload
+                        const mockFile = {
+                            buffer: audioBuffer,
+                            originalname: `${sanitizedTitle}.${format}`,
+                            mimetype: `audio/${format}`,
+                            size: audioBuffer.length
+                        };
 
-        audioStream.pipe(writeStream);
+                        const uploadResult = await audioManager.uploadFile(mockFile, {
+                            title: videoTitle,
+                            artist: 'YouTube',
+                            duration: info.videoDetails.lengthSeconds,
+                            source: 'youtube',
+                            originalUrl: url
+                        });
 
-        writeStream.on('finish', () => {
-            const stats = fs.statSync(outputPath);
-            res.json({
-                success: true,
-                message: 'YouTube audio converted successfully',
-                file: {
-                    filename: path.basename(outputPath),
-                    originalName: videoTitle,
-                    size: stats.size,
-                    path: outputPath,
-                    format: format,
-                    quality: quality
+                        if (uploadResult.success) {
+                            res.json({
+                                success: true,
+                                message: 'YouTube audio converted and stored successfully',
+                                file: {
+                                    filename: uploadResult.file.fileName,
+                                    originalName: videoTitle,
+                                    size: uploadResult.file.size,
+                                    url: uploadResult.file.url,
+                                    format: format,
+                                    quality: quality,
+                                    duration: uploadResult.file.duration
+                                }
+                            });
+                        } else {
+                            throw new Error(uploadResult.error);
+                        }
+                    } catch (supabaseError) {
+                        console.error('Supabase upload error:', supabaseError);
+                        // Fallback to direct response
+                        res.setHeader('Content-Type', `audio/${format}`);
+                        res.setHeader('Content-Disposition', `attachment; filename="${sanitizedTitle}.${format}"`);
+                        res.send(audioBuffer);
+                    }
+                } else {
+                    // Fallback: send audio buffer directly
+                    res.setHeader('Content-Type', `audio/${format}`);
+                    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedTitle}.${format}"`);
+                    res.send(audioBuffer);
                 }
-            });
+                
+            } catch (error) {
+                console.error('Audio processing error:', error);
+                res.status(500).json({ error: 'Audio processing failed' });
+            }
         });
 
-        writeStream.on('error', (error) => {
-            console.error('Conversion error:', error);
-            res.status(500).json({ error: 'Audio conversion failed' });
+        audioStream.on('error', (error) => {
+            console.error('YouTube stream error:', error);
+            res.status(500).json({ error: 'YouTube audio stream failed' });
         });
 
     } catch (error) {
         console.error('YouTube conversion error:', error);
-        res.status(500).json({ error: 'YouTube conversion failed' });
+        res.status(500).json({ error: `YouTube conversion failed: ${error.message}` });
     }
 });
 
