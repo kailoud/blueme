@@ -4260,52 +4260,6 @@
                 }
             }
 
-            generateSampleAudioData() {
-                // Generate a simple sine wave audio as base64
-                const sampleRate = 44100;
-                const duration = 10; // 10 seconds
-                const frequency = 440; // A4 note
-                const samples = sampleRate * duration;
-                
-                // Create a simple sine wave
-                const audioBuffer = new ArrayBuffer(44 + samples * 2);
-                const view = new DataView(audioBuffer);
-                
-                // WAV header
-                const writeString = (offset, string) => {
-                    for (let i = 0; i < string.length; i++) {
-                        view.setUint8(offset + i, string.charCodeAt(i));
-                    }
-                };
-                
-                writeString(0, 'RIFF');
-                view.setUint32(4, 36 + samples * 2, true);
-                writeString(8, 'WAVE');
-                writeString(12, 'fmt ');
-                view.setUint32(16, 16, true);
-                view.setUint16(20, 1, true);
-                view.setUint16(22, 1, true);
-                view.setUint32(24, sampleRate, true);
-                view.setUint32(28, sampleRate * 2, true);
-                view.setUint16(32, 2, true);
-                view.setUint16(34, 16, true);
-                writeString(36, 'data');
-                view.setUint32(40, samples * 2, true);
-                
-                // Generate sine wave
-                for (let i = 0; i < samples; i++) {
-                    const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3;
-                    view.setInt16(44 + i * 2, sample * 32767, true);
-                }
-                
-                // Convert to base64
-                const bytes = new Uint8Array(audioBuffer);
-                let binary = '';
-                for (let i = 0; i < bytes.byteLength; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                return btoa(binary);
-            }
 
             async forceCreateProfile() {
                 console.log('🔨 Force creating profile...');
@@ -5678,71 +5632,78 @@
             }
 
             createDemoPlaylist() {
-                console.log('🎵 Creating demo playlist with sample audio...');
-                
-                // Generate sample audio data (base64 encoded WAV)
-                const sampleAudioData = this.generateSampleAudioData();
-                
-                // Create demo playlist
-                const demoPlaylist = {
-                    id: crypto.randomUUID(),
-                    name: '🎵 Demo Playlist',
-                    description: 'Sample playlist with demo tracks for testing',
-                    playlist_items: [
-                        {
-                            id: crypto.randomUUID(),
-                            position: 0,
-                            audio_file: {
+                try {
+                    console.log('🎵 Creating demo playlist with sample audio...');
+                    
+                    // Generate sample audio data (base64 encoded WAV)
+                    const sampleAudioData = this.generateSampleAudioData();
+                    console.log('✅ Sample audio data generated, length:', sampleAudioData.length);
+                    
+                    // Create demo playlist
+                    const demoPlaylist = {
+                        id: crypto.randomUUID(),
+                        name: '🎵 Demo Playlist',
+                        description: 'Sample playlist with demo tracks for testing',
+                        playlist_items: [
+                            {
                                 id: crypto.randomUUID(),
-                                title: 'Demo Track 1 - Electronic Vibes',
-                                originalName: 'demo_track_1.mp3',
-                                filename: 'demo_track_1.mp3',
-                                mime_type: 'audio/mp3',
-                                file_size: sampleAudioData.length,
-                                audio_data: sampleAudioData,
-                                url: 'demo_local'
-                            }
-                        },
-                        {
-                            id: crypto.randomUUID(),
-                            position: 1,
-                            audio_file: {
+                                position: 0,
+                                audio_file: {
+                                    id: crypto.randomUUID(),
+                                    title: 'Demo Track 1 - Electronic Vibes',
+                                    originalName: 'demo_track_1.mp3',
+                                    filename: 'demo_track_1.mp3',
+                                    mime_type: 'audio/mp3',
+                                    file_size: sampleAudioData.length,
+                                    audio_data: sampleAudioData,
+                                    url: 'demo_local'
+                                }
+                            },
+                            {
                                 id: crypto.randomUUID(),
-                                title: 'Demo Track 2 - Ambient Sounds',
-                                originalName: 'demo_track_2.mp3',
-                                filename: 'demo_track_2.mp3',
-                                mime_type: 'audio/mp3',
-                                file_size: sampleAudioData.length,
-                                audio_data: sampleAudioData,
-                                url: 'demo_local'
-                            }
-                        },
-                        {
-                            id: crypto.randomUUID(),
-                            position: 2,
-                            audio_file: {
+                                position: 1,
+                                audio_file: {
+                                    id: crypto.randomUUID(),
+                                    title: 'Demo Track 2 - Ambient Sounds',
+                                    originalName: 'demo_track_2.mp3',
+                                    filename: 'demo_track_2.mp3',
+                                    mime_type: 'audio/mp3',
+                                    file_size: sampleAudioData.length,
+                                    audio_data: sampleAudioData,
+                                    url: 'demo_local'
+                                }
+                            },
+                            {
                                 id: crypto.randomUUID(),
-                                title: 'Demo Track 3 - Chill Beats',
-                                originalName: 'demo_track_3.mp3',
-                                filename: 'demo_track_3.mp3',
-                                mime_type: 'audio/mp3',
-                                file_size: sampleAudioData.length,
-                                audio_data: sampleAudioData,
-                                url: 'demo_local'
+                                position: 2,
+                                audio_file: {
+                                    id: crypto.randomUUID(),
+                                    title: 'Demo Track 3 - Chill Beats',
+                                    originalName: 'demo_track_3.mp3',
+                                    filename: 'demo_track_3.mp3',
+                                    mime_type: 'audio/mp3',
+                                    file_size: sampleAudioData.length,
+                                    audio_data: sampleAudioData,
+                                    url: 'demo_local'
+                                }
                             }
-                        }
-                    ]
-                };
-                
-                // Add to playlists
-                this.playlists.push(demoPlaylist);
-                this.saveLocalPlaylists();
-                this.updatePlaylistUI();
-                
-                console.log('✅ Demo playlist created:', demoPlaylist);
-                this.updateStatus('success', '🎵 Demo playlist created with 3 sample tracks! Try playing it now.');
-                
-                return demoPlaylist;
+                        ]
+                    };
+                    
+                    // Add to playlists
+                    this.playlists.push(demoPlaylist);
+                    this.saveLocalPlaylists();
+                    this.updatePlaylistUI();
+                    
+                    console.log('✅ Demo playlist created successfully:', demoPlaylist);
+                    this.updateStatus('success', '🎵 Demo playlist created with 3 sample tracks! Try playing it now.');
+                    
+                    return demoPlaylist;
+                } catch (error) {
+                    console.error('❌ Error creating demo playlist:', error);
+                    this.updateStatus('error', `Failed to create demo playlist: ${error.message}`);
+                    return null;
+                }
             }
 
             generateSampleAudioData() {
