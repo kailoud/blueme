@@ -2,6 +2,3 @@
 startCommand = "npm start"
 healthcheckPath = "/"
 healthcheckTimeout = 30
-
-[build]
-builder = "nixpacks"
