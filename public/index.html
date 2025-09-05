@@ -2258,30 +2258,401 @@
             border: 1px solid rgba(255, 107, 107, 0.3);
         }
 
-        /* Responsive design - Mobile Optimized */
+        /* Modern Mobile Design - Sharp & Neat */
         @media (max-width: 768px) {
+            /* Modern Base Layout */
             .app-container {
-                padding: 15px;
+                padding: 16px;
+                gap: 24px;
             }
             
             .card {
-                margin-bottom: 15px;
+                margin-bottom: 20px;
+                border-radius: 20px;
+                backdrop-filter: blur(20px);
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             }
             
             .btn {
-                padding: 12px 20px;
-                font-size: 0.9rem;
+                padding: 14px 24px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
-            /* Mobile User Profile */
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            }
+
+            /* Modern Player Controls */
+            .player-controls {
+                gap: 16px;
+                margin: 20px 0;
+            }
+
+            .control-btn {
+                width: 56px;
+                height: 56px;
+                border-radius: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .control-btn:hover {
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            }
+
+            .play-btn {
+                width: 72px;
+                height: 72px;
+                border-radius: 20px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            }
+
+            .play-btn:hover {
+                transform: translateY(-3px) scale(1.08);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            }
+
+            /* Modern Progress Bar */
+            .progress-container {
+                margin: 24px 0;
+                padding: 0 8px;
+            }
+
+            .progress-bar {
+                height: 6px;
+                border-radius: 3px;
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .progress {
+                height: 6px;
+                border-radius: 3px;
+                background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+                box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+            }
+
+            /* Modern Status Messages */
+            .status-message {
+                padding: 16px 20px;
+                border-radius: 16px;
+                font-weight: 500;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Modern User Profile */
             .user-profile-section {
                 position: fixed;
-                top: 10px;
-                right: 10px;
-                left: 10px;
+                top: 12px;
+                right: 12px;
+                left: 12px;
                 min-width: auto;
                 max-width: none;
+                padding: 16px;
+                border-radius: 16px;
+                backdrop-filter: blur(20px);
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            }
+
+            .profile-header {
+                gap: 12px;
+            }
+
+            .avatar-circle {
+                width: 44px;
+                height: 44px;
+                font-size: 1.1rem;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            }
+
+            .premium-crown {
+                width: 18px;
+                height: 18px;
+                font-size: 0.8rem;
+            }
+
+            .profile-name {
+                font-size: 1rem;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+            }
+
+            .profile-stats {
+                gap: 12px;
+                padding: 12px 0;
+            }
+
+            .stat-label {
+                font-size: 0.7rem;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .stat-value {
+                font-size: 1.1rem;
+                font-weight: 700;
+            }
+
+            .menu-item {
+                padding: 14px 16px;
+                font-size: 0.9rem;
+                font-weight: 500;
+                border-radius: 12px;
+                margin-bottom: 4px;
+                transition: all 0.3s ease;
+            }
+
+            .menu-item:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: translateX(4px);
+            }
+
+            /* Modern Section Headers */
+            .playlist-section h3,
+            .audio-library-section h3 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                margin-bottom: 24px;
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            /* Modern Playlist Section */
+            .playlist-section {
+                margin: 24px 0;
+                padding: 24px;
+                border-radius: 24px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            }
+
+            .playlist-controls {
+                gap: 12px;
+                margin-bottom: 28px;
+            }
+
+            .playlist-controls .btn {
+                padding: 16px 24px;
+                font-size: 1rem;
+                font-weight: 600;
+                border-radius: 14px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            }
+
+            .playlist-item {
+                padding: 24px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 16px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            }
+
+            .playlist-item:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+                border-color: rgba(240, 147, 251, 0.4);
+            }
+
+            .playlist-info {
+                margin-bottom: 16px;
+            }
+
+            .playlist-info h4 {
+                font-size: 1.2rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                letter-spacing: -0.01em;
+            }
+
+            .playlist-actions {
+                justify-content: stretch;
+                gap: 12px;
+            }
+
+            .playlist-actions .btn {
+                flex: 1;
+                padding: 14px 20px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                border-radius: 12px;
+                min-height: 48px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Modern Audio Library */
+            .audio-library-section {
+                margin: 24px 0;
+                padding: 24px;
+                border-radius: 24px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            }
+
+            .audio-item {
+                padding: 24px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+                min-height: auto;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 16px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            }
+
+            .audio-item:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+                border-color: rgba(240, 147, 251, 0.4);
+            }
+
+            .audio-info {
+                width: 100%;
+                margin-bottom: 16px;
+            }
+
+            .audio-info h4 {
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 10px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4;
+                letter-spacing: -0.01em;
+            }
+
+            .audio-info p {
+                font-size: 0.95rem;
+                margin-bottom: 8px;
+                opacity: 0.85;
+                font-weight: 500;
+            }
+
+            .audio-info small {
+                font-size: 0.85rem;
+                opacity: 0.7;
+                font-weight: 500;
+            }
+
+            .audio-actions {
+                justify-content: stretch;
+                width: 100%;
+                gap: 12px;
+            }
+
+            .audio-actions .btn {
+                flex: 1;
+                padding: 14px 20px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                min-height: 48px;
+                white-space: nowrap;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Modern Download Section */
+            .download-section {
+                margin: 24px 0;
+                padding: 24px;
+                border-radius: 24px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            }
+
+            .download-header {
+                margin-bottom: 24px;
+                min-height: 60px;
+            }
+
+            .file-info {
+                padding-right: 16px;
+            }
+
+            .file-name {
+                margin-bottom: 10px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4;
+                font-weight: 600;
+                font-size: 1.1rem;
+                letter-spacing: -0.01em;
+            }
+
+            .file-details {
+                line-height: 1.5;
+                opacity: 0.8;
+                font-weight: 500;
+            }
+
+            .download-actions {
+                margin-top: 16px;
+                gap: 12px;
+            }
+
+            .download-actions .btn {
+                padding: 14px 20px;
+                font-weight: 600;
+                border-radius: 12px;
+                min-height: 48px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Ultra-Modern Small Mobile */
+            .app-container {
                 padding: 12px;
+                gap: 20px;
+            }
+            
+            .logo {
+                font-size: 2.2rem;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+            }
+            
+            .album-art {
+                width: 160px;
+                height: 160px;
+                border-radius: 18px;
+                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+            }
+
+            .user-profile-section {
+                top: 8px;
+                right: 8px;
+                left: 8px;
+                padding: 14px;
+                border-radius: 14px;
             }
 
             .profile-header {
@@ -2292,200 +2663,72 @@
                 width: 40px;
                 height: 40px;
                 font-size: 1rem;
-            }
-
-            .premium-crown {
-                width: 16px;
-                height: 16px;
-                font-size: 0.7rem;
+                border-radius: 10px;
             }
 
             .profile-name {
-                font-size: 0.9rem;
-            }
-
-            .profile-stats {
-                gap: 8px;
-                padding: 8px 0;
-            }
-
-            .stat-label {
-                font-size: 0.6rem;
-            }
-
-            .stat-value {
-                font-size: 1rem;
-            }
-
-            .menu-item {
-                padding: 10px 12px;
-                font-size: 0.85rem;
-            }
-
-            /* Mobile Playlist Section */
-            .playlist-section {
-                margin: 15px 0;
-                padding: 16px;
-            }
-
-            .playlist-section h3 {
-                font-size: 1.2rem;
-                margin-bottom: 16px;
-            }
-
-            .playlist-controls {
-                gap: 10px;
-                margin-bottom: 20px;
-            }
-
-            .playlist-controls .btn {
-                padding: 12px 16px;
-                font-size: 0.9rem;
-            }
-
-            .playlist-item {
-                padding: 16px;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .playlist-info {
-                margin-bottom: 12px;
-            }
-
-            .playlist-actions {
-                justify-content: stretch;
-            }
-
-            .playlist-actions .btn {
-                flex: 1;
-                min-width: auto;
-                padding: 8px 10px;
-                font-size: 0.8rem;
-            }
-
-            /* Mobile Audio Library */
-            .audio-library-section {
-                margin: 15px 0;
-                padding: 16px;
-            }
-
-            .audio-library-section h3 {
-                font-size: 1.3rem;
-                margin-bottom: 16px;
-            }
-
-            .audio-item {
-                padding: 16px;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-                min-height: auto;
-            }
-
-            .audio-info {
-                width: 100%;
-                margin-bottom: 8px;
-            }
-
-            .audio-info h4 {
-                font-size: 1rem;
-                margin-bottom: 6px;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                line-height: 1.3;
-            }
-
-            .audio-info p {
-                font-size: 0.85rem;
-                margin-bottom: 3px;
-            }
-
-            .audio-info small {
-                font-size: 0.75rem;
-            }
-
-            .audio-actions {
-                justify-content: stretch;
-                width: 100%;
-                gap: 8px;
-            }
-
-            .audio-actions .btn {
-                flex: 1;
-                padding: 10px 12px;
-                font-size: 0.85rem;
-                min-height: 40px;
-                white-space: nowrap;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .app-container {
-                padding: 16px;
-            }
-            
-            .logo {
-                font-size: 2.4rem;
-            }
-            
-            .album-art {
-                width: 140px;
-                height: 140px;
-            }
-
-            .user-profile-section {
-                top: 5px;
-                right: 5px;
-                left: 5px;
-                padding: 10px;
-            }
-
-            .profile-header {
-                gap: 8px;
-            }
-
-            .avatar-circle {
-                width: 35px;
-                height: 35px;
-                font-size: 0.9rem;
-            }
-
-            .profile-name {
-                font-size: 0.85rem;
+                font-size: 0.95rem;
+                font-weight: 600;
             }
 
             .playlist-section,
             .audio-library-section {
-                margin: 10px 0;
-                padding: 12px;
+                margin: 16px 0;
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .playlist-section h3,
+            .audio-library-section h3 {
+                font-size: 1.3rem;
+                margin-bottom: 20px;
             }
 
             .playlist-item,
             .audio-item {
-                padding: 14px;
-                gap: 10px;
+                padding: 20px;
+                gap: 16px;
+                border-radius: 16px;
+                margin-bottom: 12px;
             }
 
+            .playlist-info h4,
             .audio-info h4 {
-                font-size: 0.95rem;
-                line-height: 1.2;
+                font-size: 1.05rem;
+                line-height: 1.3;
+                font-weight: 600;
             }
 
             .audio-info p {
-                font-size: 0.8rem;
+                font-size: 0.9rem;
+                font-weight: 500;
             }
 
             .audio-info small {
-                font-size: 0.7rem;
+                font-size: 0.8rem;
+                font-weight: 500;
             }
 
             .playlist-actions .btn,
             .audio-actions .btn {
-                padding: 8px 10px;
-                font-size: 0.8rem;
-                min-height: 36px;
+                padding: 12px 16px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                min-height: 44px;
+                border-radius: 10px;
+            }
+
+            .download-section {
+                margin: 16px 0;
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .download-actions .btn {
+                padding: 12px 16px;
+                font-weight: 600;
+                min-height: 44px;
+                border-radius: 10px;
             }
 
             /* Mobile Modal Styles */
