@@ -2422,10 +2422,43 @@
                 authLink.onmouseover = () => authLink.style.opacity = '1';
                 authLink.onmouseout = () => authLink.style.opacity = '0.7';
 
+                // Add a playlist button for easy access
+                const playlistBtn = document.createElement('button');
+                playlistBtn.textContent = '🎵 Playlists';
+                playlistBtn.style.cssText = `
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                    transition: all 0.3s ease;
+                    margin-left: 10px;
+                `;
+                playlistBtn.onmouseover = () => {
+                    playlistBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+                    playlistBtn.style.transform = 'translateY(-1px)';
+                };
+                playlistBtn.onmouseout = () => {
+                    playlistBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                    playlistBtn.style.transform = 'translateY(0)';
+                };
+                playlistBtn.onclick = () => {
+                    // Force create playlist section
+                    this.ensurePlaylistSection();
+                    // Scroll to playlist section
+                    const playlistSection = document.getElementById('playlistSection');
+                    if (playlistSection) {
+                        playlistSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                };
+
                 userInfo.appendChild(userAvatar);
                 userInfo.appendChild(userDetails);
                 userInfo.appendChild(logoutBtn);
                 userInfo.appendChild(authLink);
+                userInfo.appendChild(playlistBtn);
 
                 // Remove existing user info if any
                 const existingUserInfo = document.getElementById('userInfo');
@@ -2566,9 +2599,12 @@
             }
 
             ensurePlaylistSection() {
+                console.log('🎵 Ensuring playlist section exists...');
+                
                 // Always create playlist section for authenticated users
                 let playlistSection = document.getElementById('playlistSection');
                 if (!playlistSection) {
+                    console.log('🎵 Creating new playlist section...');
                     playlistSection = document.createElement('div');
                     playlistSection.id = 'playlistSection';
                     playlistSection.className = 'playlist-section';
@@ -2598,8 +2634,14 @@
                     // Add after the audio converter section
                     const converterSection = document.querySelector('.converter-section');
                     if (converterSection) {
+                        console.log('🎵 Adding playlist section after converter...');
                         converterSection.parentNode.insertBefore(playlistSection, converterSection.nextSibling);
+                    } else {
+                        console.log('🎵 Converter section not found, adding to body...');
+                        document.body.appendChild(playlistSection);
                     }
+                } else {
+                    console.log('🎵 Playlist section already exists');
                 }
                 
                 // Set up event listeners
@@ -2607,6 +2649,8 @@
                 
                 // Load existing playlists
                 this.loadUserPlaylists();
+                
+                console.log('🎵 Playlist section setup complete');
             }
 
             updatePlaylistUI() {
