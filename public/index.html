@@ -5135,168 +5135,76 @@
                 }
             }
 
-            async createPlaylist(name, description = '', isPremium = false) {
-                console.log('🎵 createPlaylist called with:', { name, description, isPremium });
-                console.log('Current user:', currentUser);
-                console.log('User profile:', userProfile);
+            createPlaylist(name, description = '') {
+                console.log('🎵 createPlaylist called with:', { name, description });
                 
-                if (!currentUser) {
-                    console.error('❌ No current user found');
-                    this.updateStatus('error', 'Please log in to create playlists');
+                if (!name || !name.trim()) {
+                    this.updateStatus('error', 'Please enter a playlist name');
                     return;
                 }
 
-                // Check if user can create this type of playlist
-                if (isPremium && !userProfile?.is_premium) {
-                    console.log('❌ User not premium, showing upgrade modal');
-                    this.showPremiumUpgrade();
+                // Check if playlist name already exists
+                const existingPlaylist = this.playlists.find(p => p.name.toLowerCase() === name.toLowerCase());
+                if (existingPlaylist) {
+                    this.updateStatus('error', 'A playlist with this name already exists');
                     return;
                 }
 
-                // Check playlist limits for non-premium users
-                if (!isPremium) {
-                    const existingFreePlaylists = this.playlists.filter(p => !p.is_premium);
-                    if (existingFreePlaylists.length >= 1) {
-                        this.updateStatus('error', 'Free users can only create 1 playlist. Upgrade to Premium for unlimited playlists!');
-                        this.showPremiumUpgrade();
-                        return;
-                    }
-                }
+                // Create new playlist object
+                const newPlaylist = {
+                    id: crypto.randomUUID(),
+                    name: name.trim(),
+                    description: description.trim(),
+                    created_at: new Date().toISOString(),
+                    playlist_items: []
+                };
 
-                try {
-                    const maxSongs = isPremium ? 10 : 2;
-                    console.log('🎵 Inserting playlist with maxSongs:', maxSongs);
-                    
-                    const playlistData = {
-                        name: name,
-                        description: description,
-                        user_id: currentUser.id,
-                        is_public: false,
-                        is_premium: isPremium,
-                        max_songs: maxSongs
-                    };
-                    
-                    console.log('Playlist data to insert:', playlistData);
-                    
-                    const { data, error } = await supabase
-                        .from('playlists')
-                        .insert(playlistData)
-                        .select()
-                        .single();
-
-                    if (error) {
-                        console.error('❌ Supabase error:', error);
-                        throw error;
-                    }
-
-                    console.log('✅ Playlist created in database:', data);
-                    
-                    this.playlists.unshift(data);
-                    this.updatePlaylistUI();
-                    const playlistType = isPremium ? 'Premium' : 'Free';
-                    this.updateStatus('success', `${playlistType} playlist "${name}" created!`);
-                    return data;
-                } catch (error) {
-                    console.error('❌ Error creating playlist:', error);
-                    this.updateStatus('error', `Failed to create playlist: ${error.message}`);
-                    throw error; // Re-throw so the modal can handle it
-                }
+                // Add to playlists array
+                this.playlists.push(newPlaylist);
+                
+                // Save to local storage
+                this.saveLocalPlaylists();
+                
+                // Update UI
+                this.updatePlaylistUI();
+                
+                this.updateStatus('success', `Playlist "${name}" created successfully!`);
+                console.log('✅ Playlist created:', newPlaylist);
             }
 
-            async addToPlaylist(playlistId, audioFile) {
-                if (!currentUser) {
-                    this.updateStatus('error', 'Please sign in to add tracks to playlists');
-                    return;
-                }
+            addToPlaylist(playlistId, audioFile) {
+                console.log('🎵 Adding to playlist:', playlistId, audioFile);
 
                 try {
-                    console.log('Adding to playlist:', playlistId, audioFile);
-                    
-                    // Check if this is a converted audio (has audioData) or existing file
-                    let fileData;
-                    
-                    if (audioFile.audioData) {
-                        // This is a newly converted audio, save it to database first
-                        console.log('Saving new audio file to database...');
-                        
-                        // Convert blob to base64 for storage
-                        const base64Audio = await this.blobToBase64(audioFile.audioData);
-                        
-                        const { data: newFileData, error: fileError } = await supabase
-                            .from('audio_files')
-                            .insert({
-                                file_name: audioFile.filename || 'converted_audio.mp3',
-                                original_name: audioFile.originalName || 'YouTube Audio',
-                                file_path: 'local',
-                                file_size: audioFile.size || 0,
-                                mime_type: audioFile.mimeType || 'audio/mpeg',
-                                public_url: 'local',
-                                user_id: currentUser.id,
-                                duration: audioFile.duration || 0,
-                                title: audioFile.originalName || 'YouTube Audio',
-                                artist: 'YouTube',
-                                album: 'Converted Audio',
-                                audio_data: base64Audio // Store base64 audio data
-                            })
-                            .select()
-                            .single();
-
-                        if (fileError) {
-                            console.error('Error saving audio file:', fileError);
-                            throw fileError;
-                        }
-                        
-                        fileData = newFileData;
-                        console.log('Audio file saved:', fileData);
-                    } else if (audioFile.id) {
-                        // This is an existing audio file from the library
-                        fileData = audioFile;
-                        console.log('Using existing audio file:', fileData);
-                    } else {
-                        throw new Error('Invalid audio file data');
+                    // Find the playlist
+                    const playlist = this.playlists.find(p => p.id === playlistId);
+                    if (!playlist) {
+                        this.updateStatus('error', 'Playlist not found');
+                        return;
                     }
 
-                    // Get current position in playlist
-                    const { data: items } = await supabase
-                        .from('playlist_items')
-                        .select('position')
-                        .eq('playlist_id', playlistId)
-                        .order('position', { ascending: false })
-                        .limit(1);
-
-                    const nextPosition = items && items.length > 0 ? items[0].position + 1 : 1;
-                    console.log('Next position:', nextPosition);
-                    console.log('Attempting to add audio_file_id:', fileData.id, 'to playlist:', playlistId);
-                    console.log('fileData object:', fileData);
-
-                    // Validate that fileData.id is a valid UUID
-                    if (!fileData.id || typeof fileData.id !== 'string' || fileData.id === 'audioFile') {
-                        console.error('❌ Invalid audio_file_id:', fileData.id);
-                        throw new Error('Invalid audio file ID. Please try converting the audio again.');
-                    }
+                    // Create playlist item
+                    const playlistItem = {
+                        id: crypto.randomUUID(),
+                        position: playlist.playlist_items.length + 1,
+                        audio_file: audioFile,
+                        added_at: new Date().toISOString()
+                    };
 
                     // Add to playlist
-                    const { error: itemError } = await supabase
-                        .from('playlist_items')
-                        .insert({
-                            playlist_id: playlistId,
-                            audio_file_id: fileData.id,
-                            position: nextPosition
-                        });
-
-                    if (itemError) {
-                        console.error('Error adding to playlist items:', itemError);
-                        throw itemError;
-                    }
-
-                    console.log('Successfully added to playlist');
+                    playlist.playlist_items.push(playlistItem);
                     
-                    // Reload playlists to update UI
-                    await this.loadUserPlaylists();
-                    this.updateStatus('success', 'Track added to playlist!');
+                    // Save to local storage
+                    this.saveLocalPlaylists();
+                    
+                    // Update UI
+                    this.updatePlaylistUI();
+                    
+                    this.updateStatus('success', `Track added to "${playlist.name}"`);
+                    console.log('✅ Track added to playlist:', playlistItem);
                 } catch (error) {
-                    console.error('Error adding to playlist:', error);
-                    this.updateStatus('error', `Failed to add to playlist: ${error.message}`);
+                    console.error('❌ Error adding to playlist:', error);
+                    this.updateStatus('error', `Failed to add track: ${error.message}`);
                 }
             }
 
@@ -5827,26 +5735,28 @@
             }
 
             setupPlaylistEventListeners() {
-                // Create free playlist event listener
-                const createFreeBtn = document.getElementById('createFreePlaylistBtn');
-                if (createFreeBtn && !createFreeBtn.hasAttribute('data-listener-added')) {
-                    createFreeBtn.setAttribute('data-listener-added', 'true');
-                    createFreeBtn.addEventListener('click', () => {
-                        const name = prompt('Enter free playlist name:');
+                // Create playlist event listener
+                const createBtn = document.getElementById('createPlaylistBtn');
+                if (createBtn && !createBtn.hasAttribute('data-listener-added')) {
+                    createBtn.setAttribute('data-listener-added', 'true');
+                    createBtn.addEventListener('click', () => {
+                        const name = prompt('Enter playlist name:');
                         if (name && name.trim()) {
                             const description = prompt('Enter playlist description (optional):') || '';
-                            this.createPlaylist(name.trim(), description.trim(), false); // false = free playlist
+                            this.createPlaylist(name.trim(), description.trim());
                         }
                     });
                 }
 
-                // Create premium playlist event listener
-                const createPremiumBtn = document.getElementById('createPremiumPlaylistBtn');
-                if (createPremiumBtn && !createPremiumBtn.hasAttribute('data-listener-added')) {
-                    createPremiumBtn.setAttribute('data-listener-added', 'true');
-                    createPremiumBtn.addEventListener('click', () => {
-                        if (!userProfile?.is_premium) {
-                            this.showPremiumUpgrade();
+                // Refresh playlists event listener
+                const refreshBtn = document.getElementById('refreshPlaylistsBtn');
+                if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
+                    refreshBtn.setAttribute('data-listener-added', 'true');
+                    refreshBtn.addEventListener('click', () => {
+                        this.loadLocalPlaylists();
+                        this.updateStatus('success', 'Playlists refreshed');
+                    });
+                }
                             return;
                         }
                         const name = prompt('Enter premium playlist name:');
