@@ -228,6 +228,35 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
+        .playlist-instructions {
+            background: rgba(0, 123, 255, 0.1);
+            border: 1px solid rgba(0, 123, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .playlist-instructions p {
+            margin: 0 0 12px 0;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .playlist-instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .playlist-instructions li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .playlist-instructions strong {
+            color: var(--accent-color);
+        }
+
         .playlist-section h3 {
             color: var(--accent-color);
             margin-bottom: 20px;
@@ -2412,7 +2441,7 @@
             
             <!-- Quick Access Buttons -->
             <div class="quick-access-buttons">
-                <button class="quick-btn" onclick="app.showPlaylists()" title="View Playlists">
+                <button class="quick-btn" onclick="app.showPlaylists()" title="View & Play Playlists in Main Player">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
                         <circle cx="6" cy="18" r="3"></circle>
@@ -4563,6 +4592,15 @@
                     if (currentUser) {
                         playlistSection.innerHTML = `
                             <h3>🎵 My Playlists</h3>
+                            <div class="playlist-instructions">
+                                <p><strong>How to play playlists in "Choose Your Vibe" section:</strong></p>
+                                <ol>
+                                    <li>Click <strong>"▶️ Play"</strong> on any playlist below</li>
+                                    <li>The first track will load into the main player above</li>
+                                    <li>Use ⏮️/⏭️ buttons to navigate through playlist tracks</li>
+                                    <li>Track info will show playlist name and position (e.g., "Track 1/3")</li>
+                                </ol>
+                            </div>
                             <div class="playlist-controls">
                                 <button id="createFreePlaylistBtn" class="btn btn-primary">➕ Create Free Playlist (1 playlist, 2 songs max)</button>
                                 <button id="createPremiumPlaylistBtn" class="btn btn-premium">⭐ Create Premium Playlist (Unlimited, 10 songs each)</button>
@@ -4661,7 +4699,7 @@
                                             ${!canAddMore ? '❌ Full' : '➕ Add Track'}
                                         </button>
                                         <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
-                                        <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary">▶️ Play</button>
+                                        <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary" style="background: linear-gradient(45deg, #007bff, #00d4ff); font-weight: bold; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);">▶️ Play in Main Player</button>
                                         <button onclick="app.deletePlaylist('${playlist.id}')" class="btn btn-small btn-danger">🗑️</button>
                                     </div>
                                 </div>
