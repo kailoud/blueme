@@ -3048,26 +3048,57 @@
             }
 
             async addToPlaylist(playlistId, audioFile) {
-                if (!currentUser) return;
+                if (!currentUser) {
+                    this.updateStatus('error', 'Please sign in to add tracks to playlists');
+                    return;
+                }
 
                 try {
-                    // First, save the audio file to the database
-                    const { data: fileData, error: fileError } = await supabase
-                        .from('audio_files')
-                        .insert({
-                            file_name: audioFile.filename || 'converted_audio.mp3',
-                            original_name: audioFile.originalName || 'Unknown',
-                            file_path: audioFile.url || 'local',
-                            file_size: audioFile.size || 0,
-                            mime_type: audioFile.mimeType || 'audio/mpeg',
-                            public_url: audioFile.url || 'local',
-                            user_id: currentUser.id,
-                            duration: audioFile.duration || 0
-                        })
-                        .select()
-                        .single();
+                    console.log('Adding to playlist:', playlistId, audioFile);
+                    
+                    // Check if this is a converted audio (has audioData) or existing file
+                    let fileData;
+                    
+                    if (audioFile.audioData) {
+                        // This is a newly converted audio, save it to database first
+                        console.log('Saving new audio file to database...');
+                        
+                        // Convert blob to base64 for storage
+                        const base64Audio = await this.blobToBase64(audioFile.audioData);
+                        
+                        const { data: newFileData, error: fileError } = await supabase
+                            .from('audio_files')
+                            .insert({
+                                file_name: audioFile.filename || 'converted_audio.mp3',
+                                original_name: audioFile.originalName || 'YouTube Audio',
+                                file_path: 'local',
+                                file_size: audioFile.size || 0,
+                                mime_type: audioFile.mimeType || 'audio/mpeg',
+                                public_url: 'local',
+                                user_id: currentUser.id,
+                                duration: audioFile.duration || 0,
+                                title: audioFile.originalName || 'YouTube Audio',
+                                artist: 'YouTube',
+                                album: 'Converted Audio',
+                                audio_data: base64Audio // Store base64 audio data
+                            })
+                            .select()
+                            .single();
 
-                    if (fileError) throw fileError;
+                        if (fileError) {
+                            console.error('Error saving audio file:', fileError);
+                            throw fileError;
+                        }
+                        
+                        fileData = newFileData;
+                        console.log('Audio file saved:', fileData);
+                    } else if (audioFile.id) {
+                        // This is an existing audio file from the library
+                        fileData = audioFile;
+                        console.log('Using existing audio file:', fileData);
+                    } else {
+                        throw new Error('Invalid audio file data');
+                    }
 
                     // Get current position in playlist
                     const { data: items } = await supabase
@@ -3078,6 +3109,7 @@
                         .limit(1);
 
                     const nextPosition = items && items.length > 0 ? items[0].position + 1 : 1;
+                    console.log('Next position:', nextPosition);
 
                     // Add to playlist
                     const { error: itemError } = await supabase
@@ -3088,14 +3120,19 @@
                             position: nextPosition
                         });
 
-                    if (itemError) throw itemError;
+                    if (itemError) {
+                        console.error('Error adding to playlist items:', itemError);
+                        throw itemError;
+                    }
 
+                    console.log('Successfully added to playlist');
+                    
                     // Reload playlists to update UI
                     await this.loadUserPlaylists();
-                    this.updateStatus('success', 'Added to playlist!');
+                    this.updateStatus('success', 'Track added to playlist!');
                 } catch (error) {
                     console.error('Error adding to playlist:', error);
-                    this.updateStatus('error', 'Failed to add to playlist');
+                    this.updateStatus('error', `Failed to add to playlist: ${error.message}`);
                 }
             }
 
@@ -3188,7 +3225,8 @@
                                     <div class="playlist-actions">
                                         <button onclick="app.addCurrentTrackToPlaylist('${playlist.id}')" 
                                                 class="btn btn-small ${!canAddMore ? 'btn-disabled' : ''}" 
-                                                ${!canAddMore ? 'disabled' : ''}>
+                                                ${!canAddMore ? 'disabled' : ''}
+                                                title="${!canAddMore ? 'Playlist is full' : 'Add current track to this playlist'}">
                                             ${!canAddMore ? '❌ Full' : '➕ Add Track'}
                                         </button>
                                         <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
@@ -3205,10 +3243,15 @@
             }
 
             async addCurrentTrackToPlaylist(playlistId) {
+                console.log('🎵 Adding current track to playlist:', playlistId);
+                
                 if (!this.convertedAudioBlob) {
+                    console.log('❌ No converted audio blob found');
                     this.updateStatus('error', 'No track to add. Convert a YouTube video first!');
                     return;
                 }
+
+                console.log('✅ Found converted audio blob:', this.convertedAudioBlob);
 
                 // Check playlist limits
                 const playlist = this.playlists.find(p => p.id === playlistId);
@@ -3216,10 +3259,17 @@
                     const currentSongs = playlist.playlist_items?.length || 0;
                     const maxSongs = playlist.max_songs || (playlist.is_premium ? 10 : 2);
                     
+                    console.log(`📊 Playlist "${playlist.name}": ${currentSongs}/${maxSongs} songs`);
+                    
                     if (currentSongs >= maxSongs) {
+                        console.log('❌ Playlist is full');
                         this.updateStatus('error', `Playlist is full! Maximum ${maxSongs} songs allowed.`);
                         return;
                     }
+                } else {
+                    console.log('❌ Playlist not found:', playlistId);
+                    this.updateStatus('error', 'Playlist not found');
+                    return;
                 }
 
                 const audioFile = {
@@ -3228,7 +3278,8 @@
                     url: 'local', // Since we're using base64
                     size: this.convertedAudioBlob.size,
                     mimeType: this.convertedAudioBlob.type,
-                    duration: 0 // We don't have duration info
+                    duration: 0, // We don't have duration info
+                    audioData: this.convertedAudioBlob // Include the blob data for saving
                 };
 
                 try {
@@ -3714,6 +3765,19 @@
                 // In a real app, this would integrate with a payment system
                 this.updateStatus('info', 'Premium upgrade feature coming soon! For now, you can create free playlists with 2 songs each.');
                 document.querySelector('.premium-upgrade-modal')?.remove();
+            }
+
+            // Helper method to convert blob to base64
+            blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64 = reader.result.split(',')[1]; // Remove data:audio/mpeg;base64, prefix
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
             }
         }
 

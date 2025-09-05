@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS audio_files (
     bitrate INTEGER,
     sample_rate INTEGER,
     channels INTEGER,
+    audio_data TEXT, -- base64 encoded audio data for local storage
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
