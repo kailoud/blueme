@@ -378,6 +378,58 @@
             background: linear-gradient(45deg, #c0392b, #a93226);
         }
 
+        .btn-premium {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .premium-playlist {
+            border-left: 4px solid #ffd700;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        }
+
+        .free-playlist {
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .premium-badge {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .free-badge {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
         /* Audio Library Styles */
         .audio-library-section {
             background: rgba(255, 255, 255, 0.05);
@@ -2325,6 +2377,7 @@
                         await this.createUserProfile();
                     } else {
                         userProfile = data;
+                        console.log('User profile loaded:', userProfile);
                     }
                 } catch (error) {
                     console.error('Error loading user profile:', error);
@@ -2341,6 +2394,10 @@
                             id: currentUser.id,
                             email: currentUser.email,
                             username: currentUser.user_metadata?.full_name?.toLowerCase().replace(/\s+/g, '_') || currentUser.email.split('@')[0],
+                            is_premium: false,
+                            premium_expires_at: null,
+                            free_playlist_count: 0,
+                            premium_playlist_count: 0,
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         })
@@ -2379,10 +2436,16 @@
                 userAvatar.style.fontSize = '1.2rem';
 
                 const userDetails = document.createElement('div');
+                const isPremium = userProfile?.is_premium || false;
                 userDetails.innerHTML = `
-                    <div style="font-weight: 600;">${userProfile?.full_name || currentUser?.email}</div>
+                    <div style="font-weight: 600;">
+                        ${userProfile?.username || currentUser?.email}
+                        ${isPremium ? '<span style="color: #ffd700; margin-left: 5px;">⭐</span>' : ''}
+                    </div>
                     <div style="font-size: 0.8rem; opacity: 0.8;">
-                        Downloads: ${userProfile?.downloads_used || 0}/${userProfile?.downloads_limit || 10}
+                        ${isPremium ? 'Premium User' : 'Free User'} • 
+                        Free Playlists: ${userProfile?.free_playlist_count || 0} • 
+                        Premium Playlists: ${userProfile?.premium_playlist_count || 0}
                     </div>
                 `;
 
@@ -2516,20 +2579,29 @@
                 }
             }
 
-            async createPlaylist(name, description = '') {
+            async createPlaylist(name, description = '', isPremium = false) {
                 if (!currentUser) {
                     this.updateStatus('error', 'Please log in to create playlists');
                     return;
                 }
 
+                // Check if user can create this type of playlist
+                if (isPremium && !userProfile?.is_premium) {
+                    this.showPremiumUpgrade();
+                    return;
+                }
+
                 try {
+                    const maxSongs = isPremium ? 10 : 2;
                     const { data, error } = await supabase
                         .from('playlists')
                         .insert({
                             name: name,
                             description: description,
                             user_id: currentUser.id,
-                            is_public: false
+                            is_public: false,
+                            is_premium: isPremium,
+                            max_songs: maxSongs
                         })
                         .select()
                         .single();
@@ -2538,7 +2610,8 @@
 
                     this.playlists.unshift(data);
                     this.updatePlaylistUI();
-                    this.updateStatus('success', `Playlist "${name}" created!`);
+                    const playlistType = isPremium ? 'Premium' : 'Free';
+                    this.updateStatus('success', `${playlistType} playlist "${name}" created!`);
                     return data;
                 } catch (error) {
                     console.error('Error creating playlist:', error);
@@ -2611,7 +2684,8 @@
                     playlistSection.innerHTML = `
                         <h3>🎵 My Playlists</h3>
                         <div class="playlist-controls">
-                            <button id="createPlaylistBtn" class="btn btn-primary">➕ Create New Playlist</button>
+                            <button id="createFreePlaylistBtn" class="btn btn-primary">➕ Create Free Playlist (2 songs max)</button>
+                            <button id="createPremiumPlaylistBtn" class="btn btn-premium">⭐ Create Premium Playlist (10 songs max)</button>
                             <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
                         </div>
                         <div id="playlistsList" class="playlists-list"></div>
@@ -2667,21 +2741,35 @@
                     if (this.playlists.length === 0) {
                         playlistsList.innerHTML = '<p class="no-playlists">No playlists yet. Create your first one!</p>';
                     } else {
-                        playlistsList.innerHTML = this.playlists.map(playlist => `
-                            <div class="playlist-item" data-playlist-id="${playlist.id}">
-                                <div class="playlist-info">
-                                    <h4>${playlist.name}</h4>
-                                    <p>${playlist.description || 'No description'}</p>
-                                    <small>${playlist.playlist_items?.length || 0} tracks</small>
+                        playlistsList.innerHTML = this.playlists.map(playlist => {
+                            const isPremium = playlist.is_premium || false;
+                            const currentSongs = playlist.playlist_items?.length || 0;
+                            const maxSongs = playlist.max_songs || (isPremium ? 10 : 2);
+                            const canAddMore = currentSongs < maxSongs;
+                            
+                            return `
+                                <div class="playlist-item ${isPremium ? 'premium-playlist' : 'free-playlist'}" data-playlist-id="${playlist.id}">
+                                    <div class="playlist-info">
+                                        <h4>
+                                            ${playlist.name}
+                                            ${isPremium ? '<span class="premium-badge">⭐ Premium</span>' : '<span class="free-badge">🆓 Free</span>'}
+                                        </h4>
+                                        <p>${playlist.description || 'No description'}</p>
+                                        <small>${currentSongs}/${maxSongs} tracks ${!canAddMore ? '(Full)' : ''}</small>
+                                    </div>
+                                    <div class="playlist-actions">
+                                        <button onclick="app.addCurrentTrackToPlaylist('${playlist.id}')" 
+                                                class="btn btn-small ${!canAddMore ? 'btn-disabled' : ''}" 
+                                                ${!canAddMore ? 'disabled' : ''}>
+                                            ${!canAddMore ? '❌ Full' : '➕ Add Track'}
+                                        </button>
+                                        <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
+                                        <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary">▶️ Play</button>
+                                        <button onclick="app.deletePlaylist('${playlist.id}')" class="btn btn-small btn-danger">🗑️</button>
+                                    </div>
                                 </div>
-                                <div class="playlist-actions">
-                                    <button onclick="app.addCurrentTrackToPlaylist('${playlist.id}')" class="btn btn-small">➕ Add Track</button>
-                                    <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
-                                    <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary">▶️ Play</button>
-                                    <button onclick="app.deletePlaylist('${playlist.id}')" class="btn btn-small btn-danger">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('');
+                            `;
+                        }).join('');
                     }
                 }
 
@@ -2694,6 +2782,18 @@
                     return;
                 }
 
+                // Check playlist limits
+                const playlist = this.playlists.find(p => p.id === playlistId);
+                if (playlist) {
+                    const currentSongs = playlist.playlist_items?.length || 0;
+                    const maxSongs = playlist.max_songs || (playlist.is_premium ? 10 : 2);
+                    
+                    if (currentSongs >= maxSongs) {
+                        this.updateStatus('error', `Playlist is full! Maximum ${maxSongs} songs allowed.`);
+                        return;
+                    }
+                }
+
                 const audioFile = {
                     filename: this.convertedFileName?.textContent || 'converted_audio.mp3',
                     originalName: 'YouTube Audio',
@@ -2703,7 +2803,13 @@
                     duration: 0 // We don't have duration info
                 };
 
-                await this.addToPlaylist(playlistId, audioFile);
+                try {
+                    await this.addToPlaylist(playlistId, audioFile);
+                    this.updateStatus('success', 'Track added to playlist!');
+                } catch (error) {
+                    console.error('Error adding to playlist:', error);
+                    this.updateStatus('error', 'Failed to add to playlist');
+                }
             }
 
             async playPlaylist(playlistId) {
@@ -2806,15 +2912,32 @@
             }
 
             setupPlaylistEventListeners() {
-                // Create playlist event listener
-                const createBtn = document.getElementById('createPlaylistBtn');
-                if (createBtn && !createBtn.hasAttribute('data-listener-added')) {
-                    createBtn.setAttribute('data-listener-added', 'true');
-                    createBtn.addEventListener('click', () => {
-                        const name = prompt('Enter playlist name:');
+                // Create free playlist event listener
+                const createFreeBtn = document.getElementById('createFreePlaylistBtn');
+                if (createFreeBtn && !createFreeBtn.hasAttribute('data-listener-added')) {
+                    createFreeBtn.setAttribute('data-listener-added', 'true');
+                    createFreeBtn.addEventListener('click', () => {
+                        const name = prompt('Enter free playlist name:');
                         if (name && name.trim()) {
                             const description = prompt('Enter playlist description (optional):') || '';
-                            this.createPlaylist(name.trim(), description.trim());
+                            this.createPlaylist(name.trim(), description.trim(), false); // false = free playlist
+                        }
+                    });
+                }
+
+                // Create premium playlist event listener
+                const createPremiumBtn = document.getElementById('createPremiumPlaylistBtn');
+                if (createPremiumBtn && !createPremiumBtn.hasAttribute('data-listener-added')) {
+                    createPremiumBtn.setAttribute('data-listener-added', 'true');
+                    createPremiumBtn.addEventListener('click', () => {
+                        if (!userProfile?.is_premium) {
+                            this.showPremiumUpgrade();
+                            return;
+                        }
+                        const name = prompt('Enter premium playlist name:');
+                        if (name && name.trim()) {
+                            const description = prompt('Enter playlist description (optional):') || '';
+                            this.createPlaylist(name.trim(), description.trim(), true); // true = premium playlist
                         }
                     });
                 }
@@ -3062,6 +3185,107 @@
                         }
                     }
                 }
+            }
+
+            showPremiumUpgrade() {
+                const upgradeModal = document.createElement('div');
+                upgradeModal.className = 'premium-upgrade-modal';
+                upgradeModal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>⭐ Upgrade to Premium</h2>
+                            <button class="close-btn" onclick="this.closest('.premium-upgrade-modal').remove()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="premium-features">
+                                <h3>Premium Playlist Features:</h3>
+                                <ul>
+                                    <li>✅ Create unlimited premium playlists</li>
+                                    <li>✅ Up to 10 songs per playlist</li>
+                                    <li>✅ Advanced playlist management</li>
+                                    <li>✅ Priority support</li>
+                                </ul>
+                            </div>
+                            <div class="upgrade-actions">
+                                <button class="btn btn-premium" onclick="app.upgradeToPremium()">⭐ Upgrade Now</button>
+                                <button class="btn btn-secondary" onclick="this.closest('.premium-upgrade-modal').remove()">Maybe Later</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add modal styles
+                const style = document.createElement('style');
+                style.textContent = `
+                    .premium-upgrade-modal {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.8);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 10000;
+                    }
+                    .modal-content {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border-radius: 20px;
+                        padding: 30px;
+                        max-width: 500px;
+                        width: 90%;
+                        color: white;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                    }
+                    .modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                    }
+                    .close-btn {
+                        background: none;
+                        border: none;
+                        color: white;
+                        font-size: 24px;
+                        cursor: pointer;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .premium-features ul {
+                        list-style: none;
+                        padding: 0;
+                    }
+                    .premium-features li {
+                        padding: 8px 0;
+                        font-size: 16px;
+                    }
+                    .upgrade-actions {
+                        margin-top: 20px;
+                        display: flex;
+                        gap: 10px;
+                        justify-content: center;
+                    }
+                    .btn-premium {
+                        background: linear-gradient(45deg, #ffd700, #ffed4e);
+                        color: #333;
+                        font-weight: bold;
+                    }
+                `;
+                document.head.appendChild(style);
+                document.body.appendChild(upgradeModal);
+            }
+
+            async upgradeToPremium() {
+                // For now, just simulate premium upgrade
+                // In a real app, this would integrate with a payment system
+                this.updateStatus('info', 'Premium upgrade feature coming soon! For now, you can create free playlists with 2 songs each.');
+                document.querySelector('.premium-upgrade-modal')?.remove();
             }
         }
 

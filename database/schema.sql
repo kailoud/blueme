@@ -9,6 +9,10 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(100) UNIQUE,
+    is_premium BOOLEAN DEFAULT false,
+    premium_expires_at TIMESTAMP WITH TIME ZONE,
+    free_playlist_count INTEGER DEFAULT 0,
+    premium_playlist_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -59,6 +63,8 @@ CREATE TABLE IF NOT EXISTS playlists (
     description TEXT,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     is_public BOOLEAN DEFAULT false,
+    is_premium BOOLEAN DEFAULT false,
+    max_songs INTEGER DEFAULT 2, -- Free users: 2 songs, Premium: 10 songs
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
