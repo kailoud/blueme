@@ -2080,10 +2080,9 @@
                         .insert({
                             id: currentUser.id,
                             email: currentUser.email,
-                            full_name: currentUser.user_metadata?.full_name || currentUser.email,
+                            username: currentUser.user_metadata?.full_name?.toLowerCase().replace(/\s+/g, '_') || currentUser.email.split('@')[0],
                             created_at: new Date().toISOString(),
-                            downloads_used: 0,
-                            downloads_limit: 10 // Free tier limit
+                            updated_at: new Date().toISOString()
                         })
                         .select()
                         .single();
@@ -2162,35 +2161,15 @@
             }
 
             async checkDownloadLimit() {
-                if (!userProfile) return true;
-
-                if (userProfile.downloads_used >= userProfile.downloads_limit) {
-                    this.updateConversionStatus('error', 
-                        `Download limit reached (${userProfile.downloads_used}/${userProfile.downloads_limit}). Upgrade your plan for more downloads.`);
-                    return false;
-                }
+                // For now, allow unlimited downloads
+                // TODO: Implement proper download limits with a separate table
                 return true;
             }
 
             async incrementDownloadCount() {
-                if (!userProfile) return;
-
-                try {
-                    const { error } = await supabase
-                        .from('users')
-                        .update({ 
-                            downloads_used: userProfile.downloads_used + 1,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', currentUser.id);
-
-                    if (error) throw error;
-
-                    userProfile.downloads_used += 1;
-                    this.updateAuthUI();
-                } catch (error) {
-                    console.error('Error updating download count:', error);
-                }
+                // For now, just log the download
+                // TODO: Implement proper download tracking with a separate table
+                console.log('Download completed for user:', currentUser?.id);
             }
         }
 

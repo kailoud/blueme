@@ -538,7 +538,27 @@
 
                 if (data.user && !data.user.email_confirmed_at) {
                     showStatus('info', 'Please check your email to confirm your account');
-                } else {
+                } else if (data.user) {
+                    // Create user profile in custom users table
+                    try {
+                        const { error: profileError } = await supabase
+                            .from('users')
+                            .insert({
+                                id: data.user.id,
+                                email: data.user.email,
+                                username: name.toLowerCase().replace(/\s+/g, '_'),
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            });
+
+                        if (profileError) {
+                            console.error('Profile creation error:', profileError);
+                            // Don't fail the signup if profile creation fails
+                        }
+                    } catch (profileError) {
+                        console.error('Profile creation error:', profileError);
+                    }
+
                     showStatus('success', 'Account created! Redirecting...');
                     setTimeout(() => {
                         window.location.href = '/';
