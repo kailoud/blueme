@@ -5339,27 +5339,20 @@
                         playlistsList.innerHTML = '<p class="no-playlists">No playlists yet. Create your first one!</p>';
                     } else {
                         playlistsList.innerHTML = this.playlists.map(playlist => {
-                            const isPremium = playlist.is_premium || false;
                             const currentSongs = playlist.playlist_items?.length || 0;
-                            const maxSongs = playlist.max_songs || (isPremium ? 10 : 2);
-                            const canAddMore = currentSongs < maxSongs;
                             
                             return `
-                                <div class="playlist-item ${isPremium ? 'premium-playlist' : 'free-playlist'}" data-playlist-id="${playlist.id}">
+                                <div class="playlist-item" data-playlist-id="${playlist.id}">
                                     <div class="playlist-info">
-                                        <h4>
-                                            ${playlist.name}
-                                            ${isPremium ? '<span class="premium-badge">⭐ Premium</span>' : '<span class="free-badge">🆓 Free</span>'}
-                                        </h4>
+                                        <h4>${playlist.name}</h4>
                                         <p>${playlist.description || 'No description'}</p>
-                                        <small>${currentSongs}/${maxSongs} tracks ${!canAddMore ? '(Full)' : ''}</small>
+                                        <small>${currentSongs} tracks</small>
                                     </div>
                                     <div class="playlist-actions">
                                         <button onclick="app.showAddToPlaylistModal()" 
-                                                class="btn btn-small ${!canAddMore ? 'btn-disabled' : ''}" 
-                                                ${!canAddMore ? 'disabled' : ''}
-                                                title="${!canAddMore ? 'Playlist is full' : 'Add current track to this playlist'}">
-                                            ${!canAddMore ? '❌ Full' : '➕ Add Track'}
+                                                class="btn btn-small"
+                                                title="Add current track to this playlist">
+                                            ➕ Add Track
                                         </button>
                                         <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
                                         <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary" style="background: linear-gradient(45deg, #007bff, #00d4ff); font-weight: bold; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);">▶️ Play in Main Player</button>
@@ -5443,9 +5436,9 @@
                 
                 // Update the main player's track info to show it's from a playlist
                 const firstTrack = playlist.playlist_items[0];
-                if (firstTrack && firstTrack.audio_files) {
-                    this.trackTitle.textContent = `${firstTrack.audio_files.title || firstTrack.audio_files.original_name} (from ${playlist.name})`;
-                    this.trackArtist.textContent = firstTrack.audio_files.artist || 'Playlist Track';
+                if (firstTrack && firstTrack.audio_file) {
+                    this.trackTitle.textContent = `${firstTrack.audio_file.title || firstTrack.audio_file.originalName || firstTrack.audio_file.filename} (from ${playlist.name})`;
+                    this.trackArtist.textContent = firstTrack.audio_file.artist || 'Playlist Track';
                 }
             }
 
@@ -5456,30 +5449,44 @@
                 }
 
                 const track = this.currentPlaylist.playlist_items[this.currentTrackIndex];
-                if (!track || !track.audio_files) {
+                if (!track || !track.audio_file) {
                     this.updateStatus('error', 'Track not found');
                     return;
                 }
 
-                const audioFile = track.audio_files;
+                const audioFile = track.audio_file;
                 
                 try {
+                    console.log('🎵 Playing track from playlist:', audioFile);
+                    
                     // Load the audio file into the main player
-                    if (audioFile.audio_data) {
+                    if (audioFile.audioData && audioFile.audioData instanceof Blob) {
+                        // Handle blob data directly
+                        const url = URL.createObjectURL(audioFile.audioData);
+                        this.audioPlayer.src = url;
+                        this.audioPlayer.load();
+                        
+                        // Update track info
+                        this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
+                        this.trackArtist.textContent = 'Playlist Track';
+                        
+                        this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                    } else if (audioFile.audio_data) {
                         // Handle base64 audio data
                         const audioBlob = await this.base64ToBlob(audioFile.audio_data, audioFile.mime_type);
-                        await this.loadAudioFromBlob(audioBlob, audioFile.title || audioFile.original_name);
-                    } else if (audioFile.public_url && audioFile.public_url !== 'local') {
-                        // Handle URL-based audio
-                        await this.loadAudioFromUrl(audioFile.public_url, audioFile.title || audioFile.original_name);
+                        const url = URL.createObjectURL(audioBlob);
+                        this.audioPlayer.src = url;
+                        this.audioPlayer.load();
+                        
+                        // Update track info
+                        this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
+                        this.trackArtist.textContent = 'Playlist Track';
+                        
+                        this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
                     } else {
                         this.updateStatus('error', 'Audio file not available');
                         return;
                     }
-
-                    // Update the main player UI
-                    this.updateUI();
-                    this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name}`);
                 } catch (error) {
                     console.error('Error playing track from playlist:', error);
                     this.updateStatus('error', 'Failed to play track');
@@ -6294,8 +6301,8 @@
                 if (!playlistsList) return;
 
                 try {
-                    // Load user playlists
-                    await this.loadUserPlaylists();
+                    // Load playlists from local storage
+                    this.loadLocalPlaylists();
                     
                     if (this.playlists.length === 0) {
                         playlistsList.innerHTML = `
@@ -6310,29 +6317,20 @@
 
                     playlistsList.innerHTML = this.playlists.map(playlist => {
                         const currentSongs = playlist.playlist_items?.length || 0;
-                        const maxSongs = playlist.max_songs || (playlist.is_premium ? 10 : 2);
-                        const canAddMore = currentSongs < maxSongs;
-                        const isPremium = playlist.is_premium || false;
                         
                         return `
-                            <div class="modal-playlist-item ${!canAddMore ? 'disabled' : ''}" 
+                            <div class="modal-playlist-item" 
                                  data-playlist-id="${playlist.id}"
-                                 onclick="${canAddMore ? `app.addToPlaylistFromModal('${playlist.id}', ${audioFile ? JSON.stringify(audioFile).replace(/"/g, '&quot;') : 'null'})` : ''}">
+                                 onclick="app.addToPlaylistFromModal('${playlist.id}', ${audioFile ? JSON.stringify(audioFile).replace(/"/g, '&quot;') : 'null'})">
                                 <div class="playlist-info">
                                     <div class="playlist-name">${playlist.name}</div>
                                     <div class="playlist-meta">
-                                        <span class="playlist-type ${isPremium ? 'premium' : 'free'}">
-                                            ${isPremium ? '⭐ Premium' : '🆓 Free'}
-                                        </span>
-                                        <span class="playlist-count">${currentSongs}/${maxSongs} songs</span>
+                                        <span class="playlist-count">${currentSongs} songs</span>
                                     </div>
                                     ${playlist.description ? `<div class="playlist-desc">${playlist.description}</div>` : ''}
                                 </div>
                                 <div class="playlist-action">
-                                    ${canAddMore ? 
-                                        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' :
-                                        '<span class="full-indicator">Full</span>'
-                                    }
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </div>
                             </div>
                         `;
