@@ -964,13 +964,26 @@
     <!-- Socket.IO Client -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://iuvzediktfczwvpfherh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1dnplZGlrdGZjend2cGZoZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3NTYxMDUsImV4cCI6MjA3MjMzMjEwNX0.UtbxInMx2FumVADTIMcE3acbP_0WIDnPzPUfR6NT5fQ';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Authentication state
+        let currentUser = null;
+        let userProfile = null;
+
         class BlueMe {
             constructor() {
                 this.connectedDevices = new Map();
                 this.isScanning = false;
                 this.isPlaying = false;
                 this.audioContext = null;
+                this.convertedAudioBlob = null;
+                this.syncRoomId = null;
+                this.socket = null;
                 this.convertedAudioBlob = null;
                 this.currentTime = 0;
                 this.duration = 0;
@@ -983,6 +996,7 @@
                 this.setupEventListeners();
                 this.initializeSocketIO();
                 this.checkBluetoothSupport();
+                this.initializeAuth();
                 this.updateUI();
             }
 
@@ -1794,7 +1808,8 @@
                         body: JSON.stringify({
                             url: url,
                             format: this.formatSelect.value,
-                            quality: this.qualitySelect.value
+                            quality: this.qualitySelect.value,
+                            userId: currentUser?.id
                         })
                     });
 
@@ -1966,8 +1981,12 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
             }
 
-            downloadConvertedFile() {
+            async downloadConvertedFile() {
                 if (!this.convertedAudioBlob) return;
+                
+                // Check download limit
+                const canDownload = await this.checkDownloadLimit();
+                if (!canDownload) return;
                 
                 const url = URL.createObjectURL(this.convertedAudioBlob);
                 const a = document.createElement('a');
@@ -1977,6 +1996,9 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                
+                // Increment download count
+                await this.incrementDownloadCount();
                 
                 this.updateConversionStatus('success', '📥 Download started! Check your downloads folder');
             }
@@ -1994,6 +2016,181 @@
                 
                 this.updateStatus('success', '🎵 Converted track loaded! Ready to sync with friends');
                 this.updateConversionStatus('success', '🎉 Track loaded into player!');
+            }
+
+            // Authentication Methods
+            async initializeAuth() {
+                // Check if user is already logged in
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    await this.loadUserProfile();
+                    this.updateAuthUI();
+                } else {
+                    // Redirect to auth page if not logged in
+                    window.location.href = '/auth.html';
+                }
+
+                // Listen for auth state changes
+                supabase.auth.onAuthStateChange(async (event, session) => {
+                    if (event === 'SIGNED_IN' && session) {
+                        currentUser = session.user;
+                        await this.loadUserProfile();
+                        this.updateAuthUI();
+                    } else if (event === 'SIGNED_OUT') {
+                        currentUser = null;
+                        userProfile = null;
+                        window.location.href = '/auth.html';
+                    }
+                });
+            }
+
+            async loadUserProfile() {
+                if (!currentUser) return;
+
+                try {
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', currentUser.id)
+                        .single();
+
+                    if (error && error.code !== 'PGRST116') {
+                        console.error('Error loading user profile:', error);
+                        return;
+                    }
+
+                    if (!data) {
+                        // Create user profile if it doesn't exist
+                        await this.createUserProfile();
+                    } else {
+                        userProfile = data;
+                    }
+                } catch (error) {
+                    console.error('Error loading user profile:', error);
+                }
+            }
+
+            async createUserProfile() {
+                if (!currentUser) return;
+
+                try {
+                    const { data, error } = await supabase
+                        .from('users')
+                        .insert({
+                            id: currentUser.id,
+                            email: currentUser.email,
+                            full_name: currentUser.user_metadata?.full_name || currentUser.email,
+                            created_at: new Date().toISOString(),
+                            downloads_used: 0,
+                            downloads_limit: 10 // Free tier limit
+                        })
+                        .select()
+                        .single();
+
+                    if (error) throw error;
+                    userProfile = data;
+                } catch (error) {
+                    console.error('Error creating user profile:', error);
+                }
+            }
+
+            updateAuthUI() {
+                // Add user info to the UI
+                const userInfo = document.createElement('div');
+                userInfo.id = 'userInfo';
+                userInfo.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(10px);
+                    padding: 10px 15px;
+                    border-radius: 20px;
+                    color: white;
+                    font-size: 0.9rem;
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                `;
+
+                const userAvatar = document.createElement('div');
+                userAvatar.textContent = '👤';
+                userAvatar.style.fontSize = '1.2rem';
+
+                const userDetails = document.createElement('div');
+                userDetails.innerHTML = `
+                    <div style="font-weight: 600;">${userProfile?.full_name || currentUser?.email}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">
+                        Downloads: ${userProfile?.downloads_used || 0}/${userProfile?.downloads_limit || 10}
+                    </div>
+                `;
+
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = 'Logout';
+                logoutBtn.style.cssText = `
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                `;
+                logoutBtn.onclick = () => this.logout();
+
+                userInfo.appendChild(userAvatar);
+                userInfo.appendChild(userDetails);
+                userInfo.appendChild(logoutBtn);
+
+                // Remove existing user info if any
+                const existingUserInfo = document.getElementById('userInfo');
+                if (existingUserInfo) {
+                    existingUserInfo.remove();
+                }
+
+                document.body.appendChild(userInfo);
+            }
+
+            async logout() {
+                try {
+                    await supabase.auth.signOut();
+                } catch (error) {
+                    console.error('Error logging out:', error);
+                }
+            }
+
+            async checkDownloadLimit() {
+                if (!userProfile) return true;
+
+                if (userProfile.downloads_used >= userProfile.downloads_limit) {
+                    this.updateConversionStatus('error', 
+                        `Download limit reached (${userProfile.downloads_used}/${userProfile.downloads_limit}). Upgrade your plan for more downloads.`);
+                    return false;
+                }
+                return true;
+            }
+
+            async incrementDownloadCount() {
+                if (!userProfile) return;
+
+                try {
+                    const { error } = await supabase
+                        .from('users')
+                        .update({ 
+                            downloads_used: userProfile.downloads_used + 1,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', currentUser.id);
+
+                    if (error) throw error;
+
+                    userProfile.downloads_used += 1;
+                    this.updateAuthUI();
+                } catch (error) {
+                    console.error('Error updating download count:', error);
+                }
             }
         }
 

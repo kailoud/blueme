@@ -429,7 +429,7 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
 // Convert YouTube URL to audio
 app.post('/api/convert-youtube', async (req, res) => {
     try {
-        const { url, format = 'mp3', quality = '192' } = req.body;
+        const { url, format = 'mp3', quality = '192', userId } = req.body;
 
         if (!url) {
             return res.status(400).json({ error: 'YouTube URL is required' });
