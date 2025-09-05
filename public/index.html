@@ -290,6 +290,94 @@
             padding: 40px 20px;
         }
 
+        /* Playlist Player Styles */
+        .playlist-player {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .playlist-player h4 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .current-playlist-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .current-playlist-info span {
+            color: white;
+            font-weight: 500;
+        }
+
+        .playlist-tracks {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(240, 147, 251, 0.3);
+        }
+
+        .track-item.current-track {
+            background: rgba(240, 147, 251, 0.1);
+            border-color: rgba(240, 147, 251, 0.4);
+        }
+
+        .track-number {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            min-width: 20px;
+        }
+
+        .track-title {
+            color: white;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .track-artist {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .btn-tiny {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+        }
+
         /* Audio Library Styles */
         .audio-library-section {
             background: rgba(255, 255, 255, 0.05);
@@ -1148,6 +1236,7 @@
                 this.audioStream = null;
                 this.playlists = [];
                 this.currentPlaylist = null;
+                this.currentTrackIndex = 0;
                 this.audioLibrary = [];
                 
                 this.initializeElements();
@@ -2461,9 +2550,24 @@
                     playlistSection.innerHTML = `
                         <h3>🎵 My Playlists</h3>
                         <div class="playlist-controls">
-                            <button id="createPlaylistBtn" class="btn btn-secondary">Create New Playlist</button>
+                            <button id="createPlaylistBtn" class="btn btn-primary">➕ Create New Playlist</button>
+                            <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
                         </div>
                         <div id="playlistsList" class="playlists-list"></div>
+                        <div id="playlistPlayer" class="playlist-player" style="display: none;">
+                            <h4>🎧 Now Playing</h4>
+                            <div class="current-playlist-info">
+                                <span id="currentPlaylistName"></span>
+                                <span id="currentTrackInfo"></span>
+                            </div>
+                            <div class="playlist-controls">
+                                <button id="prevTrackBtn" class="btn btn-small">⏮️</button>
+                                <button id="playPauseBtn" class="btn btn-small btn-primary">▶️</button>
+                                <button id="nextTrackBtn" class="btn btn-small">⏭️</button>
+                                <button id="stopPlaylistBtn" class="btn btn-small">⏹️</button>
+                            </div>
+                            <div id="playlistTracks" class="playlist-tracks"></div>
+                        </div>
                     `;
                     
                     // Add after the audio converter section
@@ -2487,8 +2591,10 @@
                                     <small>${playlist.playlist_items?.length || 0} tracks</small>
                                 </div>
                                 <div class="playlist-actions">
-                                    <button onclick="app.addCurrentTrackToPlaylist('${playlist.id}')" class="btn btn-small">Add Current Track</button>
-                                    <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary">Play</button>
+                                    <button onclick="app.addCurrentTrackToPlaylist('${playlist.id}')" class="btn btn-small">➕ Add Track</button>
+                                    <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
+                                    <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary">▶️ Play</button>
+                                    <button onclick="app.deletePlaylist('${playlist.id}')" class="btn btn-small btn-danger">🗑️</button>
                                 </div>
                             </div>
                         `).join('');
@@ -2507,6 +2613,19 @@
                         }
                     });
                 }
+
+                // Add refresh playlists event listener
+                const refreshBtn = document.getElementById('refreshPlaylistsBtn');
+                if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
+                    refreshBtn.setAttribute('data-listener-added', 'true');
+                    refreshBtn.addEventListener('click', () => {
+                        console.log('Refreshing playlists...');
+                        this.loadUserPlaylists();
+                    });
+                }
+
+                // Add playlist player control event listeners
+                this.setupPlaylistPlayerControls();
             }
 
             async addCurrentTrackToPlaylist(playlistId) {
@@ -2535,8 +2654,150 @@
                 }
 
                 this.currentPlaylist = playlist;
+                this.currentTrackIndex = 0;
+                this.isPlaying = false;
+                
+                this.showPlaylistPlayer(playlist);
                 this.updateStatus('info', `Playing playlist: ${playlist.name}`);
-                // TODO: Implement playlist playback logic
+                
+                // Start playing the first track
+                await this.playCurrentTrack();
+            }
+
+            showPlaylistPlayer(playlist) {
+                const player = document.getElementById('playlistPlayer');
+                const playlistName = document.getElementById('currentPlaylistName');
+                const tracksContainer = document.getElementById('playlistTracks');
+                
+                if (player) {
+                    player.style.display = 'block';
+                    playlistName.textContent = playlist.name;
+                    
+                    // Display all tracks in the playlist
+                    tracksContainer.innerHTML = playlist.playlist_items.map((item, index) => `
+                        <div class="track-item ${index === this.currentTrackIndex ? 'current-track' : ''}" data-index="${index}">
+                            <span class="track-number">${index + 1}</span>
+                            <span class="track-title">${item.audio_files?.title || item.audio_files?.original_name || 'Unknown Track'}</span>
+                            <span class="track-artist">${item.audio_files?.artist || 'Unknown Artist'}</span>
+                            <button onclick="app.playTrackFromPlaylist(${index})" class="btn btn-tiny">▶️</button>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            async playCurrentTrack() {
+                if (!this.currentPlaylist || !this.currentPlaylist.playlist_items) return;
+                
+                const currentItem = this.currentPlaylist.playlist_items[this.currentTrackIndex];
+                if (!currentItem) return;
+
+                const trackInfo = document.getElementById('currentTrackInfo');
+                if (trackInfo) {
+                    trackInfo.textContent = `${currentItem.audio_files?.title || 'Unknown Track'} - ${currentItem.audio_files?.artist || 'Unknown Artist'}`;
+                }
+
+                // Update current track highlighting
+                document.querySelectorAll('.track-item').forEach((item, index) => {
+                    item.classList.toggle('current-track', index === this.currentTrackIndex);
+                });
+
+                this.updateStatus('info', `Now playing: ${currentItem.audio_files?.title || 'Unknown Track'}`);
+                // TODO: Implement actual audio playback
+            }
+
+            async playTrackFromPlaylist(index) {
+                this.currentTrackIndex = index;
+                await this.playCurrentTrack();
+            }
+
+            async viewPlaylist(playlistId) {
+                const playlist = this.playlists.find(p => p.id === playlistId);
+                if (!playlist) return;
+
+                const tracks = playlist.playlist_items || [];
+                const trackList = tracks.map((item, index) => 
+                    `${index + 1}. ${item.audio_files?.title || item.audio_files?.original_name || 'Unknown Track'}`
+                ).join('\n');
+
+                alert(`Playlist: ${playlist.name}\n\nTracks:\n${trackList || 'No tracks in this playlist'}`);
+            }
+
+            async deletePlaylist(playlistId) {
+                const playlist = this.playlists.find(p => p.id === playlistId);
+                if (!playlist) return;
+
+                if (confirm(`Are you sure you want to delete the playlist "${playlist.name}"?`)) {
+                    try {
+                        const { error } = await supabase
+                            .from('playlists')
+                            .delete()
+                            .eq('id', playlistId);
+
+                        if (error) throw error;
+
+                        this.playlists = this.playlists.filter(p => p.id !== playlistId);
+                        this.updatePlaylistUI();
+                        this.updateStatus('success', `Playlist "${playlist.name}" deleted`);
+                    } catch (error) {
+                        console.error('Error deleting playlist:', error);
+                        this.updateStatus('error', 'Failed to delete playlist');
+                    }
+                }
+            }
+
+            setupPlaylistPlayerControls() {
+                // Previous track button
+                const prevBtn = document.getElementById('prevTrackBtn');
+                if (prevBtn && !prevBtn.hasAttribute('data-listener-added')) {
+                    prevBtn.setAttribute('data-listener-added', 'true');
+                    prevBtn.addEventListener('click', () => {
+                        if (this.currentPlaylist && this.currentTrackIndex > 0) {
+                            this.currentTrackIndex--;
+                            this.playCurrentTrack();
+                        }
+                    });
+                }
+
+                // Play/Pause button
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                if (playPauseBtn && !playPauseBtn.hasAttribute('data-listener-added')) {
+                    playPauseBtn.setAttribute('data-listener-added', 'true');
+                    playPauseBtn.addEventListener('click', () => {
+                        this.isPlaying = !this.isPlaying;
+                        playPauseBtn.textContent = this.isPlaying ? '⏸️' : '▶️';
+                        this.updateStatus('info', this.isPlaying ? 'Playing...' : 'Paused');
+                    });
+                }
+
+                // Next track button
+                const nextBtn = document.getElementById('nextTrackBtn');
+                if (nextBtn && !nextBtn.hasAttribute('data-listener-added')) {
+                    nextBtn.setAttribute('data-listener-added', 'true');
+                    nextBtn.addEventListener('click', () => {
+                        if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                            this.currentTrackIndex++;
+                            this.playCurrentTrack();
+                        }
+                    });
+                }
+
+                // Stop button
+                const stopBtn = document.getElementById('stopPlaylistBtn');
+                if (stopBtn && !stopBtn.hasAttribute('data-listener-added')) {
+                    stopBtn.setAttribute('data-listener-added', 'true');
+                    stopBtn.addEventListener('click', () => {
+                        this.isPlaying = false;
+                        this.currentPlaylist = null;
+                        this.currentTrackIndex = 0;
+                        
+                        const player = document.getElementById('playlistPlayer');
+                        if (player) {
+                            player.style.display = 'none';
+                        }
+                        
+                        this.updateStatus('info', 'Playlist stopped');
+                    });
+                }
             }
 
             async saveConvertedAudioToDatabase(fileData) {
