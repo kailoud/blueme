@@ -560,23 +560,39 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             border-radius: 20px;
-            padding: 16px;
+            padding: 20px;
             color: white;
             font-size: 0.9rem;
             z-index: 1000;
-            min-width: 280px;
-            max-width: 320px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-width: 300px;
+            max-width: 350px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .user-profile-section:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Make profile more visible */
+        .user-profile-section {
+            animation: profilePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes profilePulse {
+            0%, 100% {
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                box-shadow: 0 12px 40px rgba(78, 205, 196, 0.4);
+                border-color: rgba(78, 205, 196, 0.5);
+            }
         }
 
         .profile-header {
@@ -682,6 +698,88 @@
         .profile-btn:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: scale(1.1);
+        }
+
+        .signin-btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            padding: 12px 20px !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3) !important;
+            animation: signinPulse 2s ease-in-out infinite !important;
+        }
+
+        .signin-btn:hover {
+            background: linear-gradient(45deg, #ff5252, #26c6da) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4) !important;
+        }
+
+        @keyframes signinPulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 20px rgba(78, 205, 196, 0.5);
+            }
+        }
+
+        /* Profile Notification */
+        .profile-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            z-index: 3000;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(78, 205, 196, 0.5);
+            animation: notificationSlide 0.5s ease-out;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .notification-content button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .notification-content button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes notificationSlide {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
 
         .profile-stats {
@@ -5485,8 +5583,8 @@
                         </div>
                     </div>
                     <div class="profile-actions">
-                        <button class="profile-btn" onclick="window.location.href='/auth.html'">
-                            🔐 Sign In
+                        <button class="profile-btn signin-btn" onclick="window.location.href='/auth.html'">
+                            🔐 Sign In / Sign Up
                         </button>
                     </div>
                 </div>
@@ -5508,6 +5606,27 @@
                 console.log('👤 App container found, inserting profile...');
                 appContainer.insertBefore(profileSection, appContainer.firstChild);
                 console.log('✅ Guest profile section created successfully');
+                
+                // Add a temporary notification to make profile more visible
+                setTimeout(() => {
+                    const notification = document.createElement('div');
+                    notification.className = 'profile-notification';
+                    notification.innerHTML = `
+                        <div class="notification-content">
+                            <span>👤</span>
+                            <span>Profile is in the top-right corner!</span>
+                            <button onclick="this.parentElement.parentElement.remove()">×</button>
+                        </div>
+                    `;
+                    document.body.appendChild(notification);
+                    
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 5000);
+                }, 1000);
             } else {
                 console.error('❌ App container not found!');
                 // Fallback: append to body
