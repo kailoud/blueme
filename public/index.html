@@ -5757,28 +5757,6 @@
                         this.updateStatus('success', 'Playlists refreshed');
                     });
                 }
-                            return;
-                        }
-                        const name = prompt('Enter premium playlist name:');
-                        if (name && name.trim()) {
-                            const description = prompt('Enter playlist description (optional):') || '';
-                            this.createPlaylist(name.trim(), description.trim(), true); // true = premium playlist
-                        }
-                    });
-                }
-
-                // Refresh playlists event listener
-                const refreshBtn = document.getElementById('refreshPlaylistsBtn');
-                if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
-                    refreshBtn.setAttribute('data-listener-added', 'true');
-                    refreshBtn.addEventListener('click', () => {
-                        console.log('Refreshing playlists...');
-                        this.loadUserPlaylists();
-                    });
-                }
-
-                // Add playlist player control event listeners
-                this.setupPlaylistPlayerControls();
             }
 
             setupPlaylistPlayerControls() {
