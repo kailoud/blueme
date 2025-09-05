@@ -1765,6 +1765,73 @@
             font-size: 0.95rem;
         }
 
+        /* New Auth Form Styles */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: white;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        }
+
+        .auth-status {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
         .progress-section {
             margin-bottom: 24px;
         }
@@ -4304,46 +4371,188 @@
             }
 
             showSignInModal() {
-                // Create a sign-in modal overlay
+                // Create a sign-in modal overlay with direct sign-in form
                 const overlay = document.createElement('div');
                 overlay.className = 'signin-modal-overlay';
                 overlay.innerHTML = `
                     <div class="signin-modal">
                         <div class="modal-header">
-                            <h3>🔐 Sign In Required</h3>
+                            <h3>🔐 Sign In to BlueMe</h3>
                             <button class="close-btn" onclick="this.closest('.signin-modal-overlay').remove()">×</button>
                         </div>
                         <div class="modal-body">
-                            <p>Sign in to create playlists, save your audio, and access premium features!</p>
-                            <div class="signin-options">
-                                <button class="btn btn-primary" onclick="window.location.href='/auth.html'">
-                                    🔐 Sign In / Sign Up
-                                </button>
-                                <button class="btn btn-secondary" onclick="this.closest('.signin-modal-overlay').remove()">
-                                    Maybe Later
-                                </button>
+                            <div class="auth-tabs">
+                                <button class="tab-btn active" onclick="app.switchAuthTab('signin')">Sign In</button>
+                                <button class="tab-btn" onclick="app.switchAuthTab('signup')">Sign Up</button>
                             </div>
-                            <div class="features-preview">
-                                <h4>What you'll get:</h4>
-                                <ul>
-                                    <li>🎵 Create and manage playlists</li>
-                                    <li>☁️ Save converted audio to your library</li>
-                                    <li>⭐ Access to premium features</li>
-                                    <li>👥 Sync music with friends</li>
-                                </ul>
-                            </div>
+                            
+                            <form id="signinForm" class="auth-form">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="signinEmail" required placeholder="your@email.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="signinPassword" required placeholder="Your password">
+                                </div>
+                                <button type="submit" class="btn btn-primary">🔐 Sign In</button>
+                            </form>
+                            
+                            <form id="signupForm" class="auth-form" style="display: none;">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="signupEmail" required placeholder="your@email.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="signupPassword" required placeholder="Min 6 characters">
+                                </div>
+                                <div class="form-group">
+                                    <label>Username</label>
+                                    <input type="text" id="signupUsername" required placeholder="Your username">
+                                </div>
+                                <button type="submit" class="btn btn-primary">🚀 Sign Up</button>
+                            </form>
+                            
+                            <div class="auth-status" id="authStatus"></div>
                         </div>
                     </div>
                 `;
                 
                 document.body.appendChild(overlay);
                 
-                // Auto-remove after 15 seconds
-                setTimeout(() => {
-                    if (overlay.parentNode) {
+                // Add event listeners
+                document.getElementById('signinForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSignIn();
+                });
+                
+                document.getElementById('signupForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSignUp();
+                });
+                
+                // Close on overlay click
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
                         overlay.remove();
                     }
-                }, 15000);
+                });
+            }
+
+            switchAuthTab(tab) {
+                const signinForm = document.getElementById('signinForm');
+                const signupForm = document.getElementById('signupForm');
+                const tabs = document.querySelectorAll('.tab-btn');
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                if (tab === 'signin') {
+                    signinForm.style.display = 'block';
+                    signupForm.style.display = 'none';
+                } else {
+                    signinForm.style.display = 'none';
+                    signupForm.style.display = 'block';
+                }
+            }
+
+            async handleSignIn() {
+                const email = document.getElementById('signinEmail').value;
+                const password = document.getElementById('signinPassword').value;
+                const statusEl = document.getElementById('authStatus');
+                
+                if (!email || !password) {
+                    statusEl.innerHTML = '<span style="color: #ff6b6b;">❌ Please fill in all fields</span>';
+                    return;
+                }
+                
+                statusEl.innerHTML = '<span style="color: #4ecdc4;">🔄 Signing in...</span>';
+                
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ ${error.message}</span>`;
+                        return;
+                    }
+                    
+                    statusEl.innerHTML = '<span style="color: #4ecdc4;">✅ Signed in successfully!</span>';
+                    
+                    // Close modal after successful sign-in
+                    setTimeout(() => {
+                        document.querySelector('.signin-modal-overlay').remove();
+                    }, 1000);
+                    
+                } catch (error) {
+                    statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ Sign-in failed: ${error.message}</span>`;
+                }
+            }
+
+            async handleSignUp() {
+                const email = document.getElementById('signupEmail').value;
+                const password = document.getElementById('signupPassword').value;
+                const username = document.getElementById('signupUsername').value;
+                const statusEl = document.getElementById('authStatus');
+                
+                if (!email || !password || !username) {
+                    statusEl.innerHTML = '<span style="color: #ff6b6b;">❌ Please fill in all fields</span>';
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    statusEl.innerHTML = '<span style="color: #ff6b6b;">❌ Password must be at least 6 characters</span>';
+                    return;
+                }
+                
+                statusEl.innerHTML = '<span style="color: #4ecdc4;">🔄 Creating account...</span>';
+                
+                try {
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                full_name: username
+                            }
+                        }
+                    });
+                    
+                    if (error) {
+                        statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ ${error.message}</span>`;
+                        return;
+                    }
+                    
+                    // Create user profile in custom users table
+                    if (data.user) {
+                        const { error: profileError } = await supabase
+                            .from('users')
+                            .insert([{
+                                id: data.user.id,
+                                email: data.user.email,
+                                username: username,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            }]);
+                        
+                        if (profileError) {
+                            console.error('Profile creation error:', profileError);
+                        }
+                    }
+                    
+                    statusEl.innerHTML = '<span style="color: #4ecdc4;">✅ Account created! Check your email to confirm.</span>';
+                    
+                    // Close modal after successful sign-up
+                    setTimeout(() => {
+                        document.querySelector('.signin-modal-overlay').remove();
+                    }, 2000);
+                    
+                } catch (error) {
+                    statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ Sign-up failed: ${error.message}</span>`;
+                }
             }
 
             // Audio Conversion Methods
