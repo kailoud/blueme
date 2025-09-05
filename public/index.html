@@ -3432,44 +3432,24 @@
             }
 
             togglePlayback() {
-                console.log('🎵 togglePlayback called');
-                console.log('🎵 Current playlist:', this.currentPlaylist);
-                console.log('🎵 Current track index:', this.currentTrackIndex);
-                console.log('🎵 Audio player src:', this.audioPlayer.src);
-                console.log('🎵 Audio player paused:', this.audioPlayer.paused);
-                console.log('🎵 Is playing:', this.isPlaying);
+                console.log('🎵 Simple togglePlayback called');
                 
-                // If we have an active playlist, handle play/pause for the current track
-                if (this.currentPlaylist && this.currentPlaylist.playlist_items && this.currentPlaylist.playlist_items.length > 0) {
-                    console.log('🎵 Handling playlist playback:', this.currentPlaylist.name);
-                    
-                    // If no audio is loaded, load the current track
-                    if (!this.audioPlayer.src) {
-                        console.log('🎵 No audio loaded, loading current track from playlist');
-                        this.playCurrentTrack();
-                        return;
-                    }
-                    
-                    // If audio is loaded, toggle play/pause
-                    if (this.isPlaying) {
-                        this.pauseAudio();
-                    } else {
-                        this.playAudio();
-                    }
-                    return;
-                }
-                
-                // If we have audio loaded (individual track), play/pause it
-                if (this.audioPlayer.src) {
-                    if (this.isPlaying) {
-                        this.pauseAudio();
-                    } else {
-                        this.playAudio();
-                    }
+                // SIMPLE: Just check if audio is paused and toggle
+                if (this.audioPlayer.paused) {
+                    console.log('🎵 Audio is paused, trying to play...');
+                    this.audioPlayer.play().then(() => {
+                        console.log('✅ Audio started playing');
+                        this.playBtn.innerHTML = '⏸';
+                        this.isPlaying = true;
+                    }).catch(error => {
+                        console.error('❌ Play failed:', error);
+                        this.updateStatus('error', 'Play failed: ' + error.message);
+                    });
                 } else {
-                    console.log('🎵 No audio loaded, showing load options');
-                    this.updateStatus('info', '🎵 Load a track first! Try the audio converter or drag & drop a file');
-                    this.showLoadAudioOptions();
+                    console.log('🎵 Audio is playing, pausing...');
+                    this.audioPlayer.pause();
+                    this.playBtn.innerHTML = '▶';
+                    this.isPlaying = false;
                 }
             }
 
