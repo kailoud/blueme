@@ -2530,6 +2530,13 @@
                     </svg>
                     <span>Demo</span>
                 </button>
+                <button class="quick-btn" onclick="app.debugPlayButton()" title="Debug Play Button" style="background: linear-gradient(45deg, #ff0000, #ff6666);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                    </svg>
+                    <span>Play Debug</span>
+                </button>
                 <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -5664,6 +5671,32 @@
                 });
                 
                 this.updateStatus('info', `🔍 Debug complete! Check console for details. Found ${this.playlists.length} playlists and ${this.audioLibrary.length} audio files.`);
+            }
+
+            debugPlayButton() {
+                console.log('🔍 === PLAY BUTTON DEBUG ===');
+                console.log('🎵 Play button element:', this.playBtn);
+                console.log('🎵 Play button innerHTML:', this.playBtn.innerHTML);
+                console.log('🎵 Audio player element:', this.audioPlayer);
+                console.log('🎵 Audio player src:', this.audioPlayer.src);
+                console.log('🎵 Audio player paused:', this.audioPlayer.paused);
+                console.log('🎵 Audio player readyState:', this.audioPlayer.readyState);
+                console.log('🎵 Audio player duration:', this.audioPlayer.duration);
+                console.log('🎵 Audio player currentTime:', this.audioPlayer.currentTime);
+                console.log('🎵 isPlaying state:', this.isPlaying);
+                console.log('🎵 Current playlist:', this.currentPlaylist);
+                console.log('🎵 Current track index:', this.currentTrackIndex);
+                
+                // Test if event listeners are attached
+                console.log('🎵 Testing event listeners...');
+                try {
+                    this.togglePlayback();
+                    console.log('✅ togglePlayback() called successfully');
+                } catch (error) {
+                    console.error('❌ togglePlayback() failed:', error);
+                }
+                
+                this.updateStatus('info', '🔍 Play button debug complete! Check console for details.');
             }
 
             createDemoPlaylist() {
