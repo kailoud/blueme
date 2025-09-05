@@ -3378,14 +3378,27 @@
                 console.log('🎵 Audio player paused:', this.audioPlayer.paused);
                 console.log('🎵 Is playing:', this.isPlaying);
                 
-                // If we have an active playlist, play the current track
+                // If we have an active playlist, handle play/pause for the current track
                 if (this.currentPlaylist && this.currentPlaylist.playlist_items && this.currentPlaylist.playlist_items.length > 0) {
-                    console.log('🎵 Playing from active playlist:', this.currentPlaylist.name);
-                    this.playCurrentTrack();
+                    console.log('🎵 Handling playlist playback:', this.currentPlaylist.name);
+                    
+                    // If no audio is loaded, load the current track
+                    if (!this.audioPlayer.src) {
+                        console.log('🎵 No audio loaded, loading current track from playlist');
+                        this.playCurrentTrack();
+                        return;
+                    }
+                    
+                    // If audio is loaded, toggle play/pause
+                    if (this.isPlaying) {
+                        this.pauseAudio();
+                    } else {
+                        this.playAudio();
+                    }
                     return;
                 }
                 
-                // If we have audio loaded, play/pause it
+                // If we have audio loaded (individual track), play/pause it
                 if (this.audioPlayer.src) {
                     if (this.isPlaying) {
                         this.pauseAudio();
@@ -3593,6 +3606,28 @@
                 this.isPlaying = false;
                 this.playBtn.innerHTML = '▶';
                 this.albumArt.style.animation = 'none';
+                
+                // If we have an active playlist, play the next track
+                if (this.currentPlaylist && this.currentPlaylist.playlist_items && this.currentPlaylist.playlist_items.length > 0) {
+                    if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                        // Play next track
+                        this.currentTrackIndex++;
+                        this.updateStatus('info', `⏭️ Playing next track (${this.currentTrackIndex + 1}/${this.currentPlaylist.playlist_items.length})`);
+                        this.playCurrentTrack();
+                        return;
+                    } else {
+                        // End of playlist
+                        this.updateStatus('success', `🎊 Playlist "${this.currentPlaylist.name}" finished!`);
+                        this.currentPlaylist = null;
+                        this.currentTrackIndex = 0;
+                        this.audioPlayer.src = '';
+                        this.trackTitle.textContent = 'Choose Your Vibe';
+                        this.trackArtist.textContent = 'No track selected';
+                        return;
+                    }
+                }
+                
+                // Individual track finished
                 this.updateStatus('success', '🎊 Track finished! Play another to keep the vibe going');
             }
 
@@ -5470,6 +5505,12 @@
                         this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
                         this.trackArtist.textContent = 'Playlist Track';
                         
+                        // Auto-play the track
+                        await this.audioPlayer.play();
+                        this.isPlaying = true;
+                        this.playBtn.innerHTML = '⏸';
+                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                        
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
                     } else if (audioFile.audio_data) {
                         // Handle base64 audio data
@@ -5481,6 +5522,12 @@
                         // Update track info
                         this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
                         this.trackArtist.textContent = 'Playlist Track';
+                        
+                        // Auto-play the track
+                        await this.audioPlayer.play();
+                        this.isPlaying = true;
+                        this.playBtn.innerHTML = '⏸';
+                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
                         
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
                     } else {
