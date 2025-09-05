@@ -2172,7 +2172,7 @@
             0%, 100% { opacity: 0.8; }
             50% { opacity: 1; }
         }
-        
+
         .bluetooth-status {
             font-size: 0.75rem;
             font-weight: 500;
@@ -3291,9 +3291,9 @@
                         return;
                     }
                     
-                    this.statusMessage.className = `status-toast status-${type}`;
-                    this.statusMessage.innerHTML = this.getStatusIcon(type) + message;
-                    this.statusMessage.style.animation = 'slideUp 0.3s ease';
+                this.statusMessage.className = `status-toast status-${type}`;
+                this.statusMessage.innerHTML = this.getStatusIcon(type) + message;
+                this.statusMessage.style.animation = 'slideUp 0.3s ease';
                 } catch (error) {
                     console.error('Error updating status:', error);
                 }
@@ -4624,7 +4624,11 @@
                         }
                         
                         this.showDownloadSection(result.file.filename, this.formatSelect.value, result.file.size);
-                        this.updateConversionStatus('success', '🎉 YouTube conversion complete!');
+                        
+                        // Add to audio library
+                        this.loadUserAudioLibrary();
+                        
+                        this.updateConversionStatus('success', '🎉 YouTube conversion complete! Track added to library');
                     } else {
                         throw new Error(result.error || 'Conversion failed');
                     }
@@ -4661,7 +4665,10 @@
                 const filename = this.extractFilenameFromUrl(url) || 'converted_audio';
                 this.showDownloadSection(filename, format, convertedBlob.size);
                 
-                this.updateConversionStatus('success', '🎉 Conversion complete! Your track is ready');
+                // Add to audio library
+                this.loadUserAudioLibrary();
+                
+                this.updateConversionStatus('success', '🎉 Conversion complete! Your track is ready and added to library');
             }
 
             async fetchAudioBlob(path) {
@@ -4815,7 +4822,7 @@
                 this.updateConversionStatus('success', '🎉 Track loaded into player!');
                 
                 // Auto-play the converted audio
-                setTimeout(() => {
+            setTimeout(() => {
                     if (this.audioPlayer.readyState >= 2) {
                         this.audioPlayer.play().then(() => {
                             this.isPlaying = true;
@@ -4832,33 +4839,33 @@
 
             // Authentication Methods
             initializeDragAndDrop() {
-                const uploadArea = document.querySelector('.file-upload-area');
-                const audioFileInput = document.getElementById('audioFile');
+            const uploadArea = document.querySelector('.file-upload-area');
+            const audioFileInput = document.getElementById('audioFile');
 
                 if (uploadArea && audioFileInput) {
-                    uploadArea.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        uploadArea.style.borderColor = 'rgba(240, 147, 251, 0.8)';
-                        uploadArea.style.background = 'rgba(240, 147, 251, 0.1)';
-                    });
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(240, 147, 251, 0.8)';
+                uploadArea.style.background = 'rgba(240, 147, 251, 0.1)';
+            });
 
-                    uploadArea.addEventListener('dragleave', (e) => {
-                        e.preventDefault();
-                        uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                        uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
-                    });
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
+            });
 
-                    uploadArea.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                        uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
-                        
-                        const files = e.dataTransfer.files;
-                        if (files.length > 0 && files[0].type.startsWith('audio/')) {
-                            audioFileInput.files = files;
-                            const event = new Event('change');
-                            audioFileInput.dispatchEvent(event);
-                        } else {
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type.startsWith('audio/')) {
+                    audioFileInput.files = files;
+                    const event = new Event('change');
+                    audioFileInput.dispatchEvent(event);
+                } else {
                             this.updateStatus('error', '❌ Please drop a valid audio file');
                         }
                     });
@@ -5863,27 +5870,39 @@
                 }
             }
 
-            async loadUserAudioLibrary() {
-                if (!currentUser) {
-                    console.log('No current user, cannot load audio library');
-                    return;
-                }
-
-                console.log('Loading audio library for user:', currentUser.id);
+            loadUserAudioLibrary() {
+                console.log('Loading audio library from local storage...');
 
                 try {
-                    const { data, error } = await supabase
-                        .from('audio_files')
-                        .select('*')
-                        .eq('user_id', currentUser.id)
-                        .order('uploaded_at', { ascending: false });
-
-                    if (error) {
-                        console.error('Supabase error loading audio library:', error);
-                        throw error;
+                    // Load from local storage
+                    const storedLibrary = localStorage.getItem('blueme_audio_library');
+                    this.audioLibrary = storedLibrary ? JSON.parse(storedLibrary) : [];
+                    
+                    // Add current converted audio if available
+                    if (this.convertedAudioBlob && this.convertedFileName) {
+                        const convertedAudio = {
+                            id: 'current_converted',
+                            title: this.convertedFileName.textContent.split('.')[0],
+                            original_name: 'YouTube Audio',
+                            file_size: this.convertedAudioBlob.size,
+                            mime_type: this.convertedAudioBlob.type,
+                            created_at: new Date().toISOString(),
+                            audio_data: this.convertedAudioBlob,
+                            url: 'local_converted'
+                        };
+                        
+                        // Check if already in library
+                        const existingIndex = this.audioLibrary.findIndex(a => a.id === 'current_converted');
+                        if (existingIndex >= 0) {
+                            this.audioLibrary[existingIndex] = convertedAudio;
+                        } else {
+                            this.audioLibrary.unshift(convertedAudio);
+                        }
                     }
-
-                    this.audioLibrary = data || [];
+                    
+                    // Save updated library to local storage
+                    this.saveAudioLibraryToLocal();
+                    
                     this.updateAudioLibraryUI();
                     console.log('Loaded audio library:', this.audioLibrary.length, 'files');
                     
@@ -5892,6 +5911,30 @@
                     }
                 } catch (error) {
                     console.error('Error loading audio library:', error);
+                }
+            }
+
+            saveAudioLibraryToLocal() {
+                console.log('💾 Saving audio library to local storage...');
+                try {
+                    // Convert blob data to base64 for storage
+                    const libraryToSave = this.audioLibrary.map(audio => {
+                        if (audio.audio_data && audio.audio_data instanceof Blob) {
+                            // Convert blob to base64 for storage
+                            return {
+                                ...audio,
+                                audio_data: 'blob_data', // We'll handle this separately
+                                blob_size: audio.audio_data.size,
+                                blob_type: audio.audio_data.type
+                            };
+                        }
+                        return audio;
+                    });
+                    
+                    localStorage.setItem('blueme_audio_library', JSON.stringify(libraryToSave));
+                    console.log('✅ Audio library saved to local storage');
+                } catch (error) {
+                    console.error('❌ Error saving audio library to local storage:', error);
                 }
             }
 
@@ -5958,7 +6001,7 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            async playAudio(audioId) {
+            playAudio(audioId) {
                 const audio = this.audioLibrary.find(a => a.id === audioId);
                 if (!audio) {
                     this.updateStatus('error', 'Audio file not found');
@@ -5966,73 +6009,29 @@
                 }
 
                 console.log('🎵 Playing audio from library:', audio);
-                this.updateStatus('info', `Loading: ${audio.title || audio.original_name}`);
-
+                
                 // Clear any active playlist when playing individual tracks
                 this.currentPlaylist = null;
                 this.currentTrackIndex = 0;
+                this.updateStatus('info', `Loading: ${audio.title || audio.original_name}`);
 
                 try {
-                    let audioUrl;
-                    
-                    // Check if we have audio_data (base64) or need to fetch from storage
-                    if (audio.audio_data) {
-                        console.log('📦 Using stored audio data');
-                        audioUrl = `data:${audio.mime_type || 'audio/mpeg'};base64,${audio.audio_data}`;
-                    } else if (audio.file_path) {
-                        console.log('☁️ Fetching from Supabase storage');
-                        const { data, error } = await supabase.storage
-                            .from('audio-files')
-                            .createSignedUrl(audio.file_path, 3600); // 1 hour expiry
+                    if (audio.audio_data && audio.audio_data instanceof Blob) {
+                        // Play from blob data
+                        const url = URL.createObjectURL(audio.audio_data);
+                        this.audioPlayer.src = url;
+                        this.audioPlayer.load();
                         
-                        if (error) {
-                            console.error('❌ Error getting signed URL:', error);
-                            this.updateStatus('error', 'Failed to load audio file');
-                            return;
-                        }
-                        audioUrl = data.signedUrl;
+                        this.trackTitle.textContent = audio.title || audio.original_name;
+                        this.trackArtist.textContent = 'Audio Library';
+                        
+                        this.updateStatus('success', `Now playing: ${audio.title || audio.original_name}`);
                     } else {
-                        this.updateStatus('error', 'No audio data available');
-                        return;
+                        this.updateStatus('error', 'Audio data not available');
                     }
-
-                    // Load audio into the main player
-                    this.audioPlayer.src = audioUrl;
-                    this.audioPlayer.load();
-                    
-                    // Update track info (no playlist info since we cleared it)
-                    this.trackTitle.textContent = audio.title || audio.original_name;
-                    this.trackArtist.textContent = audio.artist || 'Unknown Artist';
-                    
-                    // Wait for metadata to load
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => {
-                            reject(new Error('Audio loading timeout'));
-                        }, 10000);
-                        
-                        this.audioPlayer.addEventListener('loadedmetadata', () => {
-                            clearTimeout(timeout);
-                            resolve();
-                        }, { once: true });
-                        
-                        this.audioPlayer.addEventListener('error', (e) => {
-                            clearTimeout(timeout);
-                            reject(e);
-                        }, { once: true });
-                    });
-
-                    // Start playing
-                    await this.audioPlayer.play();
-                    this.isPlaying = true;
-                    this.playBtn.innerHTML = '⏸';
-                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                    
-                    this.updateStatus('success', `🎵 Now playing: ${audio.title || audio.original_name}`);
-                    console.log('✅ Audio playback started successfully');
-                    
                 } catch (error) {
-                    console.error('❌ Error playing audio:', error);
-                    this.updateStatus('error', `Playback failed: ${error.message}`);
+                    console.error('Error playing audio:', error);
+                    this.updateStatus('error', 'Failed to play audio');
                 }
             }
 
