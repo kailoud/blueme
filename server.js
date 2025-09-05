@@ -519,17 +519,41 @@ app.post('/api/convert-youtube', async (req, res) => {
                         }
                     } catch (supabaseError) {
                         console.error('Supabase upload error:', supabaseError);
-                        // Fallback to direct response
-                        res.setHeader('Content-Type', `audio/${format}`);
-                        res.setHeader('Content-Disposition', `attachment; filename="${sanitizedTitle}.${format}"`);
-                        res.send(audioBuffer);
+                        // Fallback: return JSON with base64 audio data
+                        const base64Audio = audioBuffer.toString('base64');
+                        res.json({
+                            success: true,
+                            message: 'YouTube audio converted successfully (local storage)',
+                            file: {
+                                filename: `${sanitizedTitle}.${format}`,
+                                originalName: videoTitle,
+                                size: audioBuffer.length,
+                                format: format,
+                                quality: quality,
+                                duration: info.videoDetails.lengthSeconds,
+                                audioData: base64Audio,
+                                mimeType: `audio/${format}`
+                            }
+                        });
                     }
                 } else {
-                    // Fallback: send audio buffer directly
-                    console.log('📤 Sending audio buffer directly');
-                    res.setHeader('Content-Type', `audio/${format}`);
-                    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedTitle}.${format}"`);
-                    res.send(audioBuffer);
+                    // Fallback: return JSON with base64 audio data
+                    console.log('📤 Returning audio as base64 JSON');
+                    const base64Audio = audioBuffer.toString('base64');
+                    res.json({
+                        success: true,
+                        message: 'YouTube audio converted successfully (local storage)',
+                        file: {
+                            filename: `${sanitizedTitle}.${format}`,
+                            originalName: videoTitle,
+                            size: audioBuffer.length,
+                            format: format,
+                            quality: quality,
+                            duration: info.videoDetails.lengthSeconds,
+                            audioData: base64Audio,
+                            mimeType: `audio/${format}`
+                        }
+                    });
                 }
                 
             } catch (error) {

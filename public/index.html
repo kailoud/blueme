@@ -1805,7 +1805,20 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        this.convertedAudioBlob = await this.fetchAudioBlob(result.file.path);
+                        // Handle base64 audio data
+                        if (result.file.audioData) {
+                            // Convert base64 to blob
+                            const binaryString = atob(result.file.audioData);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            this.convertedAudioBlob = new Blob([bytes], { type: result.file.mimeType });
+                        } else if (result.file.url) {
+                            // Handle Supabase URL
+                            this.convertedAudioBlob = await this.fetchAudioBlob(result.file.url);
+                        }
+                        
                         this.showDownloadSection(result.file.filename, this.formatSelect.value, result.file.size);
                         this.updateConversionStatus('success', '🎉 YouTube conversion complete!');
                     } else {
