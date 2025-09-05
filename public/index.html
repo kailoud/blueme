@@ -2919,6 +2919,8 @@
                 this.audioPlayer.addEventListener('timeupdate', () => this.updateProgress());
                 this.audioPlayer.addEventListener('loadstart', () => this.onLoadStart());
                 this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
+                this.audioPlayer.addEventListener('play', () => this.onAudioPlay());
+                this.audioPlayer.addEventListener('pause', () => this.onAudioPause());
                 
                 // Progress bar click to seek
                 document.querySelector('.progress-bar').addEventListener('click', (e) => {
@@ -3408,6 +3410,20 @@
                 this.albumArt.style.animation = 'none';
             }
 
+            onAudioPlay() {
+                console.log('🎵 Audio started playing');
+                this.isPlaying = true;
+                this.playBtn.innerHTML = '⏸';
+                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+            }
+
+            onAudioPause() {
+                console.log('🎵 Audio paused');
+                this.isPlaying = false;
+                this.playBtn.innerHTML = '▶';
+                this.albumArt.style.animation = 'none';
+            }
+
             togglePlayback() {
                 console.log('🎵 togglePlayback called');
                 console.log('🎵 Current playlist:', this.currentPlaylist);
@@ -3458,9 +3474,7 @@
                     console.log('Audio duration:', this.audioPlayer.duration);
                     
                     await this.audioPlayer.play();
-                    this.isPlaying = true;
-                    this.playBtn.innerHTML = '⏸';
-                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                    // Note: isPlaying state will be set by onAudioPlay() event listener
                     
                     // Notify other users about playback
                     if (this.socket) {
@@ -3490,9 +3504,7 @@
 
             pauseAudio() {
                 this.audioPlayer.pause();
-                this.isPlaying = false;
-                this.playBtn.innerHTML = '▶';
-                this.albumArt.style.animation = 'none';
+                // Note: isPlaying state will be set by onAudioPause() event listener
                 
                 // Notify other users about pause
                 if (this.socket) {
