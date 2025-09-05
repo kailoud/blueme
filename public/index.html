@@ -2487,6 +2487,13 @@
                     </svg>
                     <span>Sample</span>
                 </button>
+                <button class="quick-btn" onclick="app.checkPlaylistHealth()" title="Check Playlist Health" style="background: linear-gradient(45deg, #17a2b8, #6f42c1);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                    <span>Check</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3879,6 +3886,64 @@
                 }
             }
 
+            async checkPlaylistHealth() {
+                console.log('🔍 Checking playlist health...');
+                try {
+                    if (!this.playlists || this.playlists.length === 0) {
+                        this.updateStatus('info', 'No playlists to check');
+                        return;
+                    }
+
+                    for (const playlist of this.playlists) {
+                        console.log(`🔍 Checking playlist: ${playlist.name}`);
+                        
+                        if (!playlist.playlist_items || playlist.playlist_items.length === 0) {
+                            console.log(`⚠️ Playlist "${playlist.name}" is empty`);
+                            continue;
+                        }
+
+                        let playableTracks = 0;
+                        let missingTracks = 0;
+
+                        for (const item of playlist.playlist_items) {
+                            if (item.audio_files) {
+                                if (item.audio_files.audio_data) {
+                                    playableTracks++;
+                                    console.log(`✅ Track "${item.audio_files.title || item.audio_files.original_name}" has audio data`);
+                                } else if (item.audio_files.file_path) {
+                                    // Check if file exists in storage
+                                    try {
+                                        const { data, error } = await supabase.storage
+                                            .from('audio-files')
+                                            .createSignedUrl(item.audio_files.file_path, 60);
+                                        
+                                        if (error) {
+                                            missingTracks++;
+                                            console.log(`❌ Track "${item.audio_files.title || item.audio_files.original_name}" missing from storage`);
+                                        } else {
+                                            playableTracks++;
+                                            console.log(`✅ Track "${item.audio_files.title || item.audio_files.original_name}" found in storage`);
+                                        }
+                                    } catch (error) {
+                                        missingTracks++;
+                                        console.log(`❌ Track "${item.audio_files.title || item.audio_files.original_name}" storage check failed`);
+                                    }
+                                } else {
+                                    missingTracks++;
+                                    console.log(`❌ Track "${item.audio_files.title || item.audio_files.original_name}" has no audio data or file path`);
+                                }
+                            }
+                        }
+
+                        console.log(`📊 Playlist "${playlist.name}": ${playableTracks} playable, ${missingTracks} missing`);
+                        this.updateStatus('info', `Playlist "${playlist.name}": ${playableTracks} playable tracks, ${missingTracks} missing`);
+                    }
+                } catch (error) {
+                    console.error('❌ Error checking playlist health:', error);
+                    this.updateStatus('error', `Playlist check failed: ${error.message}`);
+                }
+            }
+
             async forceCreateProfile() {
                 console.log('🔨 Force creating profile...');
                 try {
@@ -5223,9 +5288,14 @@
                                 console.error('❌ Error getting signed URL:', error);
                                 this.updateStatus('error', `Audio file not found: ${audioFile.title || audioFile.original_name}`);
                                 
-                                // Try to load sample audio as fallback
-                                console.log('🔄 Loading sample audio as fallback...');
-                                this.loadSampleAudio();
+                                // Skip this track and try the next one
+                                console.log('⏭️ Skipping missing track, trying next...');
+                                if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                                    this.currentTrackIndex++;
+                                    this.playCurrentTrack();
+                                } else {
+                                    this.updateStatus('error', 'No playable tracks found in playlist');
+                                }
                                 return;
                             }
                             audioUrl = data.signedUrl;
@@ -5233,17 +5303,28 @@
                             console.error('❌ Storage error:', storageError);
                             this.updateStatus('error', 'Storage connection failed');
                             
-                            // Try to load sample audio as fallback
-                            console.log('🔄 Loading sample audio as fallback...');
-                            this.loadSampleAudio();
+                            // Skip this track and try the next one
+                            console.log('⏭️ Skipping track due to storage error, trying next...');
+                            if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                                this.currentTrackIndex++;
+                                this.playCurrentTrack();
+                            } else {
+                                this.updateStatus('error', 'No playable tracks found in playlist');
+                            }
                             return;
                         }
                     } else {
-                        console.log('❌ No audio data available, loading sample audio...');
+                        console.log('❌ No audio data available, skipping track...');
                         this.updateStatus('error', 'No audio data available');
                         
-                        // Try to load sample audio as fallback
-                        this.loadSampleAudio();
+                        // Skip this track and try the next one
+                        console.log('⏭️ Skipping track with no audio data, trying next...');
+                        if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                            this.currentTrackIndex++;
+                            this.playCurrentTrack();
+                        } else {
+                            this.updateStatus('error', 'No playable tracks found in playlist');
+                        }
                         return;
                     }
 
