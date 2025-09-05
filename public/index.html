@@ -2453,6 +2453,17 @@
                     </svg>
                     <span>Sign In</span>
                 </button>
+                <button class="quick-btn" onclick="app.forceCreateProfile()" title="Force Create Profile" style="background: linear-gradient(45deg, #ff6b6b, #ff8e8e);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <span>Force</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3730,6 +3741,7 @@
                 try {
                     const { data: { session }, error } = await supabase.auth.getSession();
                     console.log('📋 Session check result:', { session: !!session, user: session?.user?.email, error });
+                    console.log('📋 Full session object:', session);
                     
                     if (session && session.user) {
                         console.log('✅ User is signed in:', session.user.email);
@@ -3751,6 +3763,105 @@
                     console.error('❌ Error checking sign-in status:', error);
                     this.updateStatus('error', `Sign-in check failed: ${error.message}`);
                     return false;
+                }
+            }
+
+            async forceCreateProfile() {
+                console.log('🔨 Force creating profile...');
+                try {
+                    // Check session first
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                        this.updateStatus('error', 'No session - please sign in first');
+                        return;
+                    }
+
+                    console.log('👤 Session found:', session.user.email);
+                    currentUser = session.user;
+
+                    // Force create profile section immediately
+                    const userInfo = document.createElement('div');
+                    userInfo.id = 'userInfo';
+                    userInfo.className = 'user-profile-section';
+                    userInfo.innerHTML = `
+                        <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="profile-content" style="display: none;">
+                            <div class="profile-header">
+                                <div class="profile-avatar">
+                                    <div class="avatar-circle">
+                                        ${currentUser.email.charAt(0).toUpperCase()}
+                                    </div>
+                                </div>
+                                <div class="profile-info">
+                                    <h3 class="profile-name">${currentUser.email}</h3>
+                                    <div class="profile-status">
+                                        <span class="status-badge free">Free User</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="profile-stats" id="profileStats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Free Playlists</div>
+                                    <div class="stat-value">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Premium Playlists</div>
+                                    <div class="stat-value">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Member Since</div>
+                                    <div class="stat-value">${new Date().toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                            <div class="profile-menu" id="profileMenu">
+                                <button class="menu-item" onclick="app.showPlaylists()">
+                                    <span class="menu-icon">🎵</span>
+                                    <span class="menu-text">My Playlists</span>
+                                </button>
+                                <button class="menu-item" onclick="app.showAudioLibrary()">
+                                    <span class="menu-icon">🎧</span>
+                                    <span class="menu-text">Audio Library</span>
+                                </button>
+                                <button class="menu-item" onclick="window.location.href='/auth.html'">
+                                    <span class="menu-icon">🔐</span>
+                                    <span class="menu-text">Account Settings</span>
+                                </button>
+                                <button class="menu-item logout" onclick="app.logout()">
+                                    <span class="menu-icon">🚪</span>
+                                    <span class="menu-text">Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Remove any existing profile
+                    const existingProfile = document.getElementById('userInfo');
+                    if (existingProfile) {
+                        existingProfile.remove();
+                    }
+
+                    // Add to page
+                    document.body.appendChild(userInfo);
+                    console.log('✅ Profile force created and added to page');
+                    this.updateStatus('success', '✅ Profile force created!');
+
+                    // Try to load actual profile data
+                    try {
+                        await this.loadUserProfile();
+                        if (userProfile) {
+                            this.updateAuthUI(); // Update with real data
+                        }
+                    } catch (error) {
+                        console.log('⚠️ Could not load profile data, but profile section created');
+                    }
+
+                } catch (error) {
+                    console.error('❌ Error force creating profile:', error);
+                    this.updateStatus('error', `Profile creation failed: ${error.message}`);
                 }
             }
 
