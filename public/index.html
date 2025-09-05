@@ -5734,22 +5734,34 @@
                 alert(`Playlist: ${playlist.name}\n\nTracks:\n${trackList || 'No tracks in this playlist'}`);
             }
 
-            async deletePlaylist(playlistId) {
+            deletePlaylist(playlistId) {
                 const playlist = this.playlists.find(p => p.id === playlistId);
-                if (!playlist) return;
+                if (!playlist) {
+                    this.updateStatus('error', 'Playlist not found');
+                    return;
+                }
 
                 if (confirm(`Are you sure you want to delete the playlist "${playlist.name}"?`)) {
                     try {
-                        const { error } = await supabase
-                            .from('playlists')
-                            .delete()
-                            .eq('id', playlistId);
-
-                        if (error) throw error;
-
+                        // Remove from local playlists array
                         this.playlists = this.playlists.filter(p => p.id !== playlistId);
+                        
+                        // Save to local storage
+                        this.saveLocalPlaylists();
+                        
+                        // Update UI
                         this.updatePlaylistUI();
-                        this.updateStatus('success', `Playlist "${playlist.name}" deleted`);
+                        
+                        // Clear current playlist if it was the deleted one
+                        if (this.currentPlaylist && this.currentPlaylist.id === playlistId) {
+                            this.currentPlaylist = null;
+                            this.currentTrackIndex = 0;
+                            this.audioPlayer.src = '';
+                            this.trackTitle.textContent = 'Choose Your Vibe';
+                            this.trackArtist.textContent = 'No track selected';
+                        }
+                        
+                        this.updateStatus('success', `Playlist "${playlist.name}" deleted successfully`);
                     } catch (error) {
                         console.error('Error deleting playlist:', error);
                         this.updateStatus('error', 'Failed to delete playlist');
