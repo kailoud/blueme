@@ -2464,6 +2464,15 @@
                     </svg>
                     <span>Force</span>
                 </button>
+                <button class="quick-btn" onclick="app.testSignIn()" title="Test Sign In" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    <span>Test</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3763,6 +3772,47 @@
                     console.error('❌ Error checking sign-in status:', error);
                     this.updateStatus('error', `Sign-in check failed: ${error.message}`);
                     return false;
+                }
+            }
+
+            async testSignIn() {
+                console.log('🔐 Testing sign-in functionality...');
+                try {
+                    // Test with a known email/password
+                    const testEmail = prompt('Enter your email:');
+                    const testPassword = prompt('Enter your password:');
+                    
+                    if (!testEmail || !testPassword) {
+                        this.updateStatus('error', 'Email and password required');
+                        return;
+                    }
+
+                    console.log('🔐 Attempting sign-in with:', testEmail);
+                    
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: testEmail,
+                        password: testPassword
+                    });
+
+                    if (error) {
+                        console.error('❌ Sign-in error:', error);
+                        this.updateStatus('error', `Sign-in failed: ${error.message}`);
+                        return;
+                    }
+
+                    console.log('✅ Sign-in successful:', data.user.email);
+                    currentUser = data.user;
+                    
+                    // Load profile and update UI
+                    await this.loadUserProfile();
+                    this.updateAuthUI();
+                    this.ensurePlaylistSection();
+                    
+                    this.updateStatus('success', `✅ Successfully signed in as: ${data.user.email}`);
+                    
+                } catch (error) {
+                    console.error('❌ Error testing sign-in:', error);
+                    this.updateStatus('error', `Sign-in test failed: ${error.message}`);
                 }
             }
 
