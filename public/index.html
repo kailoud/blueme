@@ -5575,142 +5575,14 @@
                     tracksContainer.innerHTML = playlist.playlist_items.map((item, index) => `
                         <div class="track-item ${index === this.currentTrackIndex ? 'current-track' : ''}" data-index="${index}">
                             <span class="track-number">${index + 1}</span>
-                            <span class="track-title">${item.audio_files?.title || item.audio_files?.original_name || 'Unknown Track'}</span>
-                            <span class="track-artist">${item.audio_files?.artist || 'Unknown Artist'}</span>
+                            <span class="track-title">${item.audio_file?.title || item.audio_file?.originalName || item.audio_file?.filename || 'Unknown Track'}</span>
+                            <span class="track-artist">${item.audio_file?.artist || 'Unknown Artist'}</span>
                             <button onclick="app.playTrackFromPlaylist(${index})" class="btn btn-tiny">▶️</button>
                         </div>
                     `).join('');
                 }
             }
 
-            async playCurrentTrack() {
-                if (!this.currentPlaylist || !this.currentPlaylist.playlist_items) return;
-                
-                const currentItem = this.currentPlaylist.playlist_items[this.currentTrackIndex];
-                if (!currentItem || !currentItem.audio_files) return;
-
-                const audioFile = currentItem.audio_files;
-                console.log('🎵 Playing track from playlist:', audioFile);
-
-                try {
-                    let audioUrl;
-                    
-                    // Check if we have audio_data (base64) or need to fetch from storage
-                    if (audioFile.audio_data) {
-                        console.log('📦 Using stored audio data');
-                        audioUrl = `data:${audioFile.mime_type || 'audio/mpeg'};base64,${audioFile.audio_data}`;
-                    } else if (audioFile.file_path) {
-                        console.log('☁️ Fetching from Supabase storage');
-                        try {
-                            const { data, error } = await supabase.storage
-                                .from('audio-files')
-                                .createSignedUrl(audioFile.file_path, 3600);
-                            
-                            if (error) {
-                                console.error('❌ Error getting signed URL:', error);
-                                this.updateStatus('error', `Audio file not found: ${audioFile.title || audioFile.original_name}`);
-                                
-                                // Skip this track and try the next one
-                                console.log('⏭️ Skipping missing track, trying next...');
-                                if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
-                                    this.currentTrackIndex++;
-                                    this.playCurrentTrack();
-                                } else {
-                                    this.updateStatus('error', 'No playable tracks found in playlist');
-                                }
-                                return;
-                            }
-                            audioUrl = data.signedUrl;
-                        } catch (storageError) {
-                            console.error('❌ Storage error:', storageError);
-                            this.updateStatus('error', 'Storage connection failed');
-                            
-                            // Skip this track and try the next one
-                            console.log('⏭️ Skipping track due to storage error, trying next...');
-                            if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
-                                this.currentTrackIndex++;
-                                this.playCurrentTrack();
-                            } else {
-                                this.updateStatus('error', 'No playable tracks found in playlist');
-                            }
-                            return;
-                        }
-                    } else {
-                        console.log('❌ No audio data available, skipping track...');
-                        this.updateStatus('error', 'No audio data available');
-                        
-                        // Skip this track and try the next one
-                        console.log('⏭️ Skipping track with no audio data, trying next...');
-                        if (this.currentPlaylist && this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
-                            this.currentTrackIndex++;
-                            this.playCurrentTrack();
-                        } else {
-                            this.updateStatus('error', 'No playable tracks found in playlist');
-                        }
-                        return;
-                    }
-
-                    // Load audio into the main player
-                    this.audioPlayer.src = audioUrl;
-                    this.audioPlayer.load();
-                    
-                    // Update track info in main player
-                    if (this.currentPlaylist) {
-                        this.trackTitle.textContent = `${audioFile.title || audioFile.original_name || 'Unknown Track'} (${this.currentTrackIndex + 1}/${this.currentPlaylist.playlist_items.length})`;
-                        this.trackArtist.textContent = `${audioFile.artist || 'Unknown Artist'} • ${this.currentPlaylist.name}`;
-                    } else {
-                        this.trackTitle.textContent = audioFile.title || audioFile.original_name || 'Unknown Track';
-                        this.trackArtist.textContent = audioFile.artist || 'Unknown Artist';
-                    }
-                    
-                    // Update playlist player info
-                    const trackInfo = document.getElementById('currentTrackInfo');
-                    if (trackInfo) {
-                        trackInfo.textContent = `${audioFile.title || audioFile.original_name || 'Unknown Track'} - ${audioFile.artist || 'Unknown Artist'}`;
-                    }
-
-                    // Update current track highlighting
-                    document.querySelectorAll('.track-item').forEach((item, index) => {
-                        item.classList.toggle('current-track', index === this.currentTrackIndex);
-                    });
-
-                    // Wait for metadata to load
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => {
-                            reject(new Error('Audio loading timeout'));
-                        }, 10000);
-                        
-                        this.audioPlayer.addEventListener('loadedmetadata', () => {
-                            clearTimeout(timeout);
-                            resolve();
-                        }, { once: true });
-                        
-                        this.audioPlayer.addEventListener('error', (e) => {
-                            clearTimeout(timeout);
-                            reject(e);
-                        }, { once: true });
-                    });
-
-                    // Start playing
-                    await this.audioPlayer.play();
-                    this.isPlaying = true;
-                    this.playBtn.innerHTML = '⏸';
-                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                    
-                    // Update playlist player controls
-                    const playPauseBtn = document.getElementById('playPauseBtn');
-                    if (playPauseBtn) {
-                        playPauseBtn.textContent = '⏸️';
-                    }
-                    
-                    this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || 'Unknown Track'}`);
-                    console.log('✅ Playlist track playback started successfully');
-                    
-                } catch (error) {
-                    console.error('❌ Error playing playlist track:', error);
-                    this.updateStatus('error', `Playback failed: ${error.message}`);
-                }
-            }
 
             async playTrackFromPlaylist(index) {
                 if (!this.currentPlaylist || !this.currentPlaylist.playlist_items) {
