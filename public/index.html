@@ -2691,9 +2691,18 @@
             }
 
             updateStatus(type, message) {
-                this.statusMessage.className = `status-toast status-${type}`;
-                this.statusMessage.innerHTML = this.getStatusIcon(type) + message;
-                this.statusMessage.style.animation = 'slideUp 0.3s ease';
+                try {
+                    if (!this.statusMessage) {
+                        console.warn('Status message element not found');
+                        return;
+                    }
+                    
+                    this.statusMessage.className = `status-toast status-${type}`;
+                    this.statusMessage.innerHTML = this.getStatusIcon(type) + message;
+                    this.statusMessage.style.animation = 'slideUp 0.3s ease';
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                }
             }
 
             getStatusIcon(type) {
@@ -4545,24 +4554,30 @@
         let app;
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                console.log('🚀 Initializing BlueMe app...');
+                
                 // Always initialize the app first
                 app = new BlueMe();
                 isLoading = false;
                 
+                console.log('✅ BlueMe app initialized successfully');
+                
                 // Check authentication after app is loaded
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) {
+                    console.log('👤 No user session found');
                     // Show auth message but don't redirect
-                    if (app.statusMessage) {
+                    if (app && app.statusMessage) {
                         app.updateStatus('info', '🔐 Please sign in to save your audio and playlists');
                     }
                     
                     // Add a sign in button to the UI
                     addSignInButton();
                 } else {
+                    console.log('👤 User session found:', session.user.email);
                     // User is authenticated
-                    if (app.statusMessage) {
-                        app.updateStatus('info', '🎧 Welcome to BlueMe! Connect your friends and start sharing music');
+                    if (app && app.statusMessage) {
+                        app.updateStatus('success', '🎵 Welcome back! Your playlists are ready');
                     }
                     
                     // Ensure playlist section is created for authenticated users
@@ -4570,11 +4585,23 @@
                 }
                 
             } catch (error) {
-                console.error('Error initializing app:', error);
+                console.error('❌ Error initializing app:', error);
                 // Still initialize the app even if there's an error
                 if (!app) {
-                    app = new BlueMe();
-                    isLoading = false;
+                    console.log('🔄 Attempting to initialize app despite error...');
+                    try {
+                        app = new BlueMe();
+                        isLoading = false;
+                        console.log('✅ App initialized after error');
+                    } catch (initError) {
+                        console.error('❌ Failed to initialize app:', initError);
+                        // Show a basic error message
+                        const statusEl = document.getElementById('statusMessage');
+                        if (statusEl) {
+                            statusEl.innerHTML = '❌ App initialization failed. Please refresh the page.';
+                            statusEl.className = 'status-toast status-error';
+                        }
+                    }
                 }
             }
         });
