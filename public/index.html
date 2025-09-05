@@ -975,6 +975,9 @@
         let currentUser = null;
         let userProfile = null;
 
+        // Hide the entire page until authentication is checked
+        document.documentElement.style.visibility = 'hidden';
+
         class BlueMe {
             constructor() {
                 this.connectedDevices = new Map();
@@ -2194,30 +2197,31 @@
         // Initialize the app when the page loads
         let app;
         document.addEventListener('DOMContentLoaded', async () => {
-            // Show loading state immediately
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.3s ease';
-            
-            // Check authentication first
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                // Redirect immediately if not authenticated
-                window.location.href = '/auth.html';
-                return;
-            }
-            
-            // Initialize app if authenticated
-            app = new BlueMe();
-            
-            // Fade in the app
-            document.body.style.opacity = '1';
-            
-            // Add some demo functionality
-            setTimeout(() => {
-                if (app.statusMessage) {
-                    app.updateStatus('info', '🎧 Welcome to BlueMe! Connect your friends and start sharing music');
+            try {
+                // Check authentication first
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    // Redirect immediately if not authenticated
+                    window.location.href = '/auth.html';
+                    return;
                 }
-            }, 1000);
+                
+                // Initialize app if authenticated
+                app = new BlueMe();
+                
+                // Show the page
+                document.documentElement.style.visibility = 'visible';
+                
+                // Add some demo functionality
+                setTimeout(() => {
+                    if (app.statusMessage) {
+                        app.updateStatus('info', '🎧 Welcome to BlueMe! Connect your friends and start sharing music');
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                window.location.href = '/auth.html';
+            }
         });
 
         // Add drag and drop functionality for file upload
