@@ -290,6 +290,75 @@
             padding: 40px 20px;
         }
 
+        /* Audio Library Styles */
+        .audio-library-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .audio-library-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .audio-library-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .audio-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .audio-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(240, 147, 251, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .audio-info h4 {
+            color: white;
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .audio-info p {
+            color: var(--text-muted);
+            margin: 0 0 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .audio-info small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .audio-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .no-audio {
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
         .device-grid {
             display: flex;
             flex-direction: column;
@@ -1075,6 +1144,7 @@
                 this.audioStream = null;
                 this.playlists = [];
                 this.currentPlaylist = null;
+                this.audioLibrary = [];
                 
                 this.initializeElements();
                 this.setupEventListeners();
@@ -1918,6 +1988,11 @@
                             this.convertedAudioBlob = await this.fetchAudioBlob(result.file.url);
                         }
                         
+                        // Automatically save to database if user is logged in
+                        if (currentUser) {
+                            await this.saveConvertedAudioToDatabase(result.file);
+                        }
+                        
                         this.showDownloadSection(result.file.filename, this.formatSelect.value, result.file.size);
                         this.updateConversionStatus('success', '🎉 YouTube conversion complete!');
                     } else {
@@ -2110,6 +2185,7 @@
                     currentUser = session.user;
                     await this.loadUserProfile();
                     await this.loadUserPlaylists();
+                    await this.loadUserAudioLibrary();
                     this.updateAuthUI();
                 }
 
@@ -2119,12 +2195,14 @@
                         currentUser = session.user;
                         await this.loadUserProfile();
                         await this.loadUserPlaylists();
+                        await this.loadUserAudioLibrary();
                         this.updateAuthUI();
                     } else if (event === 'SIGNED_OUT') {
                         currentUser = null;
                         userProfile = null;
                         this.playlists = [];
                         this.currentPlaylist = null;
+                        this.audioLibrary = [];
                         window.location.href = '/auth.html';
                     }
                 });
@@ -2452,6 +2530,141 @@
                 this.currentPlaylist = playlist;
                 this.updateStatus('info', `Playing playlist: ${playlist.name}`);
                 // TODO: Implement playlist playback logic
+            }
+
+            async saveConvertedAudioToDatabase(fileData) {
+                if (!currentUser) return;
+
+                try {
+                    const { data, error } = await supabase
+                        .from('audio_files')
+                        .insert({
+                            file_name: fileData.filename || 'converted_audio.mp3',
+                            original_name: fileData.originalName || 'YouTube Audio',
+                            file_path: fileData.url || 'local',
+                            file_size: fileData.size || 0,
+                            mime_type: fileData.mimeType || 'audio/mpeg',
+                            public_url: fileData.url || 'local',
+                            user_id: currentUser.id,
+                            duration: fileData.duration || 0,
+                            title: fileData.originalName || 'YouTube Audio',
+                            artist: 'YouTube',
+                            album: 'Converted Audio'
+                        })
+                        .select()
+                        .single();
+
+                    if (error) throw error;
+
+                    console.log('Audio file saved to database:', data);
+                    this.updateStatus('success', 'Audio saved to your library!');
+                    return data;
+                } catch (error) {
+                    console.error('Error saving audio to database:', error);
+                    this.updateStatus('error', 'Failed to save audio to library');
+                }
+            }
+
+            async loadUserAudioLibrary() {
+                if (!currentUser) return;
+
+                try {
+                    const { data, error } = await supabase
+                        .from('audio_files')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('uploaded_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    this.audioLibrary = data || [];
+                    this.updateAudioLibraryUI();
+                    console.log('Loaded audio library:', this.audioLibrary.length, 'files');
+                } catch (error) {
+                    console.error('Error loading audio library:', error);
+                }
+            }
+
+            updateAudioLibraryUI() {
+                // Create audio library section if it doesn't exist
+                let librarySection = document.getElementById('audioLibrarySection');
+                if (!librarySection) {
+                    librarySection = document.createElement('div');
+                    librarySection.id = 'audioLibrarySection';
+                    librarySection.className = 'audio-library-section';
+                    librarySection.innerHTML = `
+                        <h3>🎵 My Audio Library</h3>
+                        <div id="audioLibraryList" class="audio-library-list"></div>
+                    `;
+                    
+                    // Add after the playlist section
+                    const playlistSection = document.getElementById('playlistSection');
+                    if (playlistSection) {
+                        playlistSection.parentNode.insertBefore(librarySection, playlistSection.nextSibling);
+                    }
+                }
+
+                // Update audio library list
+                const libraryList = document.getElementById('audioLibraryList');
+                if (libraryList) {
+                    if (this.audioLibrary.length === 0) {
+                        libraryList.innerHTML = '<p class="no-audio">No audio files yet. Convert some YouTube videos!</p>';
+                    } else {
+                        libraryList.innerHTML = this.audioLibrary.map(audio => `
+                            <div class="audio-item" data-audio-id="${audio.id}">
+                                <div class="audio-info">
+                                    <h4>${audio.title || audio.original_name}</h4>
+                                    <p>${audio.artist || 'Unknown Artist'} - ${audio.album || 'Unknown Album'}</p>
+                                    <small>${this.formatFileSize(audio.file_size)} • ${audio.mime_type}</small>
+                                </div>
+                                <div class="audio-actions">
+                                    <button onclick="app.playAudio('${audio.id}')" class="btn btn-small btn-primary">Play</button>
+                                    <button onclick="app.addAudioToPlaylist('${audio.id}')" class="btn btn-small">Add to Playlist</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            async playAudio(audioId) {
+                const audio = this.audioLibrary.find(a => a.id === audioId);
+                if (!audio) {
+                    this.updateStatus('error', 'Audio file not found');
+                    return;
+                }
+
+                this.updateStatus('info', `Playing: ${audio.title || audio.original_name}`);
+                // TODO: Implement audio playback logic
+            }
+
+            async addAudioToPlaylist(audioId) {
+                if (this.playlists.length === 0) {
+                    this.updateStatus('error', 'Create a playlist first!');
+                    return;
+                }
+
+                const playlistId = prompt('Select playlist:\n' + 
+                    this.playlists.map((p, i) => `${i + 1}. ${p.name}`).join('\n') + 
+                    '\nEnter playlist number:');
+
+                if (playlistId && !isNaN(playlistId)) {
+                    const selectedPlaylist = this.playlists[parseInt(playlistId) - 1];
+                    if (selectedPlaylist) {
+                        const audio = this.audioLibrary.find(a => a.id === audioId);
+                        if (audio) {
+                            await this.addToPlaylist(selectedPlaylist.id, audio);
+                        }
+                    }
+                }
             }
         }
 
