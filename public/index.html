@@ -402,6 +402,55 @@
         .track-item {
             display: flex;
             align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(78, 205, 196, 0.3);
+        }
+
+        .track-item.current-track {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: rgba(78, 205, 196, 0.5);
+            color: #4ecdc4;
+        }
+
+        .track-number {
+            width: 30px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .track-title {
+            flex: 1;
+            margin-left: 12px;
+            font-weight: 500;
+        }
+
+        .track-artist {
+            flex: 1;
+            margin-left: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .btn-tiny {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            margin-left: 12px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
             gap: 12px;
             padding: 10px;
             border-radius: 8px;
@@ -2934,11 +2983,31 @@
             }
 
             previousTrack() {
-                this.updateStatus('info', '⏮ Previous track - coming in next update!');
+                if (this.currentPlaylist && this.currentPlaylist.playlist_items) {
+                    if (this.currentTrackIndex > 0) {
+                        this.currentTrackIndex--;
+                        this.playCurrentTrack();
+                        this.updateStatus('success', '⏮ Previous track');
+                    } else {
+                        this.updateStatus('info', '⏮ Beginning of playlist');
+                    }
+                } else {
+                    this.updateStatus('info', '⏮ Previous track - coming in next update!');
+                }
             }
 
             nextTrack() {
-                this.updateStatus('info', '⏭ Next track - coming in next update!');
+                if (this.currentPlaylist && this.currentPlaylist.playlist_items) {
+                    if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                        this.currentTrackIndex++;
+                        this.playCurrentTrack();
+                        this.updateStatus('success', '⏭ Next track');
+                    } else {
+                        this.updateStatus('info', '⏭ End of playlist');
+                    }
+                } else {
+                    this.updateStatus('info', '⏭ Next track - coming in next update!');
+                }
             }
 
             setVolume(volume) {
@@ -3831,6 +3900,112 @@
                 
                 // Start playing the first track
                 await this.playCurrentTrack();
+            }
+
+            async playCurrentTrack() {
+                if (!this.currentPlaylist || !this.currentPlaylist.playlist_items) {
+                    this.updateStatus('error', 'No playlist selected');
+                    return;
+                }
+
+                const track = this.currentPlaylist.playlist_items[this.currentTrackIndex];
+                if (!track || !track.audio_files) {
+                    this.updateStatus('error', 'Track not found');
+                    return;
+                }
+
+                const audioFile = track.audio_files;
+                
+                try {
+                    // Load the audio file into the main player
+                    if (audioFile.audio_data) {
+                        // Handle base64 audio data
+                        const audioBlob = await this.base64ToBlob(audioFile.audio_data, audioFile.mime_type);
+                        await this.loadAudioFromBlob(audioBlob, audioFile.title || audioFile.original_name);
+                    } else if (audioFile.public_url && audioFile.public_url !== 'local') {
+                        // Handle URL-based audio
+                        await this.loadAudioFromUrl(audioFile.public_url, audioFile.title || audioFile.original_name);
+                    } else {
+                        this.updateStatus('error', 'Audio file not available');
+                        return;
+                    }
+
+                    // Update the main player UI
+                    this.updateUI();
+                    this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name}`);
+                } catch (error) {
+                    console.error('Error playing track from playlist:', error);
+                    this.updateStatus('error', 'Failed to play track');
+                }
+            }
+
+            async loadAudioFromBlob(blob, title) {
+                try {
+                    const audioUrl = URL.createObjectURL(blob);
+                    await this.loadAudioFromUrl(audioUrl, title);
+                } catch (error) {
+                    console.error('Error loading audio from blob:', error);
+                    throw error;
+                }
+            }
+
+            async loadAudioFromUrl(url, title) {
+                try {
+                    // Create a temporary audio element to test the URL
+                    const testAudio = new Audio();
+                    testAudio.src = url;
+                    
+                    return new Promise((resolve, reject) => {
+                        testAudio.onloadeddata = () => {
+                            // Update the main player with the new track
+                            this.currentAudio = testAudio;
+                            this.trackTitle.textContent = title;
+                            this.trackArtist.textContent = "From Playlist";
+                            this.albumArt.textContent = '🎵';
+                            
+                            // Update the main player UI
+                            this.updateUI();
+                            resolve();
+                        };
+                        
+                        testAudio.onerror = () => {
+                            reject(new Error('Failed to load audio'));
+                        };
+                        
+                        testAudio.load();
+                    });
+                } catch (error) {
+                    console.error('Error loading audio from URL:', error);
+                    throw error;
+                }
+            }
+
+            base64ToBlob(base64, mimeType) {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                return new Blob([byteArray], { type: mimeType });
+            }
+
+            async playTrackFromPlaylist(trackIndex) {
+                if (!this.currentPlaylist || !this.currentPlaylist.playlist_items) {
+                    this.updateStatus('error', 'No playlist selected');
+                    return;
+                }
+
+                if (trackIndex < 0 || trackIndex >= this.currentPlaylist.playlist_items.length) {
+                    this.updateStatus('error', 'Invalid track index');
+                    return;
+                }
+
+                this.currentTrackIndex = trackIndex;
+                await this.playCurrentTrack();
+                
+                // Update the playlist UI to highlight current track
+                this.showPlaylistPlayer(this.currentPlaylist);
             }
 
             showPlaylistPlayer(playlist) {
