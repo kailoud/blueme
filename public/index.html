@@ -1486,6 +1486,85 @@
             font-weight: 500;
         }
 
+        /* Load Audio Modal */
+        .load-audio-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .load-audio-modal {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-body p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .load-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .load-options .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+            font-size: 1rem;
+        }
+
         .progress-section {
             margin-bottom: 24px;
         }
@@ -2126,6 +2205,14 @@
                         <polyline points="10,9 9,9 8,9"></polyline>
                     </svg>
                     <span>Library</span>
+                </button>
+                <button class="quick-btn" onclick="app.loadSampleAudio()" title="Try Sample Audio">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    <span>Demo</span>
                 </button>
             </div>
 
@@ -2921,7 +3008,8 @@
                         this.playAudio();
                     }
                 } else {
-                    this.updateStatus('info', '🎵 Load a track first to start the party!');
+                    this.updateStatus('info', '🎵 Load a track first! Try the audio converter or drag & drop a file');
+                    this.showLoadAudioOptions();
                 }
             }
 
@@ -3115,6 +3203,115 @@
                 this.playBtn.innerHTML = '▶';
                 this.albumArt.style.animation = 'none';
                 this.updateStatus('success', '🎊 Track finished! Play another to keep the vibe going');
+            }
+
+            showLoadAudioOptions() {
+                // Create a temporary overlay with options to load audio
+                const overlay = document.createElement('div');
+                overlay.className = 'load-audio-overlay';
+                overlay.innerHTML = `
+                    <div class="load-audio-modal">
+                        <div class="modal-header">
+                            <h3>🎵 Load Audio</h3>
+                            <button class="close-btn" onclick="this.closest('.load-audio-overlay').remove()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Choose how you'd like to load audio:</p>
+                            <div class="load-options">
+                                <button class="btn btn-primary" onclick="document.getElementById('audioFile').click(); this.closest('.load-audio-overlay').remove();">
+                                    📁 Upload File
+                                </button>
+                                <button class="btn btn-secondary" onclick="app.loadSampleAudio(); this.closest('.load-audio-overlay').remove();">
+                                    🎵 Try Sample Audio
+                                </button>
+                                <button class="btn btn-secondary" onclick="app.showYouTubeConverter(); this.closest('.load-audio-overlay').remove();">
+                                    🎬 Convert YouTube
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    if (overlay.parentNode) {
+                        overlay.remove();
+                    }
+                }, 10000);
+            }
+
+            loadSampleAudio() {
+                // Create a simple audio tone for testing
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const sampleRate = audioContext.sampleRate;
+                const duration = 10; // 10 seconds
+                const length = sampleRate * duration;
+                const buffer = audioContext.createBuffer(1, length, sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // Generate a simple sine wave
+                for (let i = 0; i < length; i++) {
+                    data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.1; // 440Hz tone
+                }
+                
+                // Convert to blob and create URL
+                const wavBlob = this.audioBufferToWav(buffer);
+                const url = URL.createObjectURL(wavBlob);
+                
+                this.audioPlayer.src = url;
+                this.trackTitle.textContent = "Sample Audio";
+                this.trackArtist.textContent = "BlueMe Demo";
+                this.albumArt.textContent = '🎵';
+                
+                this.updateStatus('success', '🎵 Sample audio loaded! Ready to play');
+            }
+
+            audioBufferToWav(buffer) {
+                const length = buffer.length;
+                const arrayBuffer = new ArrayBuffer(44 + length * 2);
+                const view = new DataView(arrayBuffer);
+                
+                // WAV header
+                const writeString = (offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+                
+                writeString(0, 'RIFF');
+                view.setUint32(4, 36 + length * 2, true);
+                writeString(8, 'WAVE');
+                writeString(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, 1, true);
+                view.setUint32(24, buffer.sampleRate, true);
+                view.setUint32(28, buffer.sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                writeString(36, 'data');
+                view.setUint32(40, length * 2, true);
+                
+                // Convert float samples to 16-bit PCM
+                const channelData = buffer.getChannelData(0);
+                let offset = 44;
+                for (let i = 0; i < length; i++) {
+                    const sample = Math.max(-1, Math.min(1, channelData[i]));
+                    view.setInt16(offset, sample * 0x7FFF, true);
+                    offset += 2;
+                }
+                
+                return new Blob([arrayBuffer], { type: 'audio/wav' });
+            }
+
+            showYouTubeConverter() {
+                // Scroll to the converter section
+                const converterSection = document.querySelector('.converter-section');
+                if (converterSection) {
+                    converterSection.scrollIntoView({ behavior: 'smooth' });
+                }
             }
 
             // Audio Conversion Methods
