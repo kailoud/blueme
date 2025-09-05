@@ -3404,12 +3404,12 @@
                     if (this.currentTrackIndex > 0) {
                         this.currentTrackIndex--;
                         this.playCurrentTrack();
-                        this.updateStatus('success', '⏮ Previous track');
+                        this.updateStatus('success', `⏮ Previous track (${this.currentTrackIndex + 1}/${this.currentPlaylist.playlist_items.length})`);
                     } else {
                         this.updateStatus('info', '⏮ Beginning of playlist');
                     }
                 } else {
-                    this.updateStatus('info', '⏮ Previous track - coming in next update!');
+                    this.updateStatus('info', '⏮ No playlist active - load a playlist first');
                 }
             }
 
@@ -3418,12 +3418,12 @@
                     if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
                         this.currentTrackIndex++;
                         this.playCurrentTrack();
-                        this.updateStatus('success', '⏭ Next track');
+                        this.updateStatus('success', `⏭ Next track (${this.currentTrackIndex + 1}/${this.currentPlaylist.playlist_items.length})`);
                     } else {
                         this.updateStatus('info', '⏭ End of playlist');
                     }
                 } else {
-                    this.updateStatus('info', '⏭ Next track - coming in next update!');
+                    this.updateStatus('info', '⏭ No playlist active - load a playlist first');
                 }
             }
 
@@ -4007,6 +4007,10 @@
                     this.updateStatus('error', 'No converted audio available');
                     return;
                 }
+                
+                // Clear any active playlist when playing converted audio
+                this.currentPlaylist = null;
+                this.currentTrackIndex = 0;
                 
                 const url = URL.createObjectURL(this.convertedAudioBlob);
                 this.audioPlayer.src = url;
@@ -4725,15 +4729,23 @@
                     return;
                 }
 
+                console.log('🎵 Playing playlist in main player:', playlist.name);
                 this.currentPlaylist = playlist;
                 this.currentTrackIndex = 0;
                 this.isPlaying = false;
                 
-                this.showPlaylistPlayer(playlist);
-                this.updateStatus('info', `Playing playlist: ${playlist.name}`);
-                
-                // Start playing the first track
+                // Load the first track into the main "Choose Your Vibe" player
                 await this.playCurrentTrack();
+                
+                // Show playlist info in the main player
+                this.updateStatus('success', `🎵 Now playing playlist: ${playlist.name}`);
+                
+                // Update the main player's track info to show it's from a playlist
+                const firstTrack = playlist.playlist_items[0];
+                if (firstTrack && firstTrack.audio_files) {
+                    this.trackTitle.textContent = `${firstTrack.audio_files.title || firstTrack.audio_files.original_name} (from ${playlist.name})`;
+                    this.trackArtist.textContent = firstTrack.audio_files.artist || 'Playlist Track';
+                }
             }
 
             async playCurrentTrack() {
@@ -4901,8 +4913,13 @@
                     this.audioPlayer.load();
                     
                     // Update track info in main player
-                    this.trackTitle.textContent = audioFile.title || audioFile.original_name || 'Unknown Track';
-                    this.trackArtist.textContent = audioFile.artist || 'Unknown Artist';
+                    if (this.currentPlaylist) {
+                        this.trackTitle.textContent = `${audioFile.title || audioFile.original_name || 'Unknown Track'} (${this.currentTrackIndex + 1}/${this.currentPlaylist.playlist_items.length})`;
+                        this.trackArtist.textContent = `${audioFile.artist || 'Unknown Artist'} • ${this.currentPlaylist.name}`;
+                    } else {
+                        this.trackTitle.textContent = audioFile.title || audioFile.original_name || 'Unknown Track';
+                        this.trackArtist.textContent = audioFile.artist || 'Unknown Artist';
+                    }
                     
                     // Update playlist player info
                     const trackInfo = document.getElementById('currentTrackInfo');
@@ -4954,8 +4971,20 @@
             }
 
             async playTrackFromPlaylist(index) {
+                if (!this.currentPlaylist || !this.currentPlaylist.playlist_items) {
+                    this.updateStatus('error', 'No playlist selected');
+                    return;
+                }
+
                 this.currentTrackIndex = index;
                 await this.playCurrentTrack();
+                
+                // Update main player info to show it's from a playlist
+                const track = this.currentPlaylist.playlist_items[index];
+                if (track && track.audio_files) {
+                    this.trackTitle.textContent = `${track.audio_files.title || track.audio_files.original_name} (from ${this.currentPlaylist.name})`;
+                    this.trackArtist.textContent = track.audio_files.artist || 'Playlist Track';
+                }
             }
 
             async viewPlaylist(playlistId) {
@@ -5247,6 +5276,10 @@
                 console.log('🎵 Playing audio from library:', audio);
                 this.updateStatus('info', `Loading: ${audio.title || audio.original_name}`);
 
+                // Clear any active playlist when playing individual tracks
+                this.currentPlaylist = null;
+                this.currentTrackIndex = 0;
+
                 try {
                     let audioUrl;
                     
@@ -5275,7 +5308,7 @@
                     this.audioPlayer.src = audioUrl;
                     this.audioPlayer.load();
                     
-                    // Update track info
+                    // Update track info (no playlist info since we cleared it)
                     this.trackTitle.textContent = audio.title || audio.original_name;
                     this.trackArtist.textContent = audio.artist || 'Unknown Artist';
                     
