@@ -41,7 +41,8 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": "18.x",
+    "npm": ">=8.0.0"
   },
   "repository": {
     "type": "git",
