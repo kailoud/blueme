@@ -1,3 +1,6 @@
+// Load File API polyfill for Node.js compatibility
+require('./polyfill.js');
+
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');

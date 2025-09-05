@@ -1,5 +1,5 @@
-# Use Node.js 18 with FFmpeg pre-installed
-FROM node:18-bullseye
+# Use Node.js 20 with FFmpeg pre-installed
+FROM node:20-bullseye
 
 # Install FFmpeg and related libraries
 RUN apt-get update && apt-get install -y \
@@ -19,6 +19,9 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm ci --only=production
+
+# Add File API polyfill for Node.js compatibility
+RUN echo "global.File = global.File || class File { constructor() { throw new Error('File API not supported'); } };" > /app/polyfill.js
 
 # Copy application code
 COPY . .
