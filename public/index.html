@@ -3626,6 +3626,14 @@
 
                     const nextPosition = items && items.length > 0 ? items[0].position + 1 : 1;
                     console.log('Next position:', nextPosition);
+                    console.log('Attempting to add audio_file_id:', fileData.id, 'to playlist:', playlistId);
+                    console.log('fileData object:', fileData);
+
+                    // Validate that fileData.id is a valid UUID
+                    if (!fileData.id || typeof fileData.id !== 'string' || fileData.id === 'audioFile') {
+                        console.error('❌ Invalid audio_file_id:', fileData.id);
+                        throw new Error('Invalid audio file ID. Please try converting the audio again.');
+                    }
 
                     // Add to playlist
                     const { error: itemError } = await supabase
@@ -4444,7 +4452,7 @@
                         return `
                             <div class="modal-playlist-item ${!canAddMore ? 'disabled' : ''}" 
                                  data-playlist-id="${playlist.id}"
-                                 onclick="${canAddMore ? `app.addToPlaylistFromModal('${playlist.id}', audioFile)` : ''}">
+                                 onclick="${canAddMore ? `app.addToPlaylistFromModal('${playlist.id}', ${audioFile ? JSON.stringify(audioFile).replace(/"/g, '&quot;') : 'null'})` : ''}">
                                 <div class="playlist-info">
                                     <div class="playlist-name">${playlist.name}</div>
                                     <div class="playlist-meta">
@@ -4478,12 +4486,16 @@
             async addToPlaylistFromModal(playlistId, audioFile) {
                 try {
                     console.log('Adding to playlist from modal:', playlistId, audioFile);
+                    console.log('audioFile object:', audioFile);
+                    console.log('convertedAudioBlob:', this.convertedAudioBlob);
                     
-                    if (audioFile) {
+                    if (audioFile && audioFile.id) {
                         // Adding existing audio file from library
+                        console.log('Adding existing audio file with ID:', audioFile.id);
                         await this.addToPlaylist(playlistId, audioFile);
                     } else if (this.convertedAudioBlob) {
                         // Adding current converted track
+                        console.log('Adding newly converted track');
                         const trackData = {
                             filename: this.convertedFileName?.textContent || 'converted_audio.mp3',
                             originalName: 'YouTube Audio',
@@ -4495,6 +4507,7 @@
                         };
                         await this.addToPlaylist(playlistId, trackData);
                     } else {
+                        console.error('No valid audio file or converted blob found');
                         this.updateStatus('error', 'No track to add');
                         return;
                     }
