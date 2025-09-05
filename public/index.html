@@ -2494,6 +2494,18 @@
                     </svg>
                     <span>Check</span>
                 </button>
+                <button class="quick-btn" onclick="app.fixMissingAudioFiles()" title="Fix Missing Audio Files" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                    <span>Fix</span>
+                </button>
+                <button class="quick-btn" onclick="app.createTestPlaylist()" title="Create Test Playlist with Working Audio" style="background: linear-gradient(45deg, #6f42c1, #e83e8c);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.828 14.828a4 4 0 0 1-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                    </svg>
+                    <span>Test</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3912,11 +3924,13 @@
 
                         let playableTracks = 0;
                         let missingTracks = 0;
+                        let tracksWithAudioData = 0;
 
                         for (const item of playlist.playlist_items) {
                             if (item.audio_files) {
                                 if (item.audio_files.audio_data) {
                                     playableTracks++;
+                                    tracksWithAudioData++;
                                     console.log(`✅ Track "${item.audio_files.title || item.audio_files.original_name}" has audio data`);
                                 } else if (item.audio_files.file_path) {
                                     // Check if file exists in storage
@@ -3943,13 +3957,226 @@
                             }
                         }
 
-                        console.log(`📊 Playlist "${playlist.name}": ${playableTracks} playable, ${missingTracks} missing`);
+                        console.log(`📊 Playlist "${playlist.name}": ${playableTracks} playable, ${missingTracks} missing, ${tracksWithAudioData} with local data`);
                         this.updateStatus('info', `Playlist "${playlist.name}": ${playableTracks} playable tracks, ${missingTracks} missing`);
+                        
+                        // If we have tracks with audio data but missing from storage, offer to fix
+                        if (tracksWithAudioData > 0 && missingTracks > 0) {
+                            this.updateStatus('warning', `Found ${tracksWithAudioData} tracks with local audio data. Click "Fix" to re-upload missing files.`);
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Error checking playlist health:', error);
                     this.updateStatus('error', `Playlist check failed: ${error.message}`);
                 }
+            }
+
+            async fixMissingAudioFiles() {
+                console.log('🔧 Fixing missing audio files...');
+                try {
+                    if (!this.playlists || this.playlists.length === 0) {
+                        this.updateStatus('error', 'No playlists to fix');
+                        return;
+                    }
+
+                    let fixedCount = 0;
+                    let errorCount = 0;
+
+                    for (const playlist of this.playlists) {
+                        if (!playlist.playlist_items || playlist.playlist_items.length === 0) {
+                            continue;
+                        }
+
+                        for (const item of playlist.playlist_items) {
+                            if (item.audio_files && item.audio_files.audio_data && item.audio_files.file_path) {
+                                // Check if file is missing from storage
+                                try {
+                                    const { data, error } = await supabase.storage
+                                        .from('audio-files')
+                                        .createSignedUrl(item.audio_files.file_path, 60);
+                                    
+                                    if (error) {
+                                        console.log(`🔧 Re-uploading missing file: ${item.audio_files.title || item.audio_files.original_name}`);
+                                        
+                                        // Convert base64 to blob
+                                        const audioBlob = this.base64ToBlob(item.audio_files.audio_data, 'audio/mpeg');
+                                        
+                                        // Upload to Supabase storage
+                                        const { data: uploadData, error: uploadError } = await supabase.storage
+                                            .from('audio-files')
+                                            .upload(item.audio_files.file_path, audioBlob, {
+                                                contentType: 'audio/mpeg',
+                                                upsert: true
+                                            });
+
+                                        if (uploadError) {
+                                            console.error('❌ Upload error:', uploadError);
+                                            errorCount++;
+                                        } else {
+                                            console.log('✅ File re-uploaded successfully');
+                                            fixedCount++;
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error('❌ Error checking/fixing file:', error);
+                                    errorCount++;
+                                }
+                            }
+                        }
+                    }
+
+                    this.updateStatus('success', `Fixed ${fixedCount} files, ${errorCount} errors`);
+                    console.log(`🔧 Fix complete: ${fixedCount} fixed, ${errorCount} errors`);
+                    
+                    // Reload playlists after fixing
+                    if (fixedCount > 0) {
+                        await this.loadUserPlaylists();
+                        await this.autoLoadFirstPlaylist();
+                    }
+                } catch (error) {
+                    console.error('❌ Error fixing missing audio files:', error);
+                    this.updateStatus('error', `Fix failed: ${error.message}`);
+                }
+            }
+
+            async createTestPlaylist() {
+                console.log('🧪 Creating test playlist with working audio...');
+                try {
+                    if (!currentUser) {
+                        this.updateStatus('error', 'Please sign in first');
+                        return;
+                    }
+
+                    // Generate sample audio data
+                    const sampleAudioData = this.generateSampleAudioData();
+                    
+                    // Create test audio file record
+                    const testAudioFile = {
+                        id: crypto.randomUUID(),
+                        user_id: currentUser.id,
+                        title: 'Test Track - Working Audio',
+                        artist: 'BlueMe Test',
+                        album: 'Test Album',
+                        duration: 10,
+                        file_size: sampleAudioData.length,
+                        file_path: `test-${Date.now()}.mp3`,
+                        audio_data: sampleAudioData,
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Save to database
+                    const { data: audioData, error: audioError } = await supabase
+                        .from('audio_files')
+                        .insert([testAudioFile])
+                        .select()
+                        .single();
+
+                    if (audioError) {
+                        console.error('❌ Error saving test audio:', audioError);
+                        this.updateStatus('error', `Failed to save test audio: ${audioError.message}`);
+                        return;
+                    }
+
+                    // Create test playlist
+                    const testPlaylist = {
+                        id: crypto.randomUUID(),
+                        user_id: currentUser.id,
+                        name: 'Test Playlist (Working)',
+                        description: 'Test playlist with working audio',
+                        is_premium: false,
+                        max_songs: 2,
+                        created_at: new Date().toISOString()
+                    };
+
+                    const { data: playlistData, error: playlistError } = await supabase
+                        .from('playlists')
+                        .insert([testPlaylist])
+                        .select()
+                        .single();
+
+                    if (playlistError) {
+                        console.error('❌ Error creating test playlist:', playlistError);
+                        this.updateStatus('error', `Failed to create test playlist: ${playlistError.message}`);
+                        return;
+                    }
+
+                    // Add audio to playlist
+                    const playlistItem = {
+                        id: crypto.randomUUID(),
+                        playlist_id: playlistData.id,
+                        audio_file_id: audioData.id,
+                        position: 1,
+                        created_at: new Date().toISOString()
+                    };
+
+                    const { error: itemError } = await supabase
+                        .from('playlist_items')
+                        .insert([playlistItem]);
+
+                    if (itemError) {
+                        console.error('❌ Error adding audio to playlist:', itemError);
+                        this.updateStatus('error', `Failed to add audio to playlist: ${itemError.message}`);
+                        return;
+                    }
+
+                    this.updateStatus('success', '✅ Test playlist created with working audio!');
+                    console.log('✅ Test playlist created successfully');
+                    
+                    // Reload playlists and auto-load the test playlist
+                    await this.loadUserPlaylists();
+                    await this.autoLoadFirstPlaylist();
+                    
+                } catch (error) {
+                    console.error('❌ Error creating test playlist:', error);
+                    this.updateStatus('error', `Test playlist creation failed: ${error.message}`);
+                }
+            }
+
+            generateSampleAudioData() {
+                // Generate a simple sine wave audio as base64
+                const sampleRate = 44100;
+                const duration = 10; // 10 seconds
+                const frequency = 440; // A4 note
+                const samples = sampleRate * duration;
+                
+                // Create a simple sine wave
+                const audioBuffer = new ArrayBuffer(44 + samples * 2);
+                const view = new DataView(audioBuffer);
+                
+                // WAV header
+                const writeString = (offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+                
+                writeString(0, 'RIFF');
+                view.setUint32(4, 36 + samples * 2, true);
+                writeString(8, 'WAVE');
+                writeString(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, 1, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                writeString(36, 'data');
+                view.setUint32(40, samples * 2, true);
+                
+                // Generate sine wave
+                for (let i = 0; i < samples; i++) {
+                    const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3;
+                    view.setInt16(44 + i * 2, sample * 32767, true);
+                }
+                
+                // Convert to base64
+                const bytes = new Uint8Array(audioBuffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
             }
 
             async forceCreateProfile() {
