@@ -3281,6 +3281,13 @@
             }
 
             togglePlayback() {
+                console.log('🎵 togglePlayback called');
+                console.log('🎵 Current playlist:', this.currentPlaylist);
+                console.log('🎵 Current track index:', this.currentTrackIndex);
+                console.log('🎵 Audio player src:', this.audioPlayer.src);
+                console.log('🎵 Audio player paused:', this.audioPlayer.paused);
+                console.log('🎵 Is playing:', this.isPlaying);
+                
                 // If we have an active playlist, play the current track
                 if (this.currentPlaylist && this.currentPlaylist.playlist_items && this.currentPlaylist.playlist_items.length > 0) {
                     console.log('🎵 Playing from active playlist:', this.currentPlaylist.name);
@@ -3296,6 +3303,7 @@
                         this.playAudio();
                     }
                 } else {
+                    console.log('🎵 No audio loaded, showing load options');
                     this.updateStatus('info', '🎵 Load a track first! Try the audio converter or drag & drop a file');
                     this.showLoadAudioOptions();
                 }
@@ -4515,10 +4523,47 @@
                         userProfile = data;
                         console.log('✅ User profile loaded:', userProfile);
                         this.updateStatus('success', `Profile loaded for ${userProfile.username || userProfile.email}`);
+                        
+                        // Auto-load first playlist if available
+                        await this.autoLoadFirstPlaylist();
                     }
                 } catch (error) {
                     console.error('❌ Error loading user profile:', error);
                     this.updateStatus('error', `Profile error: ${error.message}`);
+                }
+            }
+
+            async autoLoadFirstPlaylist() {
+                console.log('🎵 Auto-loading first playlist...');
+                try {
+                    // Load playlists if not already loaded
+                    if (!this.playlists || this.playlists.length === 0) {
+                        await this.loadUserPlaylists();
+                    }
+
+                    if (this.playlists && this.playlists.length > 0) {
+                        const firstPlaylist = this.playlists[0];
+                        console.log('🎵 Auto-loading playlist:', firstPlaylist.name);
+                        
+                        this.currentPlaylist = firstPlaylist;
+                        this.currentTrackIndex = 0;
+                        
+                        // Update track info in main player
+                        if (firstPlaylist.playlist_items && firstPlaylist.playlist_items.length > 0) {
+                            const firstTrack = firstPlaylist.playlist_items[0];
+                            if (firstTrack.audio_files) {
+                                this.trackTitle.textContent = `${firstTrack.audio_files.title || firstTrack.audio_files.original_name} (1/${firstPlaylist.playlist_items.length})`;
+                                this.trackArtist.textContent = `${firstTrack.audio_files.artist || 'Unknown Artist'} • ${firstPlaylist.name}`;
+                            }
+                        }
+                        
+                        console.log('✅ Playlist auto-loaded:', firstPlaylist.name);
+                        this.updateStatus('success', `🎵 Ready to play: ${firstPlaylist.name}`);
+                    } else {
+                        console.log('ℹ️ No playlists found for auto-loading');
+                    }
+                } catch (error) {
+                    console.error('❌ Error auto-loading first playlist:', error);
                 }
             }
 
