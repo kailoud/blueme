@@ -2473,6 +2473,14 @@
                     </svg>
                     <span>Test</span>
                 </button>
+                <button class="quick-btn" onclick="app.loadFirstPlaylist()" title="Load First Playlist" style="background: linear-gradient(45deg, #6f42c1, #e83e8c);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    <span>Load</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3260,6 +3268,14 @@
             }
 
             togglePlayback() {
+                // If we have an active playlist, play the current track
+                if (this.currentPlaylist && this.currentPlaylist.playlist_items && this.currentPlaylist.playlist_items.length > 0) {
+                    console.log('🎵 Playing from active playlist:', this.currentPlaylist.name);
+                    this.playCurrentTrack();
+                    return;
+                }
+                
+                // If we have audio loaded, play/pause it
                 if (this.audioPlayer.src) {
                     if (this.isPlaying) {
                         this.pauseAudio();
@@ -3816,6 +3832,47 @@
                 }
             }
 
+            async loadFirstPlaylist() {
+                console.log('🎵 Loading first available playlist...');
+                try {
+                    if (!currentUser) {
+                        this.updateStatus('error', 'Please sign in first');
+                        return;
+                    }
+
+                    // Load playlists if not already loaded
+                    if (!this.playlists || this.playlists.length === 0) {
+                        await this.loadUserPlaylists();
+                    }
+
+                    if (this.playlists && this.playlists.length > 0) {
+                        const firstPlaylist = this.playlists[0];
+                        console.log('🎵 Loading playlist:', firstPlaylist.name);
+                        
+                        this.currentPlaylist = firstPlaylist;
+                        this.currentTrackIndex = 0;
+                        
+                        this.updateStatus('success', `🎵 Loaded playlist: ${firstPlaylist.name}`);
+                        
+                        // Update track info in main player
+                        if (firstPlaylist.playlist_items && firstPlaylist.playlist_items.length > 0) {
+                            const firstTrack = firstPlaylist.playlist_items[0];
+                            if (firstTrack.audio_files) {
+                                this.trackTitle.textContent = `${firstTrack.audio_files.title || firstTrack.audio_files.original_name} (1/${firstPlaylist.playlist_items.length})`;
+                                this.trackArtist.textContent = `${firstTrack.audio_files.artist || 'Unknown Artist'} • ${firstPlaylist.name}`;
+                            }
+                        }
+                        
+                        this.updateStatus('success', `🎵 Ready to play: ${firstPlaylist.name}. Click play to start!`);
+                    } else {
+                        this.updateStatus('info', 'No playlists found. Create a playlist first!');
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading first playlist:', error);
+                    this.updateStatus('error', `Failed to load playlist: ${error.message}`);
+                }
+            }
+
             async forceCreateProfile() {
                 console.log('🔨 Force creating profile...');
                 try {
@@ -4328,7 +4385,15 @@
                         // Update playlist section for authenticated user
                         this.ensurePlaylistSection();
                         
-                        this.updateStatus('success', '🎵 Welcome back! Your playlists are ready');
+                        // Auto-load first playlist if available
+                        if (this.playlists && this.playlists.length > 0) {
+                            console.log('🎵 Auto-loading first playlist:', this.playlists[0].name);
+                            this.currentPlaylist = this.playlists[0];
+                            this.currentTrackIndex = 0;
+                            this.updateStatus('success', `🎵 Welcome back! Ready to play: ${this.playlists[0].name}`);
+                        } else {
+                            this.updateStatus('success', '🎵 Welcome back! Create a playlist to get started');
+                        }
                         
                     } else if (event === 'SIGNED_OUT') {
                         console.log('👤 User signed out');
