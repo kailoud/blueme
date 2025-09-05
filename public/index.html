@@ -2722,13 +2722,8 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase
-        const supabaseUrl = 'https://iuvzediktfczwvpfherh.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1dnplZGlrdGZjend2cGZoZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3NTYxMDUsImV4cCI6MjA3MjMzMjEwNX0.UtbxInMx2FumVADTIMcE3acbP_0WIDnPzPUfR6NT5fQ';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        // Authentication state
-        let currentUser = null;
+        // Authentication removed - app works without sign-in
+        let currentUser = null; // Keep for compatibility but not used
         let userProfile = null;
 
         // Simple loading state
@@ -4871,61 +4866,10 @@
             }
 
             async initializeAuth() {
-                // User is already authenticated (checked in DOMContentLoaded)
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    currentUser = session.user;
-                    await this.loadUserProfile();
-                    await this.loadUserPlaylists();
-                    await this.loadUserAudioLibrary();
-                    this.updateAuthUI();
-                }
-
-                // Listen for auth state changes
-                supabase.auth.onAuthStateChange(async (event, session) => {
-                    console.log('🔐 Auth state changed:', event, session?.user?.email);
-                    
-                    if (event === 'SIGNED_IN' && session) {
-                        currentUser = session.user;
-                        console.log('👤 User signed in:', currentUser.email);
-                        
-                        // Load user data FIRST
-                        await this.loadUserProfile();
-                        await this.loadUserPlaylists();
-                        await this.loadUserAudioLibrary();
-                        
-                        // THEN update the profile section with loaded data
-                        this.updateAuthUI();
-                        
-                        // Update playlist section for authenticated user
-                        this.ensurePlaylistSection();
-                        
-                        // Auto-load first playlist if available
-                        if (this.playlists && this.playlists.length > 0) {
-                            console.log('🎵 Auto-loading first playlist:', this.playlists[0].name);
-                            this.currentPlaylist = this.playlists[0];
-                            this.currentTrackIndex = 0;
-                            this.updateStatus('success', `🎵 Welcome back! Ready to play: ${this.playlists[0].name}`);
-                        } else {
-                            this.updateStatus('success', '🎵 Welcome back! Create a playlist to get started');
-                        }
-                        
-                    } else if (event === 'SIGNED_OUT') {
-                        console.log('👤 User signed out');
-                        currentUser = null;
-                        userProfile = null;
-                        this.playlists = [];
-                        this.currentPlaylist = null;
-                        this.audioLibrary = [];
-                        
-                        // Update UI for signed out state
-                        this.updateAuthUI();
-                        this.ensurePlaylistSection();
-                        
-                        // Don't redirect immediately, let user see the signed out state
-                        this.updateStatus('info', '🔐 You have been signed out');
-                    }
-                });
+                // Authentication removed - app works without sign-in
+                console.log('🔓 App running without authentication');
+                this.updateAuthUI();
+                this.ensurePlaylistSection();
             }
 
             async loadUserProfile() {
@@ -5050,107 +4994,57 @@
             }
 
             updateAuthUI() {
-                console.log('🔄 Updating auth UI...', { 
-                    currentUser: !!currentUser, 
-                    userProfile: !!userProfile,
-                    currentUserEmail: currentUser?.email,
-                    userProfileData: userProfile
-                });
+                console.log('🔄 Updating UI (no authentication)...');
                 
-                // Remove existing user info if any
-                const existingUserInfo = document.getElementById('userInfo');
-                if (existingUserInfo) {
-                    console.log('🗑️ Removing existing userInfo');
-                    existingUserInfo.remove();
+                // Remove existing profile sections
+                const existingProfile = document.querySelector('.user-profile-section');
+                if (existingProfile) {
+                    existingProfile.remove();
                 }
 
-                // Remove existing guest profile if any
-                const existingGuestProfile = document.querySelector('.user-profile-section');
-                if (existingGuestProfile) {
-                    console.log('🗑️ Removing existing guest profile');
-                    existingGuestProfile.remove();
-                }
-
-                if (currentUser) {
-                    // Create authenticated user profile with hamburger menu
-                    const userInfo = document.createElement('div');
-                    userInfo.id = 'userInfo';
-                    userInfo.className = 'user-profile-section';
-                    userInfo.innerHTML = `
-                        <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <div class="profile-content" style="display: none;">
-                            <div class="profile-header">
-                                <div class="profile-avatar">
-                                    <div class="avatar-circle">
-                                        ${userProfile?.username?.charAt(0)?.toUpperCase() || currentUser?.email?.charAt(0)?.toUpperCase() || '👤'}
-                                    </div>
-                                    ${userProfile?.is_premium ? '<div class="premium-crown">⭐</div>' : ''}
-                                </div>
-                                <div class="profile-info">
-                                    <h3 class="profile-name">${userProfile?.username || currentUser?.email}</h3>
-                                    <div class="profile-status">
-                                        <span class="status-badge ${userProfile?.is_premium ? 'premium' : 'free'}">
-                                            ${userProfile?.is_premium ? 'Premium User' : 'Free User'}
-                                        </span>
-                                    </div>
-                                </div>
+                // Create simple profile section without authentication
+                const profileSection = document.createElement('div');
+                profileSection.className = 'user-profile-section';
+                profileSection.innerHTML = `
+                    <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="profile-content" style="display: none;">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <div class="avatar-circle">🎵</div>
                             </div>
-                            <div class="profile-stats" id="profileStats">
-                                <div class="stat-item">
-                                    <div class="stat-label">Free Playlists</div>
-                                    <div class="stat-value">${userProfile?.free_playlist_count || 0}</div>
+                            <div class="profile-info">
+                                <h3 class="profile-name">BlueMe User</h3>
+                                <div class="profile-status">
+                                    <span class="status-badge free">Guest User</span>
                                 </div>
-                                <div class="stat-item">
-                                    <div class="stat-label">Premium Playlists</div>
-                                    <div class="stat-value">${userProfile?.premium_playlist_count || 0}</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-label">Member Since</div>
-                                    <div class="stat-value">${new Date(userProfile?.created_at || currentUser?.created_at).toLocaleDateString()}</div>
-                                </div>
-                            </div>
-                            <div class="profile-menu" id="profileMenu">
-                                <button class="menu-item" onclick="app.showPlaylists()">
-                                    <span class="menu-icon">🎵</span>
-                                    <span class="menu-text">My Playlists</span>
-                                </button>
-                                <button class="menu-item" onclick="app.showAudioLibrary()">
-                                    <span class="menu-icon">🎧</span>
-                                    <span class="menu-text">Audio Library</span>
-                                </button>
-                                <button class="menu-item" onclick="window.location.href='/auth.html'">
-                                    <span class="menu-icon">🔐</span>
-                                    <span class="menu-text">Account Settings</span>
-                                </button>
-                                <button class="menu-item logout" onclick="app.logout()">
-                                    <span class="menu-icon">🚪</span>
-                                    <span class="menu-text">Logout</span>
-                                </button>
                             </div>
                         </div>
-                    `;
-                    document.body.appendChild(userInfo);
-                    console.log('✅ Authenticated user profile created');
-                    
-                    // Verify profile was created
-                    setTimeout(() => {
-                        const profileSection = document.getElementById('userInfo');
-                        console.log('✅ Profile section exists after creation:', !!profileSection);
-                        if (profileSection) {
-                            console.log('📋 Profile section HTML length:', profileSection.outerHTML.length);
-                        } else {
-                            console.error('❌ Profile section was not created!');
-                        }
-                    }, 100);
+                        <div class="profile-menu">
+                            <button class="menu-item" onclick="app.showPlaylists()">
+                                <span class="menu-icon">🎵</span>
+                                <span class="menu-text">My Playlists</span>
+                            </button>
+                            <button class="menu-item" onclick="app.showAudioLibrary()">
+                                <span class="menu-icon">🎧</span>
+                                <span class="menu-text">Audio Library</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert at the top of the app container
+                const appContainer = document.querySelector('.app-container');
+                if (appContainer) {
+                    appContainer.insertBefore(profileSection, appContainer.firstChild);
                 } else {
-                    // Create guest profile
-                    createGuestProfileSection();
-                    console.log('✅ Guest profile created');
+                    document.body.appendChild(profileSection);
                 }
+                
+                console.log('✅ Simple profile section created');
             }
 
             toggleProfileMenu() {
@@ -5409,7 +5303,7 @@
             ensurePlaylistSection() {
                 console.log('🎵 Ensuring playlist section exists...');
                 
-                // Always create playlist section for all users
+                // Create playlist section for all users (no authentication required)
                 let playlistSection = document.getElementById('playlistSection');
                 if (!playlistSection) {
                     console.log('🎵 Creating new playlist section...');
@@ -5417,56 +5311,37 @@
                     playlistSection.id = 'playlistSection';
                     playlistSection.className = 'playlist-section';
                     
-                    // Show different content based on authentication status
-                    if (currentUser) {
-                        playlistSection.innerHTML = `
-                            <h3>🎵 My Playlists</h3>
-                            <div class="playlist-instructions">
-                                <p><strong>How to play playlists in "Choose Your Vibe" section:</strong></p>
-                                <ol>
-                                    <li>Click <strong>"▶️ Play"</strong> on any playlist below</li>
-                                    <li>The first track will load into the main player above</li>
-                                    <li>Use ⏮️/⏭️ buttons to navigate through playlist tracks</li>
-                                    <li>Track info will show playlist name and position (e.g., "Track 1/3")</li>
-                                </ol>
+                    playlistSection.innerHTML = `
+                        <h3>🎵 My Playlists</h3>
+                        <div class="playlist-instructions">
+                            <p><strong>How to play playlists in "Choose Your Vibe" section:</strong></p>
+                            <ol>
+                                <li>Click <strong>"▶️ Play"</strong> on any playlist below</li>
+                                <li>The first track will load into the main player above</li>
+                                <li>Use ⏮️/⏭️ buttons to navigate through playlist tracks</li>
+                                <li>Track info will show playlist name and position (e.g., "Track 1/3")</li>
+                            </ol>
+                        </div>
+                        <div class="playlist-controls">
+                            <button id="createPlaylistBtn" class="btn btn-primary">➕ Create Playlist</button>
+                            <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
+                        </div>
+                        <div id="playlistsList" class="playlists-list"></div>
+                        <div id="playlistPlayer" class="playlist-player" style="display: none;">
+                            <h4>🎧 Now Playing</h4>
+                            <div class="current-playlist-info">
+                                <span id="currentPlaylistName"></span>
+                                <span id="currentTrackInfo"></span>
                             </div>
                             <div class="playlist-controls">
-                                <button id="createFreePlaylistBtn" class="btn btn-primary">➕ Create Free Playlist (1 playlist, 2 songs max)</button>
-                                <button id="createPremiumPlaylistBtn" class="btn btn-premium">⭐ Create Premium Playlist (Unlimited, 10 songs each)</button>
-                                <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
+                                <button id="prevTrackBtn" class="btn btn-small">⏮️</button>
+                                <button id="playPauseBtn" class="btn btn-small btn-primary">▶️</button>
+                                <button id="nextTrackBtn" class="btn btn-small">⏭️</button>
+                                <button id="stopPlaylistBtn" class="btn btn-small">⏹️</button>
                             </div>
-                            <div id="playlistsList" class="playlists-list"></div>
-                            <div id="playlistPlayer" class="playlist-player" style="display: none;">
-                                <h4>🎧 Now Playing</h4>
-                                <div class="current-playlist-info">
-                                    <span id="currentPlaylistName"></span>
-                                    <span id="currentTrackInfo"></span>
-                                </div>
-                                <div class="playlist-controls">
-                                    <button id="prevTrackBtn" class="btn btn-small">⏮️</button>
-                                    <button id="playPauseBtn" class="btn btn-small btn-primary">▶️</button>
-                                    <button id="nextTrackBtn" class="btn btn-small">⏭️</button>
-                                    <button id="stopPlaylistBtn" class="btn btn-small">⏹️</button>
-                                </div>
-                                <div id="playlistTracks" class="playlist-tracks"></div>
-                            </div>
-                        `;
-                    } else {
-                        playlistSection.innerHTML = `
-                            <h3>🎵 Playlists</h3>
-                            <div class="playlist-controls">
-                                <button class="btn btn-primary" onclick="app.showSignInModal()">
-                                    🔐 Sign In to Create Playlists
-                                </button>
-                            </div>
-                            <div id="playlistsList" class="playlists-list">
-                                <div class="no-playlists">
-                                    <p>Sign in to create and manage your playlists!</p>
-                                    <p>Free users get 1 playlist with 2 songs. Premium users get unlimited playlists with 10 songs each.</p>
-                                </div>
-                            </div>
-                        `;
-                    }
+                            <div id="playlistTracks" class="playlist-tracks"></div>
+                        </div>
+                    `;
                     
                     // Add after the audio converter section
                     const converterSection = document.querySelector('.converter-section');
@@ -5484,10 +5359,38 @@
                 // Set up event listeners
                 this.setupPlaylistEventListeners();
                 
-                // Load existing playlists
-                this.loadUserPlaylists();
+                // Load existing playlists (local storage)
+                this.loadLocalPlaylists();
                 
                 console.log('🎵 Playlist section setup complete');
+            }
+
+            loadLocalPlaylists() {
+                console.log('🎵 Loading playlists from local storage...');
+                try {
+                    const storedPlaylists = localStorage.getItem('blueme_playlists');
+                    if (storedPlaylists) {
+                        this.playlists = JSON.parse(storedPlaylists);
+                        console.log('✅ Loaded playlists from local storage:', this.playlists.length);
+                        this.updatePlaylistUI();
+                    } else {
+                        this.playlists = [];
+                        console.log('ℹ️ No playlists found in local storage');
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading playlists from local storage:', error);
+                    this.playlists = [];
+                }
+            }
+
+            saveLocalPlaylists() {
+                console.log('💾 Saving playlists to local storage...');
+                try {
+                    localStorage.setItem('blueme_playlists', JSON.stringify(this.playlists));
+                    console.log('✅ Playlists saved to local storage');
+                } catch (error) {
+                    console.error('❌ Error saving playlists to local storage:', error);
+                }
             }
 
             updatePlaylistUI() {
@@ -6703,11 +6606,11 @@
             ensureProfileExists();
         }
         
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                console.log('🚀 Initializing BlueMe app...');
+                console.log('🚀 Initializing BlueMe app (no authentication)...');
                 
-                // Always initialize the app first
+                // Initialize the app
                 app = new BlueMe();
                 isLoading = false;
                 
@@ -6720,57 +6623,11 @@
                 
                 console.log('✅ BlueMe app initialized successfully');
                 
-                // Check authentication after app is loaded
-                console.log('🔍 Checking authentication status...');
-                const { data: { session }, error } = await supabase.auth.getSession();
+                // Initialize UI without authentication
+                app.updateAuthUI();
+                app.ensurePlaylistSection();
                 
-                if (error) {
-                    console.error('❌ Error checking session:', error);
-                }
-                
-                console.log('📋 Session data:', { session: !!session, user: session?.user?.email });
-                
-                if (!session) {
-                    console.log('👤 No user session found');
-                    // Show auth message but don't redirect
-                    if (app && app.statusMessage) {
-                        app.updateStatus('info', '🔐 Please sign in to save your audio and playlists');
-                    }
-                    
-                    // Add a sign in button to the UI
-                    addSignInButton();
-                    
-                    // Create a basic profile section for non-authenticated users
-                    createGuestProfileSection();
-                    
-                    // Always ensure playlist section is created (shows sign-in prompt for guests)
-                    app.ensurePlaylistSection();
-                    
-                    // Ensure profile exists (fallback)
-                    setTimeout(() => {
-                        const existingProfile = document.querySelector('.user-profile-section');
-                        if (!existingProfile) {
-                            console.log('👤 Fallback: Creating guest profile...');
-                            createGuestProfileSection();
-                        }
-                    }, 1000);
-                } else {
-                    console.log('👤 User session found:', session.user.email);
-                    // Set current user and load profile
-                    currentUser = session.user;
-                    
-                    // User is authenticated
-                    if (app && app.statusMessage) {
-                        app.updateStatus('success', '🎵 Welcome back! Your playlists are ready');
-                    }
-                    
-                    // Load user profile and update UI
-                    await app.loadUserProfile();
-                    app.updateAuthUI();
-                    
-                    // Always ensure playlist section is created
-                    app.ensurePlaylistSection();
-                }
+                console.log('🎵 App ready - no authentication required');
                 
             } catch (error) {
                 console.error('❌ Error initializing app:', error);
