@@ -2020,15 +2020,12 @@
 
             // Authentication Methods
             async initializeAuth() {
-                // Check if user is already logged in
+                // User is already authenticated (checked in DOMContentLoaded)
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
                     currentUser = session.user;
                     await this.loadUserProfile();
                     this.updateAuthUI();
-                } else {
-                    // Redirect to auth page if not logged in
-                    window.location.href = '/auth.html';
                 }
 
                 // Listen for auth state changes
@@ -2196,8 +2193,24 @@
 
         // Initialize the app when the page loads
         let app;
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Show loading state immediately
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.3s ease';
+            
+            // Check authentication first
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                // Redirect immediately if not authenticated
+                window.location.href = '/auth.html';
+                return;
+            }
+            
+            // Initialize app if authenticated
             app = new BlueMe();
+            
+            // Fade in the app
+            document.body.style.opacity = '1';
             
             // Add some demo functionality
             setTimeout(() => {
