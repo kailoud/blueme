@@ -217,24 +217,49 @@
             border-radius: 8px;
         }
 
-        /* Playlist Styles */
+        /* Playlist Styles - Mobile Optimized */
         .playlist-section {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-            margin: 24px 0;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .playlist-section h3 {
             color: var(--accent-color);
             margin-bottom: 20px;
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .playlist-controls {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .playlist-controls .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .playlist-controls .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
         .playlists-list {
@@ -245,19 +270,39 @@
 
         .playlist-item {
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 16px;
+            padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .playlist-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .playlist-item:hover::before {
+            opacity: 1;
         }
 
         .playlist-item:hover {
             background: rgba(255, 255, 255, 0.06);
             border-color: rgba(240, 147, 251, 0.3);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .playlist-info {
+            margin-bottom: 16px;
         }
 
         .playlist-info h4 {
@@ -265,29 +310,60 @@
             margin: 0 0 8px 0;
             font-size: 1.1rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .playlist-info p {
             color: var(--text-muted);
-            margin: 0 0 4px 0;
+            margin: 0 0 8px 0;
             font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         .playlist-info small {
             color: var(--text-secondary);
             font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
         }
 
         .playlist-actions {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
+            justify-content: center;
+        }
+
+        .playlist-actions .btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            text-align: center;
         }
 
         .no-playlists {
             text-align: center;
             color: var(--text-muted);
             font-style: italic;
-            padding: 40px 20px;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .no-playlists::before {
+            content: '🎵';
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
 
         /* Playlist Player Styles */
@@ -428,6 +504,208 @@
             font-size: 0.7rem;
             font-weight: bold;
             margin-left: 8px;
+        }
+
+        /* Professional User Profile Section - Mobile Optimized */
+        .user-profile-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 16px;
+            color: white;
+            font-size: 0.9rem;
+            z-index: 1000;
+            min-width: 280px;
+            max-width: 320px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .user-profile-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .profile-avatar {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .premium-crown {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .profile-name {
+            margin: 0 0 4px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-status {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.premium {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+        }
+
+        .status-badge.free {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .profile-actions {
+            flex-shrink: 0;
+        }
+
+        .profile-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 12px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .profile-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+
+        .menu-item.logout {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .menu-item.logout:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .menu-icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-text {
+            font-weight: 500;
         }
 
         /* Audio Library Styles */
@@ -1070,7 +1348,137 @@
             border: 1px solid rgba(255, 107, 107, 0.3);
         }
 
-        /* Responsive design */
+        /* Responsive design - Mobile Optimized */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 15px;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+
+            /* Mobile User Profile */
+            .user-profile-section {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                max-width: none;
+                padding: 12px;
+            }
+
+            .profile-header {
+                gap: 10px;
+            }
+
+            .avatar-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .premium-crown {
+                width: 16px;
+                height: 16px;
+                font-size: 0.7rem;
+            }
+
+            .profile-name {
+                font-size: 0.9rem;
+            }
+
+            .profile-stats {
+                gap: 8px;
+                padding: 8px 0;
+            }
+
+            .stat-label {
+                font-size: 0.6rem;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .menu-item {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
+            /* Mobile Playlist Section */
+            .playlist-section {
+                margin: 15px 0;
+                padding: 16px;
+            }
+
+            .playlist-section h3 {
+                font-size: 1.2rem;
+                margin-bottom: 16px;
+            }
+
+            .playlist-controls {
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            .playlist-controls .btn {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+
+            .playlist-item {
+                padding: 16px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .playlist-info {
+                margin-bottom: 12px;
+            }
+
+            .playlist-actions {
+                justify-content: stretch;
+            }
+
+            .playlist-actions .btn {
+                flex: 1;
+                min-width: auto;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+
+            /* Mobile Audio Library */
+            .audio-library-section {
+                margin: 15px 0;
+                padding: 16px;
+            }
+
+            .audio-item {
+                padding: 12px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .audio-actions {
+                justify-content: stretch;
+            }
+
+            .audio-actions .btn {
+                flex: 1;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+        }
+
         @media (max-width: 480px) {
             .app-container {
                 padding: 16px;
@@ -1083,6 +1491,44 @@
             .album-art {
                 width: 140px;
                 height: 140px;
+            }
+
+            .user-profile-section {
+                top: 5px;
+                right: 5px;
+                left: 5px;
+                padding: 10px;
+            }
+
+            .profile-header {
+                gap: 8px;
+            }
+
+            .avatar-circle {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+
+            .profile-name {
+                font-size: 0.85rem;
+            }
+
+            .playlist-section,
+            .audio-library-section {
+                margin: 10px 0;
+                padding: 12px;
+            }
+
+            .playlist-item,
+            .audio-item {
+                padding: 12px;
+            }
+
+            .playlist-actions .btn,
+            .audio-actions .btn {
+                padding: 6px 8px;
+                font-size: 0.75rem;
             }
         }
     </style>
@@ -2412,116 +2858,65 @@
             }
 
             updateAuthUI() {
-                // Add user info to the UI
+                // Create professional mobile-optimized user profile section
                 const userInfo = document.createElement('div');
                 userInfo.id = 'userInfo';
-                userInfo.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: rgba(255, 255, 255, 0.1);
-                    backdrop-filter: blur(10px);
-                    padding: 10px 15px;
-                    border-radius: 20px;
-                    color: white;
-                    font-size: 0.9rem;
-                    z-index: 1000;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                `;
-
-                const userAvatar = document.createElement('div');
-                userAvatar.textContent = '👤';
-                userAvatar.style.fontSize = '1.2rem';
-
-                const userDetails = document.createElement('div');
-                const isPremium = userProfile?.is_premium || false;
-                userDetails.innerHTML = `
-                    <div style="font-weight: 600;">
-                        ${userProfile?.username || currentUser?.email}
-                        ${isPremium ? '<span style="color: #ffd700; margin-left: 5px;">⭐</span>' : ''}
+                userInfo.className = 'user-profile-section';
+                userInfo.innerHTML = `
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            <div class="avatar-circle">
+                                ${userProfile?.username?.charAt(0)?.toUpperCase() || currentUser?.email?.charAt(0)?.toUpperCase() || '👤'}
+                            </div>
+                            ${userProfile?.is_premium ? '<div class="premium-crown">⭐</div>' : ''}
+                        </div>
+                        <div class="profile-info">
+                            <h3 class="profile-name">${userProfile?.username || currentUser?.email}</h3>
+                            <div class="profile-status">
+                                <span class="status-badge ${userProfile?.is_premium ? 'premium' : 'free'}">
+                                    ${userProfile?.is_premium ? 'Premium User' : 'Free User'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-btn" onclick="app.toggleProfileMenu()">
+                                <span class="menu-icon">☰</span>
+                            </button>
+                        </div>
                     </div>
-                    <div style="font-size: 0.8rem; opacity: 0.8;">
-                        ${isPremium ? 'Premium User' : 'Free User'} • 
-                        Free Playlists: ${userProfile?.free_playlist_count || 0} • 
-                        Premium Playlists: ${userProfile?.premium_playlist_count || 0}
+                    <div class="profile-stats" id="profileStats" style="display: none;">
+                        <div class="stat-item">
+                            <div class="stat-label">Free Playlists</div>
+                            <div class="stat-value">${userProfile?.free_playlist_count || 0}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Premium Playlists</div>
+                            <div class="stat-value">${userProfile?.premium_playlist_count || 0}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Member Since</div>
+                            <div class="stat-value">${new Date(userProfile?.created_at || currentUser?.created_at).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    <div class="profile-menu" id="profileMenu" style="display: none;">
+                        <button class="menu-item" onclick="app.showPlaylists()">
+                            <span class="menu-icon">🎵</span>
+                            <span class="menu-text">My Playlists</span>
+                        </button>
+                        <button class="menu-item" onclick="app.showAudioLibrary()">
+                            <span class="menu-icon">🎧</span>
+                            <span class="menu-text">Audio Library</span>
+                        </button>
+                        <button class="menu-item" onclick="window.location.href='/auth.html'">
+                            <span class="menu-icon">🔐</span>
+                            <span class="menu-text">Account Settings</span>
+                        </button>
+                        <button class="menu-item logout" onclick="app.logout()">
+                            <span class="menu-icon">🚪</span>
+                            <span class="menu-text">Logout</span>
+                        </button>
                     </div>
                 `;
-
-                const logoutBtn = document.createElement('button');
-                logoutBtn.textContent = '🚪 Logout';
-                logoutBtn.style.cssText = `
-                    background: rgba(255, 255, 255, 0.2);
-                    border: none;
-                    color: white;
-                    padding: 8px 12px;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    font-size: 0.8rem;
-                    transition: all 0.3s ease;
-                `;
-                logoutBtn.onmouseover = () => {
-                    logoutBtn.style.background = 'rgba(255, 255, 255, 0.3)';
-                    logoutBtn.style.transform = 'translateY(-1px)';
-                };
-                logoutBtn.onmouseout = () => {
-                    logoutBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-                    logoutBtn.style.transform = 'translateY(0)';
-                };
-                logoutBtn.onclick = () => this.logout();
-
-                // Add a link to auth page for easy access
-                const authLink = document.createElement('a');
-                authLink.href = '/auth.html';
-                authLink.textContent = '🔐 Auth';
-                authLink.style.cssText = `
-                    color: white;
-                    text-decoration: none;
-                    font-size: 0.8rem;
-                    opacity: 0.7;
-                    margin-left: 10px;
-                `;
-                authLink.onmouseover = () => authLink.style.opacity = '1';
-                authLink.onmouseout = () => authLink.style.opacity = '0.7';
-
-                // Add a playlist button for easy access
-                const playlistBtn = document.createElement('button');
-                playlistBtn.textContent = '🎵 Playlists';
-                playlistBtn.style.cssText = `
-                    background: rgba(255, 255, 255, 0.2);
-                    border: none;
-                    color: white;
-                    padding: 8px 12px;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    font-size: 0.8rem;
-                    transition: all 0.3s ease;
-                    margin-left: 10px;
-                `;
-                playlistBtn.onmouseover = () => {
-                    playlistBtn.style.background = 'rgba(255, 255, 255, 0.3)';
-                    playlistBtn.style.transform = 'translateY(-1px)';
-                };
-                playlistBtn.onmouseout = () => {
-                    playlistBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-                    playlistBtn.style.transform = 'translateY(0)';
-                };
-                playlistBtn.onclick = () => {
-                    // Force create playlist section
-                    this.ensurePlaylistSection();
-                    // Scroll to playlist section
-                    const playlistSection = document.getElementById('playlistSection');
-                    if (playlistSection) {
-                        playlistSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                };
-
-                userInfo.appendChild(userAvatar);
-                userInfo.appendChild(userDetails);
-                userInfo.appendChild(logoutBtn);
-                userInfo.appendChild(authLink);
-                userInfo.appendChild(playlistBtn);
 
                 // Remove existing user info if any
                 const existingUserInfo = document.getElementById('userInfo');
@@ -2530,6 +2925,39 @@
                 }
 
                 document.body.appendChild(userInfo);
+            }
+
+            toggleProfileMenu() {
+                const profileStats = document.getElementById('profileStats');
+                const profileMenu = document.getElementById('profileMenu');
+                const isVisible = profileStats.style.display !== 'none';
+                
+                if (isVisible) {
+                    profileStats.style.display = 'none';
+                    profileMenu.style.display = 'none';
+                } else {
+                    profileStats.style.display = 'flex';
+                    profileMenu.style.display = 'flex';
+                }
+            }
+
+            showPlaylists() {
+                this.ensurePlaylistSection();
+                const playlistSection = document.getElementById('playlistSection');
+                if (playlistSection) {
+                    playlistSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                this.toggleProfileMenu();
+            }
+
+            showAudioLibrary() {
+                const audioLibrarySection = document.getElementById('audioLibrarySection');
+                if (audioLibrarySection) {
+                    audioLibrarySection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    this.loadUserAudioLibrary();
+                }
+                this.toggleProfileMenu();
             }
 
             async logout() {
