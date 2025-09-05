@@ -2453,6 +2453,12 @@
                     </svg>
                     <span>Auth</span>
                 </button>
+                <button class="quick-btn" onclick="app.testSupabaseConnection()" title="Test Supabase Connection">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                    <span>DB</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3686,6 +3692,31 @@
                 }
             }
 
+            async testSupabaseConnection() {
+                console.log('🔗 Testing Supabase connection...');
+                try {
+                    // Test basic connection
+                    const { data, error } = await supabase.from('users').select('count').limit(1);
+                    if (error) {
+                        console.error('❌ Supabase connection error:', error);
+                        this.updateStatus('error', `❌ Database connection failed: ${error.message}`);
+                        return false;
+                    }
+                    console.log('✅ Supabase connection successful');
+                    
+                    // Test auth connection
+                    const { data: { session } } = await supabase.auth.getSession();
+                    console.log('🔐 Auth session:', { hasSession: !!session, user: session?.user?.email });
+                    
+                    this.updateStatus('success', '✅ Supabase connection working');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Supabase test failed:', error);
+                    this.updateStatus('error', `❌ Connection test failed: ${error.message}`);
+                    return false;
+                }
+            }
+
             showSignInModal() {
                 // Create a sign-in modal overlay
                 const overlay = document.createElement('div');
@@ -4072,7 +4103,12 @@
             }
 
             async loadUserProfile() {
-                if (!currentUser) return;
+                if (!currentUser) {
+                    console.log('❌ No current user to load profile for');
+                    return;
+                }
+
+                console.log('👤 Loading profile for user:', currentUser.id, currentUser.email);
 
                 try {
                     const { data, error } = await supabase
@@ -4081,47 +4117,72 @@
                         .eq('id', currentUser.id)
                         .single();
 
+                    console.log('📋 Profile query result:', { data, error });
+
                     if (error && error.code !== 'PGRST116') {
-                        console.error('Error loading user profile:', error);
+                        console.error('❌ Error loading user profile:', error);
+                        this.updateStatus('error', `Profile load error: ${error.message}`);
                         return;
                     }
 
                     if (!data) {
+                        console.log('👤 No profile found, creating new one...');
                         // Create user profile if it doesn't exist
                         await this.createUserProfile();
                     } else {
                         userProfile = data;
-                        console.log('User profile loaded:', userProfile);
+                        console.log('✅ User profile loaded:', userProfile);
+                        this.updateStatus('success', `Profile loaded for ${userProfile.username || userProfile.email}`);
                     }
                 } catch (error) {
-                    console.error('Error loading user profile:', error);
+                    console.error('❌ Error loading user profile:', error);
+                    this.updateStatus('error', `Profile error: ${error.message}`);
                 }
             }
 
             async createUserProfile() {
-                if (!currentUser) return;
+                if (!currentUser) {
+                    console.log('❌ No current user to create profile for');
+                    return;
+                }
+
+                console.log('👤 Creating profile for user:', currentUser.id, currentUser.email);
 
                 try {
+                    const profileData = {
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        username: currentUser.user_metadata?.full_name?.toLowerCase().replace(/\s+/g, '_') || currentUser.email.split('@')[0],
+                        is_premium: false,
+                        premium_expires_at: null,
+                        free_playlist_count: 0,
+                        premium_playlist_count: 0,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+
+                    console.log('📝 Creating profile with data:', profileData);
+
                     const { data, error } = await supabase
                         .from('users')
-                        .insert({
-                            id: currentUser.id,
-                            email: currentUser.email,
-                            username: currentUser.user_metadata?.full_name?.toLowerCase().replace(/\s+/g, '_') || currentUser.email.split('@')[0],
-                            is_premium: false,
-                            premium_expires_at: null,
-                            free_playlist_count: 0,
-                            premium_playlist_count: 0,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        })
+                        .insert(profileData)
                         .select()
                         .single();
 
-                    if (error) throw error;
+                    console.log('📋 Profile creation result:', { data, error });
+
+                    if (error) {
+                        console.error('❌ Error creating user profile:', error);
+                        this.updateStatus('error', `Profile creation failed: ${error.message}`);
+                        throw error;
+                    }
+                    
                     userProfile = data;
+                    console.log('✅ User profile created successfully:', userProfile);
+                    this.updateStatus('success', `Profile created for ${userProfile.username}`);
                 } catch (error) {
-                    console.error('Error creating user profile:', error);
+                    console.error('❌ Error creating user profile:', error);
+                    this.updateStatus('error', `Profile creation error: ${error.message}`);
                 }
             }
 
