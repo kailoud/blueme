@@ -1565,6 +1565,69 @@
             font-size: 1rem;
         }
 
+        /* Sign In Modal */
+        .signin-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .signin-modal {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .signin-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .signin-options .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+            font-size: 1rem;
+        }
+
+        .features-preview {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .features-preview h4 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .features-preview ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-preview li {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
         .progress-section {
             margin-bottom: 24px;
         }
@@ -3430,6 +3493,49 @@
                 }
             }
 
+            showSignInModal() {
+                // Create a sign-in modal overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'signin-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="signin-modal">
+                        <div class="modal-header">
+                            <h3>🔐 Sign In Required</h3>
+                            <button class="close-btn" onclick="this.closest('.signin-modal-overlay').remove()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Sign in to create playlists, save your audio, and access premium features!</p>
+                            <div class="signin-options">
+                                <button class="btn btn-primary" onclick="window.location.href='/auth.html'">
+                                    🔐 Sign In / Sign Up
+                                </button>
+                                <button class="btn btn-secondary" onclick="this.closest('.signin-modal-overlay').remove()">
+                                    Maybe Later
+                                </button>
+                            </div>
+                            <div class="features-preview">
+                                <h4>What you'll get:</h4>
+                                <ul>
+                                    <li>🎵 Create and manage playlists</li>
+                                    <li>☁️ Save converted audio to your library</li>
+                                    <li>⭐ Access to premium features</li>
+                                    <li>👥 Sync music with friends</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Auto-remove after 15 seconds
+                setTimeout(() => {
+                    if (overlay.parentNode) {
+                        overlay.remove();
+                    }
+                }, 15000);
+            }
+
             // Audio Conversion Methods
             async convertAudio() {
                 const url = this.audioUrl.value.trim();
@@ -3735,19 +3841,39 @@
 
                 // Listen for auth state changes
                 supabase.auth.onAuthStateChange(async (event, session) => {
+                    console.log('🔐 Auth state changed:', event, session?.user?.email);
+                    
                     if (event === 'SIGNED_IN' && session) {
                         currentUser = session.user;
+                        console.log('👤 User signed in:', currentUser.email);
+                        
+                        // Update the profile section
+                        this.updateAuthUI();
+                        
+                        // Load user data
                         await this.loadUserProfile();
                         await this.loadUserPlaylists();
                         await this.loadUserAudioLibrary();
-                        this.updateAuthUI();
+                        
+                        // Update playlist section for authenticated user
+                        this.ensurePlaylistSection();
+                        
+                        this.updateStatus('success', '🎵 Welcome back! Your playlists are ready');
+                        
                     } else if (event === 'SIGNED_OUT') {
+                        console.log('👤 User signed out');
                         currentUser = null;
                         userProfile = null;
                         this.playlists = [];
                         this.currentPlaylist = null;
                         this.audioLibrary = [];
-                        window.location.href = '/auth.html';
+                        
+                        // Update UI for signed out state
+                        this.updateAuthUI();
+                        this.ensurePlaylistSection();
+                        
+                        // Don't redirect immediately, let user see the signed out state
+                        this.updateStatus('info', '🔐 You have been signed out');
                     }
                 });
             }
@@ -3807,73 +3933,87 @@
             }
 
             updateAuthUI() {
-                // Create professional mobile-optimized user profile section
-                const userInfo = document.createElement('div');
-                userInfo.id = 'userInfo';
-                userInfo.className = 'user-profile-section';
-                userInfo.innerHTML = `
-                    <div class="profile-header">
-                        <div class="profile-avatar">
-                            <div class="avatar-circle">
-                                ${userProfile?.username?.charAt(0)?.toUpperCase() || currentUser?.email?.charAt(0)?.toUpperCase() || '👤'}
-                            </div>
-                            ${userProfile?.is_premium ? '<div class="premium-crown">⭐</div>' : ''}
-                        </div>
-                        <div class="profile-info">
-                            <h3 class="profile-name">${userProfile?.username || currentUser?.email}</h3>
-                            <div class="profile-status">
-                                <span class="status-badge ${userProfile?.is_premium ? 'premium' : 'free'}">
-                                    ${userProfile?.is_premium ? 'Premium User' : 'Free User'}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="profile-actions">
-                            <button class="profile-btn" onclick="app.toggleProfileMenu()">
-                                <span class="menu-icon">☰</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="profile-stats" id="profileStats" style="display: none;">
-                        <div class="stat-item">
-                            <div class="stat-label">Free Playlists</div>
-                            <div class="stat-value">${userProfile?.free_playlist_count || 0}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Premium Playlists</div>
-                            <div class="stat-value">${userProfile?.premium_playlist_count || 0}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Member Since</div>
-                            <div class="stat-value">${new Date(userProfile?.created_at || currentUser?.created_at).toLocaleDateString()}</div>
-                        </div>
-                    </div>
-                    <div class="profile-menu" id="profileMenu" style="display: none;">
-                        <button class="menu-item" onclick="app.showPlaylists()">
-                            <span class="menu-icon">🎵</span>
-                            <span class="menu-text">My Playlists</span>
-                        </button>
-                        <button class="menu-item" onclick="app.showAudioLibrary()">
-                            <span class="menu-icon">🎧</span>
-                            <span class="menu-text">Audio Library</span>
-                        </button>
-                        <button class="menu-item" onclick="window.location.href='/auth.html'">
-                            <span class="menu-icon">🔐</span>
-                            <span class="menu-text">Account Settings</span>
-                        </button>
-                        <button class="menu-item logout" onclick="app.logout()">
-                            <span class="menu-icon">🚪</span>
-                            <span class="menu-text">Logout</span>
-                        </button>
-                    </div>
-                `;
-
+                console.log('🔄 Updating auth UI...', { currentUser: !!currentUser, userProfile: !!userProfile });
+                
                 // Remove existing user info if any
                 const existingUserInfo = document.getElementById('userInfo');
                 if (existingUserInfo) {
                     existingUserInfo.remove();
                 }
 
-                document.body.appendChild(userInfo);
+                // Remove existing guest profile if any
+                const existingGuestProfile = document.querySelector('.user-profile-section');
+                if (existingGuestProfile) {
+                    existingGuestProfile.remove();
+                }
+
+                if (currentUser) {
+                    // Create authenticated user profile
+                    const userInfo = document.createElement('div');
+                    userInfo.id = 'userInfo';
+                    userInfo.className = 'user-profile-section';
+                    userInfo.innerHTML = `
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <div class="avatar-circle">
+                                    ${userProfile?.username?.charAt(0)?.toUpperCase() || currentUser?.email?.charAt(0)?.toUpperCase() || '👤'}
+                                </div>
+                                ${userProfile?.is_premium ? '<div class="premium-crown">⭐</div>' : ''}
+                            </div>
+                            <div class="profile-info">
+                                <h3 class="profile-name">${userProfile?.username || currentUser?.email}</h3>
+                                <div class="profile-status">
+                                    <span class="status-badge ${userProfile?.is_premium ? 'premium' : 'free'}">
+                                        ${userProfile?.is_premium ? 'Premium User' : 'Free User'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="profile-actions">
+                                <button class="profile-btn" onclick="app.toggleProfileMenu()">
+                                    <span class="menu-icon">☰</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="profile-stats" id="profileStats" style="display: none;">
+                            <div class="stat-item">
+                                <div class="stat-label">Free Playlists</div>
+                                <div class="stat-value">${userProfile?.free_playlist_count || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Premium Playlists</div>
+                                <div class="stat-value">${userProfile?.premium_playlist_count || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Member Since</div>
+                                <div class="stat-value">${new Date(userProfile?.created_at || currentUser?.created_at).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div class="profile-menu" id="profileMenu" style="display: none;">
+                            <button class="menu-item" onclick="app.showPlaylists()">
+                                <span class="menu-icon">🎵</span>
+                                <span class="menu-text">My Playlists</span>
+                            </button>
+                            <button class="menu-item" onclick="app.showAudioLibrary()">
+                                <span class="menu-icon">🎧</span>
+                                <span class="menu-text">Audio Library</span>
+                            </button>
+                            <button class="menu-item" onclick="window.location.href='/auth.html'">
+                                <span class="menu-icon">🔐</span>
+                                <span class="menu-text">Account Settings</span>
+                            </button>
+                            <button class="menu-item logout" onclick="app.logout()">
+                                <span class="menu-icon">🚪</span>
+                                <span class="menu-text">Logout</span>
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(userInfo);
+                    console.log('✅ Authenticated user profile created');
+                } else {
+                    // Create guest profile
+                    createGuestProfileSection();
+                    console.log('✅ Guest profile created');
+                }
             }
 
             toggleProfileMenu() {
