@@ -2488,6 +2488,15 @@
                     </svg>
                     <span>DB</span>
                 </button>
+                <button class="quick-btn" onclick="app.forceRefreshProfile()" title="Force Refresh Profile">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                        <path d="M21 3v5h-5"></path>
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                        <path d="M3 21v-5h5"></path>
+                    </svg>
+                    <span>Profile</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3721,6 +3730,42 @@
                 }
             }
 
+            async forceRefreshProfile() {
+                console.log('🔄 Force refreshing profile...');
+                try {
+                    // Check if user is authenticated
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                        this.updateStatus('error', 'No active session - please sign in first');
+                        return;
+                    }
+
+                    currentUser = session.user;
+                    console.log('👤 Current user:', currentUser.email);
+
+                    // Force reload profile data
+                    await this.loadUserProfile();
+                    console.log('👤 Profile loaded:', userProfile);
+
+                    // Force update UI
+                    this.updateAuthUI();
+                    console.log('🔄 UI updated');
+
+                    // Check if profile section exists
+                    const profileSection = document.getElementById('userInfo');
+                    if (profileSection) {
+                        this.updateStatus('success', '✅ Profile refreshed successfully');
+                        console.log('✅ Profile section found after refresh');
+                    } else {
+                        this.updateStatus('error', '❌ Profile section still not visible');
+                        console.error('❌ Profile section not found after refresh');
+                    }
+                } catch (error) {
+                    console.error('❌ Error force refreshing profile:', error);
+                    this.updateStatus('error', `Profile refresh failed: ${error.message}`);
+                }
+            }
+
             async testSupabaseConnection() {
                 console.log('🔗 Testing Supabase connection...');
                 try {
@@ -4123,13 +4168,13 @@
                         currentUser = session.user;
                         console.log('👤 User signed in:', currentUser.email);
                         
-                        // Update the profile section
-                        this.updateAuthUI();
-                        
-                        // Load user data
+                        // Load user data FIRST
                         await this.loadUserProfile();
                         await this.loadUserPlaylists();
                         await this.loadUserAudioLibrary();
+                        
+                        // THEN update the profile section with loaded data
+                        this.updateAuthUI();
                         
                         // Update playlist section for authenticated user
                         this.ensurePlaylistSection();
@@ -4239,17 +4284,24 @@
             }
 
             updateAuthUI() {
-                console.log('🔄 Updating auth UI...', { currentUser: !!currentUser, userProfile: !!userProfile });
+                console.log('🔄 Updating auth UI...', { 
+                    currentUser: !!currentUser, 
+                    userProfile: !!userProfile,
+                    currentUserEmail: currentUser?.email,
+                    userProfileData: userProfile
+                });
                 
                 // Remove existing user info if any
                 const existingUserInfo = document.getElementById('userInfo');
                 if (existingUserInfo) {
+                    console.log('🗑️ Removing existing userInfo');
                     existingUserInfo.remove();
                 }
 
                 // Remove existing guest profile if any
                 const existingGuestProfile = document.querySelector('.user-profile-section');
                 if (existingGuestProfile) {
+                    console.log('🗑️ Removing existing guest profile');
                     existingGuestProfile.remove();
                 }
 
@@ -4317,6 +4369,17 @@
                     `;
                     document.body.appendChild(userInfo);
                     console.log('✅ Authenticated user profile created');
+                    
+                    // Verify profile was created
+                    setTimeout(() => {
+                        const profileSection = document.getElementById('userInfo');
+                        console.log('✅ Profile section exists after creation:', !!profileSection);
+                        if (profileSection) {
+                            console.log('📋 Profile section HTML length:', profileSection.outerHTML.length);
+                        } else {
+                            console.error('❌ Profile section was not created!');
+                        }
+                    }, 100);
                 } else {
                     // Create guest profile
                     createGuestProfileSection();
