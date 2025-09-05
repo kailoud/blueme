@@ -4399,28 +4399,9 @@
             }
 
             async testSupabaseConnection() {
-                console.log('🔗 Testing Supabase connection...');
-                try {
-                    // Test basic connection
-                    const { data, error } = await supabase.from('users').select('count').limit(1);
-                    if (error) {
-                        console.error('❌ Supabase connection error:', error);
-                        this.updateStatus('error', `❌ Database connection failed: ${error.message}`);
-                        return false;
-                    }
-                    console.log('✅ Supabase connection successful');
-                    
-                    // Test auth connection
-                    const { data: { session } } = await supabase.auth.getSession();
-                    console.log('🔐 Auth session:', { hasSession: !!session, user: session?.user?.email });
-                    
-                    this.updateStatus('success', '✅ Supabase connection working');
-                    return true;
-                } catch (error) {
-                    console.error('❌ Supabase test failed:', error);
-                    this.updateStatus('error', `❌ Connection test failed: ${error.message}`);
-                    return false;
-                }
+                console.log('🔗 Supabase connection test skipped - using local storage');
+                this.updateStatus('info', 'ℹ️ Using local storage (no database connection needed)');
+                return true;
             }
 
             showSignInModal() {
@@ -5538,8 +5519,53 @@
                         
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
                     } else {
-                        this.updateStatus('error', 'Audio file not available');
-                        return;
+                        console.log('❌ No audio data found for track:', audioFile);
+                        this.updateStatus('error', `❌ Audio file not available for: ${audioFile.title || audioFile.originalName || audioFile.filename || 'Unknown track'}`);
+                        
+                        // Try to find the track in the audio library
+                        const libraryTrack = this.audioLibrary.find(audio => 
+                            audio.title === audioFile.title || 
+                            audio.original_name === audioFile.originalName ||
+                            audio.id === audioFile.id
+                        );
+                        
+                        if (libraryTrack && (libraryTrack.audio_data || libraryTrack.audioData)) {
+                            console.log('✅ Found track in audio library, using that instead');
+                            // Use the library track's audio data
+                            if (libraryTrack.audioData && libraryTrack.audioData instanceof Blob) {
+                                const url = URL.createObjectURL(libraryTrack.audioData);
+                                this.audioPlayer.src = url;
+                                this.audioPlayer.load();
+                                await this.audioPlayer.play();
+                                this.isPlaying = true;
+                                this.playBtn.innerHTML = '⏸';
+                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                this.updateStatus('success', `🎵 Now playing from library: ${libraryTrack.title || libraryTrack.original_name}`);
+                                return;
+                            } else if (libraryTrack.audio_data) {
+                                const audioBlob = await this.base64ToBlob(libraryTrack.audio_data, libraryTrack.mime_type);
+                                const url = URL.createObjectURL(audioBlob);
+                                this.audioPlayer.src = url;
+                                this.audioPlayer.load();
+                                await this.audioPlayer.play();
+                                this.isPlaying = true;
+                                this.playBtn.innerHTML = '⏸';
+                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                this.updateStatus('success', `🎵 Now playing from library: ${libraryTrack.title || libraryTrack.original_name}`);
+                                return;
+                            }
+                        }
+                        
+                        // If still no audio, try next track
+                        if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                            this.currentTrackIndex++;
+                            this.updateStatus('info', `⏭️ Skipping missing track, trying next...`);
+                            this.playCurrentTrack();
+                            return;
+                        } else {
+                            this.updateStatus('error', '❌ No playable tracks found in playlist');
+                            return;
+                        }
                     }
                 } catch (error) {
                     console.error('Error playing track from playlist:', error);
