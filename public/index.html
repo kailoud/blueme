@@ -1429,6 +1429,63 @@
             box-shadow: 0 12px 35px rgba(245, 87, 108, 0.5);
         }
 
+        /* Quick Access Buttons */
+        .quick-access-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .quick-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .quick-btn svg {
+            flex-shrink: 0;
+        }
+
+        .quick-btn span {
+            white-space: nowrap;
+        }
+
+        /* No Playlists Message */
+        .no-playlists {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-playlists p {
+            margin: 8px 0;
+            font-size: 1rem;
+        }
+
+        .no-playlists p:first-child {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
         .progress-section {
             margin-bottom: 24px;
         }
@@ -2048,6 +2105,28 @@
                 <button class="control-btn" id="prevBtn">⏮</button>
                 <button class="control-btn play-btn" id="playBtn">▶</button>
                 <button class="control-btn" id="nextBtn">⏭</button>
+            </div>
+            
+            <!-- Quick Access Buttons -->
+            <div class="quick-access-buttons">
+                <button class="quick-btn" onclick="app.showPlaylists()" title="View Playlists">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    <span>Playlists</span>
+                </button>
+                <button class="quick-btn" onclick="app.showAudioLibrary()" title="Audio Library">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10,9 9,9 8,9"></polyline>
+                    </svg>
+                    <span>Library</span>
+                </button>
             </div>
 
             <div class="progress-section">
@@ -3732,36 +3811,55 @@
             ensurePlaylistSection() {
                 console.log('🎵 Ensuring playlist section exists...');
                 
-                // Always create playlist section for authenticated users
+                // Always create playlist section for all users
                 let playlistSection = document.getElementById('playlistSection');
                 if (!playlistSection) {
                     console.log('🎵 Creating new playlist section...');
                     playlistSection = document.createElement('div');
                     playlistSection.id = 'playlistSection';
                     playlistSection.className = 'playlist-section';
-                    playlistSection.innerHTML = `
-                        <h3>🎵 My Playlists</h3>
-                        <div class="playlist-controls">
-                            <button id="createFreePlaylistBtn" class="btn btn-primary">➕ Create Free Playlist (1 playlist, 2 songs max)</button>
-                            <button id="createPremiumPlaylistBtn" class="btn btn-premium">⭐ Create Premium Playlist (Unlimited, 10 songs each)</button>
-                            <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
-                        </div>
-                        <div id="playlistsList" class="playlists-list"></div>
-                        <div id="playlistPlayer" class="playlist-player" style="display: none;">
-                            <h4>🎧 Now Playing</h4>
-                            <div class="current-playlist-info">
-                                <span id="currentPlaylistName"></span>
-                                <span id="currentTrackInfo"></span>
-                            </div>
+                    
+                    // Show different content based on authentication status
+                    if (currentUser) {
+                        playlistSection.innerHTML = `
+                            <h3>🎵 My Playlists</h3>
                             <div class="playlist-controls">
-                                <button id="prevTrackBtn" class="btn btn-small">⏮️</button>
-                                <button id="playPauseBtn" class="btn btn-small btn-primary">▶️</button>
-                                <button id="nextTrackBtn" class="btn btn-small">⏭️</button>
-                                <button id="stopPlaylistBtn" class="btn btn-small">⏹️</button>
+                                <button id="createFreePlaylistBtn" class="btn btn-primary">➕ Create Free Playlist (1 playlist, 2 songs max)</button>
+                                <button id="createPremiumPlaylistBtn" class="btn btn-premium">⭐ Create Premium Playlist (Unlimited, 10 songs each)</button>
+                                <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
                             </div>
-                            <div id="playlistTracks" class="playlist-tracks"></div>
-                        </div>
-                    `;
+                            <div id="playlistsList" class="playlists-list"></div>
+                            <div id="playlistPlayer" class="playlist-player" style="display: none;">
+                                <h4>🎧 Now Playing</h4>
+                                <div class="current-playlist-info">
+                                    <span id="currentPlaylistName"></span>
+                                    <span id="currentTrackInfo"></span>
+                                </div>
+                                <div class="playlist-controls">
+                                    <button id="prevTrackBtn" class="btn btn-small">⏮️</button>
+                                    <button id="playPauseBtn" class="btn btn-small btn-primary">▶️</button>
+                                    <button id="nextTrackBtn" class="btn btn-small">⏭️</button>
+                                    <button id="stopPlaylistBtn" class="btn btn-small">⏹️</button>
+                                </div>
+                                <div id="playlistTracks" class="playlist-tracks"></div>
+                            </div>
+                        `;
+                    } else {
+                        playlistSection.innerHTML = `
+                            <h3>🎵 Playlists</h3>
+                            <div class="playlist-controls">
+                                <button class="btn btn-primary" onclick="app.showSignInModal()">
+                                    🔐 Sign In to Create Playlists
+                                </button>
+                            </div>
+                            <div id="playlistsList" class="playlists-list">
+                                <div class="no-playlists">
+                                    <p>Sign in to create and manage your playlists!</p>
+                                    <p>Free users get 1 playlist with 2 songs. Premium users get unlimited playlists with 10 songs each.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
                     
                     // Add after the audio converter section
                     const converterSection = document.querySelector('.converter-section');
@@ -4816,6 +4914,9 @@
                     
                     // Create a basic profile section for non-authenticated users
                     createGuestProfileSection();
+                    
+                    // Always ensure playlist section is created (shows sign-in prompt for guests)
+                    app.ensurePlaylistSection();
                 } else {
                     console.log('👤 User session found:', session.user.email);
                     // User is authenticated
@@ -4823,7 +4924,7 @@
                         app.updateStatus('success', '🎵 Welcome back! Your playlists are ready');
                     }
                     
-                    // Ensure playlist section is created for authenticated users
+                    // Always ensure playlist section is created
                     app.ensurePlaylistSection();
                 }
                 
