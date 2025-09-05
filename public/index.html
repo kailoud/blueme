@@ -2565,8 +2565,8 @@
                 }
             }
 
-            updatePlaylistUI() {
-                // Create playlist section if it doesn't exist
+            ensurePlaylistSection() {
+                // Always create playlist section for authenticated users
                 let playlistSection = document.getElementById('playlistSection');
                 if (!playlistSection) {
                     playlistSection = document.createElement('div');
@@ -2601,6 +2601,21 @@
                         converterSection.parentNode.insertBefore(playlistSection, converterSection.nextSibling);
                     }
                 }
+                
+                // Set up event listeners
+                this.setupPlaylistEventListeners();
+                
+                // Load existing playlists
+                this.loadUserPlaylists();
+            }
+
+            updatePlaylistUI() {
+                // Create playlist section if it doesn't exist
+                let playlistSection = document.getElementById('playlistSection');
+                if (!playlistSection) {
+                    this.ensurePlaylistSection();
+                    return;
+                }
 
                 // Update playlists list
                 const playlistsList = document.getElementById('playlistsList');
@@ -2626,31 +2641,7 @@
                     }
                 }
 
-                // Add create playlist event listener
-                const createBtn = document.getElementById('createPlaylistBtn');
-                if (createBtn && !createBtn.hasAttribute('data-listener-added')) {
-                    createBtn.setAttribute('data-listener-added', 'true');
-                    createBtn.addEventListener('click', () => {
-                        const name = prompt('Enter playlist name:');
-                        if (name && name.trim()) {
-                            const description = prompt('Enter playlist description (optional):') || '';
-                            this.createPlaylist(name.trim(), description.trim());
-                        }
-                    });
-                }
-
-                // Add refresh playlists event listener
-                const refreshBtn = document.getElementById('refreshPlaylistsBtn');
-                if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
-                    refreshBtn.setAttribute('data-listener-added', 'true');
-                    refreshBtn.addEventListener('click', () => {
-                        console.log('Refreshing playlists...');
-                        this.loadUserPlaylists();
-                    });
-                }
-
-                // Add playlist player control event listeners
-                this.setupPlaylistPlayerControls();
+                this.setupPlaylistEventListeners();
             }
 
             async addCurrentTrackToPlaylist(playlistId) {
@@ -2768,6 +2759,34 @@
                         this.updateStatus('error', 'Failed to delete playlist');
                     }
                 }
+            }
+
+            setupPlaylistEventListeners() {
+                // Create playlist event listener
+                const createBtn = document.getElementById('createPlaylistBtn');
+                if (createBtn && !createBtn.hasAttribute('data-listener-added')) {
+                    createBtn.setAttribute('data-listener-added', 'true');
+                    createBtn.addEventListener('click', () => {
+                        const name = prompt('Enter playlist name:');
+                        if (name && name.trim()) {
+                            const description = prompt('Enter playlist description (optional):') || '';
+                            this.createPlaylist(name.trim(), description.trim());
+                        }
+                    });
+                }
+
+                // Refresh playlists event listener
+                const refreshBtn = document.getElementById('refreshPlaylistsBtn');
+                if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
+                    refreshBtn.setAttribute('data-listener-added', 'true');
+                    refreshBtn.addEventListener('click', () => {
+                        console.log('Refreshing playlists...');
+                        this.loadUserPlaylists();
+                    });
+                }
+
+                // Add playlist player control event listeners
+                this.setupPlaylistPlayerControls();
             }
 
             setupPlaylistPlayerControls() {
@@ -3025,6 +3044,9 @@
                     if (app.statusMessage) {
                         app.updateStatus('info', '🎧 Welcome to BlueMe! Connect your friends and start sharing music');
                     }
+                    
+                    // Ensure playlist section is created for authenticated users
+                    app.ensurePlaylistSection();
                 }
                 
             } catch (error) {
