@@ -195,6 +195,17 @@
             backdrop-filter: blur(10px);
         }
 
+        .btn-accent {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: translateY(-1px);
@@ -2661,6 +2672,9 @@
                         <button class="btn btn-primary" id="useConvertedBtn">
                             🎵 Load & Play
                         </button>
+                        <button class="btn btn-accent" id="addToPlaylistBtn">
+                            ➕ Add to Playlist
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2839,6 +2853,7 @@
                 this.downloadSection = document.getElementById('downloadSection');
                 this.downloadBtn = document.getElementById('downloadBtn');
                 this.useConvertedBtn = document.getElementById('useConvertedBtn');
+                this.addToPlaylistBtn = document.getElementById('addToPlaylistBtn');
                 this.convertedFileName = document.getElementById('convertedFileName');
                 this.convertedFileInfo = document.getElementById('convertedFileInfo');
             }
@@ -2858,6 +2873,7 @@
                 this.convertBtn.addEventListener('click', () => this.convertAudio());
                 this.downloadBtn.addEventListener('click', () => this.downloadConvertedFile());
                 this.useConvertedBtn.addEventListener('click', () => this.useConvertedInPlayer());
+                this.addToPlaylistBtn.addEventListener('click', () => this.showAddToPlaylistModal());
                 
                 // Audio player events
                 this.audioPlayer.addEventListener('loadedmetadata', () => this.updateTrackInfo());
