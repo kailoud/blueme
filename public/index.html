@@ -306,6 +306,10 @@
             font-weight: 600;
         }
 
+        .library-controls {
+            margin-bottom: 20px;
+        }
+
         .audio-library-list {
             display: flex;
             flex-direction: column;
@@ -1990,7 +1994,10 @@
                         
                         // Automatically save to database if user is logged in
                         if (currentUser) {
+                            console.log('Saving converted audio to database for user:', currentUser.id);
                             await this.saveConvertedAudioToDatabase(result.file);
+                        } else {
+                            console.log('No user logged in, skipping database save');
                         }
                         
                         this.showDownloadSection(result.file.filename, this.formatSelect.value, result.file.size);
@@ -2533,40 +2540,61 @@
             }
 
             async saveConvertedAudioToDatabase(fileData) {
-                if (!currentUser) return;
+                if (!currentUser) {
+                    console.log('No current user, cannot save to database');
+                    return;
+                }
+
+                console.log('Attempting to save audio file:', fileData);
 
                 try {
+                    const insertData = {
+                        file_name: fileData.filename || 'converted_audio.mp3',
+                        original_name: fileData.originalName || 'YouTube Audio',
+                        file_path: fileData.url || 'local',
+                        file_size: fileData.size || 0,
+                        mime_type: fileData.mimeType || 'audio/mpeg',
+                        public_url: fileData.url || 'local',
+                        user_id: currentUser.id,
+                        duration: fileData.duration || 0,
+                        title: fileData.originalName || 'YouTube Audio',
+                        artist: 'YouTube',
+                        album: 'Converted Audio'
+                    };
+
+                    console.log('Inserting data:', insertData);
+
                     const { data, error } = await supabase
                         .from('audio_files')
-                        .insert({
-                            file_name: fileData.filename || 'converted_audio.mp3',
-                            original_name: fileData.originalName || 'YouTube Audio',
-                            file_path: fileData.url || 'local',
-                            file_size: fileData.size || 0,
-                            mime_type: fileData.mimeType || 'audio/mpeg',
-                            public_url: fileData.url || 'local',
-                            user_id: currentUser.id,
-                            duration: fileData.duration || 0,
-                            title: fileData.originalName || 'YouTube Audio',
-                            artist: 'YouTube',
-                            album: 'Converted Audio'
-                        })
+                        .insert(insertData)
                         .select()
                         .single();
 
-                    if (error) throw error;
+                    if (error) {
+                        console.error('Supabase error:', error);
+                        throw error;
+                    }
 
-                    console.log('Audio file saved to database:', data);
+                    console.log('Audio file saved to database successfully:', data);
                     this.updateStatus('success', 'Audio saved to your library!');
+                    
+                    // Reload the audio library to show the new file
+                    await this.loadUserAudioLibrary();
+                    
                     return data;
                 } catch (error) {
                     console.error('Error saving audio to database:', error);
-                    this.updateStatus('error', 'Failed to save audio to library');
+                    this.updateStatus('error', `Failed to save audio to library: ${error.message}`);
                 }
             }
 
             async loadUserAudioLibrary() {
-                if (!currentUser) return;
+                if (!currentUser) {
+                    console.log('No current user, cannot load audio library');
+                    return;
+                }
+
+                console.log('Loading audio library for user:', currentUser.id);
 
                 try {
                     const { data, error } = await supabase
@@ -2575,11 +2603,18 @@
                         .eq('user_id', currentUser.id)
                         .order('uploaded_at', { ascending: false });
 
-                    if (error) throw error;
+                    if (error) {
+                        console.error('Supabase error loading audio library:', error);
+                        throw error;
+                    }
 
                     this.audioLibrary = data || [];
                     this.updateAudioLibraryUI();
                     console.log('Loaded audio library:', this.audioLibrary.length, 'files');
+                    
+                    if (this.audioLibrary.length > 0) {
+                        console.log('Audio files found:', this.audioLibrary.map(f => f.title || f.original_name));
+                    }
                 } catch (error) {
                     console.error('Error loading audio library:', error);
                 }
@@ -2594,6 +2629,9 @@
                     librarySection.className = 'audio-library-section';
                     librarySection.innerHTML = `
                         <h3>🎵 My Audio Library</h3>
+                        <div class="library-controls">
+                            <button id="refreshLibraryBtn" class="btn btn-small">Refresh Library</button>
+                        </div>
                         <div id="audioLibraryList" class="audio-library-list"></div>
                     `;
                     
@@ -2624,6 +2662,16 @@
                             </div>
                         `).join('');
                     }
+                }
+
+                // Add refresh button event listener
+                const refreshBtn = document.getElementById('refreshLibraryBtn');
+                if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
+                    refreshBtn.setAttribute('data-listener-added', 'true');
+                    refreshBtn.addEventListener('click', () => {
+                        console.log('Manual refresh of audio library triggered');
+                        this.loadUserAudioLibrary();
+                    });
                 }
             }
 
