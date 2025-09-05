@@ -2161,6 +2161,7 @@
                 this.initializeSocketIO();
                 this.checkBluetoothSupport();
                 this.initializeAuth();
+                this.initializeDragAndDrop();
                 this.updateUI();
             }
 
@@ -3192,6 +3193,40 @@
             }
 
             // Authentication Methods
+            initializeDragAndDrop() {
+                const uploadArea = document.querySelector('.file-upload-area');
+                const audioFileInput = document.getElementById('audioFile');
+
+                if (uploadArea && audioFileInput) {
+                    uploadArea.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadArea.style.borderColor = 'rgba(240, 147, 251, 0.8)';
+                        uploadArea.style.background = 'rgba(240, 147, 251, 0.1)';
+                    });
+
+                    uploadArea.addEventListener('dragleave', (e) => {
+                        e.preventDefault();
+                        uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                        uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
+                    });
+
+                    uploadArea.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                        uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
+                        
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0 && files[0].type.startsWith('audio/')) {
+                            audioFileInput.files = files;
+                            const event = new Event('change');
+                            audioFileInput.dispatchEvent(event);
+                        } else {
+                            this.updateStatus('error', '❌ Please drop a valid audio file');
+                        }
+                    });
+                }
+            }
+
             async initializeAuth() {
                 // User is already authenticated (checked in DOMContentLoaded)
                 const { data: { session } } = await supabase.auth.getSession();
@@ -4576,40 +4611,7 @@
             }
         }
 
-        // Add drag and drop functionality for file upload
-        document.addEventListener('DOMContentLoaded', () => {
-            const uploadArea = document.querySelector('.file-upload-area');
-            const audioFileInput = document.getElementById('audioFile');
-
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = 'rgba(240, 147, 251, 0.8)';
-                uploadArea.style.background = 'rgba(240, 147, 251, 0.1)';
-            });
-
-            uploadArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
-            });
-
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                uploadArea.style.background = 'rgba(255, 255, 255, 0.02)';
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0 && files[0].type.startsWith('audio/')) {
-                    audioFileInput.files = files;
-                    const event = new Event('change');
-                    audioFileInput.dispatchEvent(event);
-                } else {
-                    if (app) {
-                        app.updateStatus('error', '❌ Please drop a valid audio file');
-                    }
-                }
-            });
-        });
+        // Drag and drop functionality will be initialized by the BlueMe class
 
         // Add keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -4635,18 +4637,8 @@
             }
         });
 
-        // Add service worker for offline functionality (future enhancement)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch(registrationError => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
+        // Service worker registration removed to prevent errors
+        // Will be added back when proper sw.js file is created
     </script>
 </body>
 </html>
