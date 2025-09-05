@@ -5502,22 +5502,77 @@
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
                     } else if (audioFile.audio_data) {
                         // Handle base64 audio data
-                        const audioBlob = await this.base64ToBlob(audioFile.audio_data, audioFile.mime_type);
-                        const url = URL.createObjectURL(audioBlob);
-                        this.audioPlayer.src = url;
-                        this.audioPlayer.load();
-                        
-                        // Update track info
-                        this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
-                        this.trackArtist.textContent = 'Playlist Track';
-                        
-                        // Auto-play the track
-                        await this.audioPlayer.play();
-                        this.isPlaying = true;
-                        this.playBtn.innerHTML = '⏸';
-                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                        
-                        this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                        try {
+                            const audioBlob = await this.base64ToBlob(audioFile.audio_data, audioFile.mime_type);
+                            const url = URL.createObjectURL(audioBlob);
+                            this.audioPlayer.src = url;
+                            this.audioPlayer.load();
+                            
+                            // Update track info
+                            this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
+                            this.trackArtist.textContent = 'Playlist Track';
+                            
+                            // Auto-play the track
+                            await this.audioPlayer.play();
+                            this.isPlaying = true;
+                            this.playBtn.innerHTML = '⏸';
+                            this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                            
+                            this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                        } catch (base64Error) {
+                            console.error('❌ Base64 decoding failed for track:', audioFile.title || audioFile.originalName || audioFile.filename);
+                            console.error('❌ Base64 error:', base64Error);
+                            
+                            // Try to find the track in the audio library as fallback
+                            const libraryTrack = this.audioLibrary.find(audio => 
+                                audio.title === audioFile.title || 
+                                audio.original_name === audioFile.originalName ||
+                                audio.id === audioFile.id
+                            );
+                            
+                            if (libraryTrack && (libraryTrack.audio_data || libraryTrack.audioData)) {
+                                console.log('✅ Found track in audio library, using that instead');
+                                // Use the library track's audio data
+                                if (libraryTrack.audioData && libraryTrack.audioData instanceof Blob) {
+                                    const url = URL.createObjectURL(libraryTrack.audioData);
+                                    this.audioPlayer.src = url;
+                                    this.audioPlayer.load();
+                                    await this.audioPlayer.play();
+                                    this.isPlaying = true;
+                                    this.playBtn.innerHTML = '⏸';
+                                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                    this.updateStatus('success', `🎵 Now playing from library: ${libraryTrack.title || libraryTrack.original_name}`);
+                                    return;
+                                } else if (libraryTrack.audio_data) {
+                                    try {
+                                        const audioBlob = await this.base64ToBlob(libraryTrack.audio_data, libraryTrack.mime_type);
+                                        const url = URL.createObjectURL(audioBlob);
+                                        this.audioPlayer.src = url;
+                                        this.audioPlayer.load();
+                                        await this.audioPlayer.play();
+                                        this.isPlaying = true;
+                                        this.playBtn.innerHTML = '⏸';
+                                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                        this.updateStatus('success', `🎵 Now playing from library: ${libraryTrack.title || libraryTrack.original_name}`);
+                                        return;
+                                    } catch (libraryBase64Error) {
+                                        console.error('❌ Library track base64 also failed:', libraryBase64Error);
+                                        // Continue to skip track logic below
+                                    }
+                                }
+                            }
+                            
+                            // If still no audio, try next track
+                            if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
+                                this.currentTrackIndex++;
+                                this.updateStatus('info', `⏭️ Skipping corrupted track, trying next...`);
+                                this.playCurrentTrack();
+                                return;
+                            } else {
+                                this.updateStatus('error', '❌ No playable tracks found in playlist');
+                                return;
+                            }
+                        }
                     } else {
                         console.log('❌ No audio data found for track:', audioFile);
                         this.updateStatus('error', `❌ Audio file not available for: ${audioFile.title || audioFile.originalName || audioFile.filename || 'Unknown track'}`);
@@ -5656,13 +5711,33 @@
             }
 
             base64ToBlob(base64, mimeType) {
-                const byteCharacters = atob(base64);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                try {
+                    // Clean the base64 string (remove any whitespace or invalid characters)
+                    const cleanBase64 = base64.replace(/[^A-Za-z0-9+/=]/g, '');
+                    
+                    // Validate base64 format
+                    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64)) {
+                        throw new Error('Invalid base64 format');
+                    }
+                    
+                    // Check if base64 is empty or too short
+                    if (!cleanBase64 || cleanBase64.length < 4) {
+                        throw new Error('Base64 string is too short or empty');
+                    }
+                    
+                    const byteCharacters = atob(cleanBase64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    return new Blob([byteArray], { type: mimeType });
+                } catch (error) {
+                    console.error('❌ Base64 decoding failed:', error);
+                    console.error('❌ Base64 string length:', base64 ? base64.length : 'null');
+                    console.error('❌ Base64 preview:', base64 ? base64.substring(0, 100) + '...' : 'null');
+                    throw new Error(`Base64 decoding failed: ${error.message}`);
                 }
-                const byteArray = new Uint8Array(byteNumbers);
-                return new Blob([byteArray], { type: mimeType });
             }
 
             async playTrackFromPlaylist(trackIndex) {
