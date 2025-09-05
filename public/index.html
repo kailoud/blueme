@@ -4883,6 +4883,23 @@
 
         // Initialize the app when the page loads
         let app;
+        
+        // Create guest profile immediately if no user is logged in
+        function ensureProfileExists() {
+            const existingProfile = document.querySelector('.user-profile-section');
+            if (!existingProfile) {
+                console.log('👤 No profile found, creating guest profile...');
+                createGuestProfileSection();
+            }
+        }
+        
+        // Try to create profile immediately
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ensureProfileExists);
+        } else {
+            ensureProfileExists();
+        }
+        
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 console.log('🚀 Initializing BlueMe app...');
@@ -4917,6 +4934,15 @@
                     
                     // Always ensure playlist section is created (shows sign-in prompt for guests)
                     app.ensurePlaylistSection();
+                    
+                    // Ensure profile exists (fallback)
+                    setTimeout(() => {
+                        const existingProfile = document.querySelector('.user-profile-section');
+                        if (!existingProfile) {
+                            console.log('👤 Fallback: Creating guest profile...');
+                            createGuestProfileSection();
+                        }
+                    }, 1000);
                 } else {
                     console.log('👤 User session found:', session.user.email);
                     // User is authenticated
@@ -4983,9 +5009,12 @@
         }
 
         function createGuestProfileSection() {
+            console.log('👤 Creating guest profile section...');
+            
             // Create a guest profile section for non-authenticated users
             const existingProfile = document.querySelector('.user-profile-section');
             if (existingProfile) {
+                console.log('👤 Removing existing profile...');
                 existingProfile.remove();
             }
 
@@ -5023,7 +5052,14 @@
             // Insert at the top of the app container
             const appContainer = document.querySelector('.app-container');
             if (appContainer) {
+                console.log('👤 App container found, inserting profile...');
                 appContainer.insertBefore(profileSection, appContainer.firstChild);
+                console.log('✅ Guest profile section created successfully');
+            } else {
+                console.error('❌ App container not found!');
+                // Fallback: append to body
+                document.body.appendChild(profileSection);
+                console.log('✅ Guest profile section created as fallback');
             }
         }
 
