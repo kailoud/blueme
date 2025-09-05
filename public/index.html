@@ -3427,42 +3427,60 @@
             }
 
             async createPlaylist(name, description = '', isPremium = false) {
+                console.log('🎵 createPlaylist called with:', { name, description, isPremium });
+                console.log('Current user:', currentUser);
+                console.log('User profile:', userProfile);
+                
                 if (!currentUser) {
+                    console.error('❌ No current user found');
                     this.updateStatus('error', 'Please log in to create playlists');
                     return;
                 }
 
                 // Check if user can create this type of playlist
                 if (isPremium && !userProfile?.is_premium) {
+                    console.log('❌ User not premium, showing upgrade modal');
                     this.showPremiumUpgrade();
                     return;
                 }
 
                 try {
                     const maxSongs = isPremium ? 10 : 2;
+                    console.log('🎵 Inserting playlist with maxSongs:', maxSongs);
+                    
+                    const playlistData = {
+                        name: name,
+                        description: description,
+                        user_id: currentUser.id,
+                        is_public: false,
+                        is_premium: isPremium,
+                        max_songs: maxSongs
+                    };
+                    
+                    console.log('Playlist data to insert:', playlistData);
+                    
                     const { data, error } = await supabase
                         .from('playlists')
-                        .insert({
-                            name: name,
-                            description: description,
-                            user_id: currentUser.id,
-                            is_public: false,
-                            is_premium: isPremium,
-                            max_songs: maxSongs
-                        })
+                        .insert(playlistData)
                         .select()
                         .single();
 
-                    if (error) throw error;
+                    if (error) {
+                        console.error('❌ Supabase error:', error);
+                        throw error;
+                    }
 
+                    console.log('✅ Playlist created in database:', data);
+                    
                     this.playlists.unshift(data);
                     this.updatePlaylistUI();
                     const playlistType = isPremium ? 'Premium' : 'Free';
                     this.updateStatus('success', `${playlistType} playlist "${name}" created!`);
                     return data;
                 } catch (error) {
-                    console.error('Error creating playlist:', error);
-                    this.updateStatus('error', 'Failed to create playlist');
+                    console.error('❌ Error creating playlist:', error);
+                    this.updateStatus('error', `Failed to create playlist: ${error.message}`);
+                    throw error; // Re-throw so the modal can handle it
                 }
             }
 
@@ -4401,9 +4419,32 @@
             }
 
             async createPlaylistFromModal() {
-                const name = document.getElementById('playlistName').value.trim();
-                const description = document.getElementById('playlistDescription').value.trim();
-                const type = document.querySelector('input[name="playlistType"]:checked').value;
+                console.log('🎵 Creating playlist from modal...');
+                console.log('Supabase client:', supabase);
+                
+                const nameInput = document.getElementById('playlistName');
+                const descriptionInput = document.getElementById('playlistDescription');
+                const typeInput = document.querySelector('input[name="playlistType"]:checked');
+                
+                console.log('Form elements found:', { nameInput, descriptionInput, typeInput });
+                
+                if (!nameInput) {
+                    console.error('❌ Playlist name input not found');
+                    this.updateStatus('error', 'Form error: Name input not found');
+                    return;
+                }
+                
+                if (!typeInput) {
+                    console.error('❌ Playlist type input not found');
+                    this.updateStatus('error', 'Form error: Type input not found');
+                    return;
+                }
+                
+                const name = nameInput.value.trim();
+                const description = descriptionInput ? descriptionInput.value.trim() : '';
+                const type = typeInput.value;
+                
+                console.log('Form values:', { name, description, type });
                 
                 if (!name) {
                     this.updateStatus('error', 'Please enter a playlist name');
@@ -4411,19 +4452,56 @@
                 }
                 
                 const isPremium = type === 'premium';
+                console.log('Is premium:', isPremium);
+                console.log('User profile:', userProfile);
+                console.log('Current user:', currentUser);
                 
                 if (isPremium && !userProfile?.is_premium) {
                     this.updateStatus('error', 'Premium playlists require a premium account');
                     return;
                 }
                 
+                if (!currentUser) {
+                    this.updateStatus('error', 'Please log in to create playlists');
+                    return;
+                }
+                
+                // Test Supabase connection first
                 try {
-                    await this.createPlaylist(name, description, isPremium);
-                    document.querySelector('.create-playlist-form').remove();
+                    console.log('🔍 Testing Supabase connection...');
+                    const { data: testData, error: testError } = await supabase
+                        .from('playlists')
+                        .select('count')
+                        .limit(1);
+                    
+                    if (testError) {
+                        console.error('❌ Supabase connection test failed:', testError);
+                        this.updateStatus('error', `Database connection failed: ${testError.message}`);
+                        return;
+                    }
+                    
+                    console.log('✅ Supabase connection test passed');
+                } catch (connectionError) {
+                    console.error('❌ Supabase connection error:', connectionError);
+                    this.updateStatus('error', `Database connection error: ${connectionError.message}`);
+                    return;
+                }
+                
+                try {
+                    console.log('🎵 Calling createPlaylist with:', { name, description, isPremium });
+                    const result = await this.createPlaylist(name, description, isPremium);
+                    console.log('✅ Playlist created successfully:', result);
+                    
+                    // Close the form
+                    const form = document.querySelector('.create-playlist-form');
+                    if (form) {
+                        form.remove();
+                    }
+                    
                     this.updateStatus('success', `Playlist "${name}" created successfully!`);
                 } catch (error) {
-                    console.error('Error creating playlist from modal:', error);
-                    this.updateStatus('error', 'Failed to create playlist');
+                    console.error('❌ Error creating playlist from modal:', error);
+                    this.updateStatus('error', `Failed to create playlist: ${error.message}`);
                 }
             }
         }
