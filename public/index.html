@@ -2492,6 +2492,13 @@
                     </svg>
                     <span>Demo</span>
                 </button>
+                <button class="quick-btn" onclick="app.debugPlaylists()" title="Debug Playlists & Tracks" style="background: linear-gradient(45deg, #ff6b6b, #ffa500);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                    </svg>
+                    <span>Debug</span>
+                </button>
                 <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -4856,7 +4863,7 @@
                     return;
                 }
                 
-                // Clear any active playlist when playing converted audio
+                // Clear any active playlist when playing converted audio as individual track
                 this.currentPlaylist = null;
                 this.currentTrackIndex = 0;
                 
@@ -4869,7 +4876,7 @@
                 this.trackArtist.textContent = 'Converted Track';
                 this.albumArt.textContent = '🎵';
                 
-                this.updateStatus('success', '🎵 Converted track loaded! Ready to sync with friends');
+                this.updateStatus('success', '🎵 Converted track loaded as individual file! Use "▶️ Play in Main Player" on playlists to play multiple tracks');
                 this.updateConversionStatus('success', '🎉 Track loaded into player!');
                 
                 // Auto-play the converted audio
@@ -5538,6 +5545,47 @@
                     console.error('Error playing track from playlist:', error);
                     this.updateStatus('error', 'Failed to play track');
                 }
+            }
+
+            debugPlaylists() {
+                console.log('🔍 === PLAYLIST DEBUG ===');
+                console.log('📊 Total playlists:', this.playlists.length);
+                
+                this.playlists.forEach((playlist, index) => {
+                    console.log(`\n📁 Playlist ${index + 1}: "${playlist.name}"`);
+                    console.log('   ID:', playlist.id);
+                    console.log('   Items:', playlist.playlist_items ? playlist.playlist_items.length : 0);
+                    
+                    if (playlist.playlist_items && playlist.playlist_items.length > 0) {
+                        playlist.playlist_items.forEach((item, itemIndex) => {
+                            console.log(`   🎵 Track ${itemIndex + 1}:`, {
+                                id: item.id,
+                                title: item.audio_file?.title || item.audio_file?.originalName || item.audio_file?.filename || 'Unknown',
+                                hasAudioData: !!(item.audio_file?.audioData || item.audio_file?.audio_data),
+                                audioDataSize: item.audio_file?.audioData?.size || 'N/A'
+                            });
+                        });
+                    }
+                });
+                
+                console.log('\n🎯 Current State:');
+                console.log('   Current Playlist:', this.currentPlaylist ? this.currentPlaylist.name : 'None');
+                console.log('   Current Track Index:', this.currentTrackIndex);
+                console.log('   Audio Player Src:', this.audioPlayer.src ? 'Loaded' : 'Empty');
+                console.log('   Is Playing:', this.isPlaying);
+                
+                console.log('\n💾 Audio Library:');
+                console.log('   Total Files:', this.audioLibrary.length);
+                this.audioLibrary.forEach((audio, index) => {
+                    console.log(`   🎵 File ${index + 1}:`, {
+                        id: audio.id,
+                        title: audio.title || audio.original_name || 'Unknown',
+                        hasAudioData: !!(audio.audio_data || audio.audioData),
+                        size: audio.file_size || 'N/A'
+                    });
+                });
+                
+                this.updateStatus('info', `🔍 Debug complete! Check console for details. Found ${this.playlists.length} playlists and ${this.audioLibrary.length} audio files.`);
             }
 
             async loadAudioFromBlob(blob, title) {
