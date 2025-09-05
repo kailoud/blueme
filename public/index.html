@@ -708,6 +708,382 @@
             font-weight: 500;
         }
 
+        /* Add to Playlist Modal Styles */
+        .add-to-playlist-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-info h2 {
+            margin: 0 0 4px 0;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .track-info {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .create-playlist-section {
+            margin-bottom: 24px;
+        }
+
+        .create-new-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            border: none;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .create-new-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+        }
+
+        .playlists-section h3 {
+            margin: 0 0 16px 0;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-playlist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-playlist-item:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(78, 205, 196, 0.3);
+            transform: translateX(4px);
+        }
+
+        .modal-playlist-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .playlist-info {
+            flex: 1;
+        }
+
+        .playlist-name {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .playlist-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .playlist-type {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .playlist-type.premium {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+        }
+
+        .playlist-type.free {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .playlist-count {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .playlist-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+
+        .playlist-action {
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .modal-playlist-item:hover:not(.disabled) .playlist-action {
+            color: #4ecdc4;
+        }
+
+        .full-indicator {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .no-playlists {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .no-playlists-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .modal-footer {
+            padding: 16px 24px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Create Playlist Form Styles */
+        .create-playlist-form {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(15px);
+        }
+
+        .form-content {
+            position: relative;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-header h3 {
+            margin: 0;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .form-body {
+            padding: 20px 24px;
+        }
+
+        .form-body .input-group {
+            margin-bottom: 20px;
+        }
+
+        .form-body label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-body input,
+        .form-body textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-body input:focus,
+        .form-body textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-body input::placeholder,
+        .form-body textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .playlist-type-selection {
+            margin-bottom: 20px;
+        }
+
+        .type-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .type-option {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(78, 205, 196, 0.3);
+        }
+
+        .type-option input[type="radio"] {
+            margin-right: 12px;
+            width: auto;
+        }
+
+        .option-content {
+            flex: 1;
+        }
+
+        .option-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .option-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .form-footer {
+            padding: 16px 24px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
         /* Audio Library Styles */
         .audio-library-section {
             background: rgba(255, 255, 255, 0.05);
@@ -1529,6 +1905,49 @@
             .audio-actions .btn {
                 padding: 6px 8px;
                 font-size: 0.75rem;
+            }
+
+            /* Mobile Modal Styles */
+            .modal-content {
+                width: 95%;
+                max-width: none;
+                margin: 10px;
+            }
+
+            .form-content {
+                width: 95%;
+                max-width: none;
+                margin: 10px;
+            }
+
+            .modal-header,
+            .form-header {
+                padding: 16px 16px 12px;
+            }
+
+            .modal-body,
+            .form-body {
+                padding: 16px;
+            }
+
+            .modal-footer,
+            .form-footer {
+                padding: 12px 16px 16px;
+            }
+
+            .create-new-btn {
+                padding: 14px 16px;
+                font-size: 0.9rem;
+            }
+
+            .modal-playlist-item {
+                padding: 12px;
+            }
+
+            .playlist-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
             }
         }
     </style>
@@ -3223,7 +3642,7 @@
                                         <small>${currentSongs}/${maxSongs} tracks ${!canAddMore ? '(Full)' : ''}</small>
                                     </div>
                                     <div class="playlist-actions">
-                                        <button onclick="app.addCurrentTrackToPlaylist('${playlist.id}')" 
+                                        <button onclick="app.showAddToPlaylistModal()" 
                                                 class="btn btn-small ${!canAddMore ? 'btn-disabled' : ''}" 
                                                 ${!canAddMore ? 'disabled' : ''}
                                                 title="${!canAddMore ? 'Playlist is full' : 'Add current track to this playlist'}">
@@ -3608,7 +4027,7 @@
                                 </div>
                                 <div class="audio-actions">
                                     <button onclick="app.playAudio('${audio.id}')" class="btn btn-small btn-primary">Play</button>
-                                    <button onclick="app.addAudioToPlaylist('${audio.id}')" class="btn btn-small">Add to Playlist</button>
+                                                                            <button onclick="app.showAddToPlaylistModal(${JSON.stringify(audio).replace(/"/g, '&quot;')})" class="btn btn-small">Add to Playlist</button>
                                 </div>
                             </div>
                         `).join('');
@@ -3664,6 +4083,108 @@
                         }
                     }
                 }
+            }
+
+            showAddToPlaylistModal(audioFile = null) {
+                const modal = document.createElement('div');
+                modal.className = 'add-to-playlist-modal';
+                modal.innerHTML = `
+                    <div class="modal-overlay" onclick="app.closeAddToPlaylistModal()"></div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="header-info">
+                                <h2>Add to Playlist</h2>
+                                <p class="track-info">${audioFile ? audioFile.title || audioFile.originalName || 'Current Track' : 'Current Track'}</p>
+                            </div>
+                            <button class="close-btn" onclick="app.closeAddToPlaylistModal()">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="create-playlist-section">
+                                <button class="create-new-btn" onclick="app.showCreatePlaylistForm()">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    Create New Playlist
+                                </button>
+                            </div>
+                            
+                            <div class="playlists-section">
+                                <h3>Your Playlists</h3>
+                                <div class="playlists-list" id="modalPlaylistsList">
+                                    <div class="loading-playlists">Loading playlists...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="app.closeAddToPlaylistModal()">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                this.loadModalPlaylists(audioFile);
+            }
+
+            showCreatePlaylistForm() {
+                const createForm = document.createElement('div');
+                createForm.className = 'create-playlist-form';
+                createForm.innerHTML = `
+                    <div class="form-overlay" onclick="this.remove()"></div>
+                    <div class="form-content">
+                        <div class="form-header">
+                            <h3>Create New Playlist</h3>
+                            <button class="close-btn" onclick="this.closest('.create-playlist-form').remove()">×</button>
+                        </div>
+                        <div class="form-body">
+                            <div class="input-group">
+                                <label for="playlistName">Playlist Name</label>
+                                <input type="text" id="playlistName" placeholder="Enter playlist name" maxlength="50">
+                            </div>
+                            <div class="input-group">
+                                <label for="playlistDescription">Description (Optional)</label>
+                                <textarea id="playlistDescription" placeholder="Describe your playlist" maxlength="200" rows="3"></textarea>
+                            </div>
+                            <div class="playlist-type-selection">
+                                <label>Playlist Type</label>
+                                <div class="type-options">
+                                    <label class="type-option">
+                                        <input type="radio" name="playlistType" value="free" checked>
+                                        <div class="option-content">
+                                            <div class="option-title">🆓 Free Playlist</div>
+                                            <div class="option-desc">Up to 2 songs</div>
+                                        </div>
+                                    </label>
+                                    <label class="type-option">
+                                        <input type="radio" name="playlistType" value="premium">
+                                        <div class="option-content">
+                                            <div class="option-title">⭐ Premium Playlist</div>
+                                            <div class="option-desc">Up to 10 songs</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-footer">
+                            <button class="btn btn-secondary" onclick="this.closest('.create-playlist-form').remove()">Cancel</button>
+                            <button class="btn btn-primary" onclick="app.createPlaylistFromModal()">Create Playlist</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(createForm);
+                
+                // Focus on name input
+                setTimeout(() => {
+                    document.getElementById('playlistName').focus();
+                }, 100);
             }
 
             showPremiumUpgrade() {
@@ -3778,6 +4299,132 @@
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
+            }
+
+            // Modal management methods
+            closeAddToPlaylistModal() {
+                const modal = document.querySelector('.add-to-playlist-modal');
+                if (modal) {
+                    modal.remove();
+                }
+            }
+
+            async loadModalPlaylists(audioFile) {
+                const playlistsList = document.getElementById('modalPlaylistsList');
+                if (!playlistsList) return;
+
+                try {
+                    // Load user playlists
+                    await this.loadUserPlaylists();
+                    
+                    if (this.playlists.length === 0) {
+                        playlistsList.innerHTML = `
+                            <div class="no-playlists">
+                                <div class="no-playlists-icon">🎵</div>
+                                <p>No playlists yet</p>
+                                <small>Create your first playlist to get started</small>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    playlistsList.innerHTML = this.playlists.map(playlist => {
+                        const currentSongs = playlist.playlist_items?.length || 0;
+                        const maxSongs = playlist.max_songs || (playlist.is_premium ? 10 : 2);
+                        const canAddMore = currentSongs < maxSongs;
+                        const isPremium = playlist.is_premium || false;
+                        
+                        return `
+                            <div class="modal-playlist-item ${!canAddMore ? 'disabled' : ''}" 
+                                 data-playlist-id="${playlist.id}"
+                                 onclick="${canAddMore ? `app.addToPlaylistFromModal('${playlist.id}', audioFile)` : ''}">
+                                <div class="playlist-info">
+                                    <div class="playlist-name">${playlist.name}</div>
+                                    <div class="playlist-meta">
+                                        <span class="playlist-type ${isPremium ? 'premium' : 'free'}">
+                                            ${isPremium ? '⭐ Premium' : '🆓 Free'}
+                                        </span>
+                                        <span class="playlist-count">${currentSongs}/${maxSongs} songs</span>
+                                    </div>
+                                    ${playlist.description ? `<div class="playlist-desc">${playlist.description}</div>` : ''}
+                                </div>
+                                <div class="playlist-action">
+                                    ${canAddMore ? 
+                                        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' :
+                                        '<span class="full-indicator">Full</span>'
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (error) {
+                    console.error('Error loading modal playlists:', error);
+                    playlistsList.innerHTML = `
+                        <div class="error-state">
+                            <p>Error loading playlists</p>
+                            <button class="btn btn-small" onclick="app.loadModalPlaylists(audioFile)">Retry</button>
+                        </div>
+                    `;
+                }
+            }
+
+            async addToPlaylistFromModal(playlistId, audioFile) {
+                try {
+                    console.log('Adding to playlist from modal:', playlistId, audioFile);
+                    
+                    if (audioFile) {
+                        // Adding existing audio file from library
+                        await this.addToPlaylist(playlistId, audioFile);
+                    } else if (this.convertedAudioBlob) {
+                        // Adding current converted track
+                        const trackData = {
+                            filename: this.convertedFileName?.textContent || 'converted_audio.mp3',
+                            originalName: 'YouTube Audio',
+                            url: 'local',
+                            size: this.convertedAudioBlob.size,
+                            mimeType: this.convertedAudioBlob.type,
+                            duration: 0,
+                            audioData: this.convertedAudioBlob
+                        };
+                        await this.addToPlaylist(playlistId, trackData);
+                    } else {
+                        this.updateStatus('error', 'No track to add');
+                        return;
+                    }
+                    
+                    this.closeAddToPlaylistModal();
+                    this.updateStatus('success', 'Track added to playlist!');
+                } catch (error) {
+                    console.error('Error adding to playlist from modal:', error);
+                    this.updateStatus('error', 'Failed to add track to playlist');
+                }
+            }
+
+            async createPlaylistFromModal() {
+                const name = document.getElementById('playlistName').value.trim();
+                const description = document.getElementById('playlistDescription').value.trim();
+                const type = document.querySelector('input[name="playlistType"]:checked').value;
+                
+                if (!name) {
+                    this.updateStatus('error', 'Please enter a playlist name');
+                    return;
+                }
+                
+                const isPremium = type === 'premium';
+                
+                if (isPremium && !userProfile?.is_premium) {
+                    this.updateStatus('error', 'Premium playlists require a premium account');
+                    return;
+                }
+                
+                try {
+                    await this.createPlaylist(name, description, isPremium);
+                    document.querySelector('.create-playlist-form').remove();
+                    this.updateStatus('success', `Playlist "${name}" created successfully!`);
+                } catch (error) {
+                    console.error('Error creating playlist from modal:', error);
+                    this.updateStatus('error', 'Failed to create playlist');
+                }
             }
         }
 
