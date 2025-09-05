@@ -4560,6 +4560,13 @@
                 app = new BlueMe();
                 isLoading = false;
                 
+                // Clear any leftover status messages
+                const statusEl = document.getElementById('statusMessage');
+                if (statusEl) {
+                    statusEl.innerHTML = '<span>💡</span> Make sure your Bluetooth headphones are in pairing mode';
+                    statusEl.className = 'status-toast status-info';
+                }
+                
                 console.log('✅ BlueMe app initialized successfully');
                 
                 // Check authentication after app is loaded
@@ -4573,6 +4580,9 @@
                     
                     // Add a sign in button to the UI
                     addSignInButton();
+                    
+                    // Create a basic profile section for non-authenticated users
+                    createGuestProfileSection();
                 } else {
                     console.log('👤 User session found:', session.user.email);
                     // User is authenticated
@@ -4635,6 +4645,51 @@
                 if (convertBtn) {
                     convertBtn.parentNode.insertBefore(signInBtn, convertBtn.nextSibling);
                 }
+            }
+        }
+
+        function createGuestProfileSection() {
+            // Create a guest profile section for non-authenticated users
+            const existingProfile = document.querySelector('.user-profile-section');
+            if (existingProfile) {
+                existingProfile.remove();
+            }
+
+            const profileSection = document.createElement('div');
+            profileSection.className = 'user-profile-section';
+            profileSection.innerHTML = `
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <div class="avatar-circle">👤</div>
+                    </div>
+                    <div class="profile-info">
+                        <h3 class="profile-name">Guest User</h3>
+                        <div class="profile-status">
+                            <span class="status-badge free">🆓 Free User</span>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="profile-btn" onclick="window.location.href='/auth.html'">
+                            🔐 Sign In
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Playlists</div>
+                        <div class="stat-value">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Tracks</div>
+                        <div class="stat-value">0</div>
+                    </div>
+                </div>
+            `;
+
+            // Insert at the top of the app container
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.insertBefore(profileSection, appContainer.firstChild);
             }
         }
 
