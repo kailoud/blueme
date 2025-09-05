@@ -2386,16 +2386,25 @@
                 `;
 
                 const logoutBtn = document.createElement('button');
-                logoutBtn.textContent = 'Logout';
+                logoutBtn.textContent = '🚪 Logout';
                 logoutBtn.style.cssText = `
                     background: rgba(255, 255, 255, 0.2);
                     border: none;
                     color: white;
-                    padding: 5px 10px;
+                    padding: 8px 12px;
                     border-radius: 10px;
                     cursor: pointer;
                     font-size: 0.8rem;
+                    transition: all 0.3s ease;
                 `;
+                logoutBtn.onmouseover = () => {
+                    logoutBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+                    logoutBtn.style.transform = 'translateY(-1px)';
+                };
+                logoutBtn.onmouseout = () => {
+                    logoutBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                    logoutBtn.style.transform = 'translateY(0)';
+                };
                 logoutBtn.onclick = () => this.logout();
 
                 userInfo.appendChild(userAvatar);
@@ -2984,8 +2993,8 @@
                 // Check authentication first
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) {
-                    // Redirect immediately if not authenticated
-                    window.location.href = '/auth.html';
+                    // Show auth access options instead of redirecting immediately
+                    showAuthAccess();
                     return;
                 }
                 
@@ -3001,9 +3010,84 @@
                 }, 1000);
             } catch (error) {
                 console.error('Error initializing app:', error);
-                window.location.href = '/auth.html';
+                showAuthAccess();
             }
         });
+
+        function showAuthAccess() {
+            // Create a simple auth access page
+            document.body.innerHTML = `
+                <div style="
+                    min-height: 100vh;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    color: white;
+                ">
+                    <div style="
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(20px);
+                        border-radius: 20px;
+                        padding: 40px;
+                        text-align: center;
+                        max-width: 400px;
+                        width: 90%;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                    ">
+                        <h1 style="
+                            font-size: 2.5rem;
+                            font-weight: 700;
+                            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            margin-bottom: 10px;
+                        ">BlueMe</h1>
+                        <p style="margin-bottom: 30px; opacity: 0.8;">Connect your friends and start sharing music</p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <button onclick="window.location.href='/auth.html'" style="
+                                width: 100%;
+                                padding: 14px;
+                                border: none;
+                                border-radius: 12px;
+                                background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                                color: white;
+                                font-size: 1rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                🔐 Sign In / Sign Up
+                            </button>
+                            
+                            <button onclick="window.location.href='/test.html'" style="
+                                width: 100%;
+                                padding: 14px;
+                                border: none;
+                                border-radius: 12px;
+                                background: rgba(255, 255, 255, 0.1);
+                                color: white;
+                                font-size: 1rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                border: 1px solid rgba(255, 255, 255, 0.2);
+                            " onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
+                                🔧 Test Connection
+                            </button>
+                        </div>
+                        
+                        <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.6;">
+                            Need help? Check the test page to diagnose any issues.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
 
         // Add drag and drop functionality for file upload
         document.addEventListener('DOMContentLoaded', () => {
