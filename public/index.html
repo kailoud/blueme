@@ -1393,11 +1393,29 @@
             font-size: 0.9rem;
             font-weight: 500;
             padding: 0 20px;
-            animation: scroll-left 15s linear infinite;
+            animation: scroll-left 8s linear infinite;
+        }
+
+        .marquee-text::before {
+            content: attr(data-text);
+            position: absolute;
+            right: 100%;
+            top: 0;
+            padding-right: 20px;
+            white-space: nowrap;
+        }
+
+        .marquee-text::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 100%;
+            top: 0;
+            padding-left: 20px;
+            white-space: nowrap;
         }
 
         @keyframes scroll-left {
-            0% { transform: translate(100vw, -50%); }
+            0% { transform: translate(0, -50%); }
             100% { transform: translate(-100%, -50%); }
         }
 
@@ -6005,6 +6023,7 @@
                 const marqueeContent = `🎵 ${trackName} • 🎤 ${artist} • ⏱️ ${duration} • 📁 ${format} • 💾 ${size}`;
                 
                 this.marqueeText.textContent = marqueeContent;
+                this.marqueeText.setAttribute('data-text', marqueeContent);
                 this.marqueeContainer.style.display = 'block';
                 this.marqueePlaceholder.style.display = 'none';
             }
