@@ -2601,14 +2601,6 @@
                     </svg>
                     <span>Test</span>
                 </button>
-                <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                    <span>Demo</span>
-                </button>
                 <button class="quick-btn" onclick="app.debugPlayButton()" title="Debug Play Button" style="background: linear-gradient(45deg, #ff0000, #ff6666);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -5569,133 +5561,7 @@
                 this.updateStatus('info', '🔍 Play button debug complete! Check console for details.');
             }
 
-            createDemoPlaylist() {
-                try {
-                    console.log('🎵 Creating demo playlist with sample audio...');
-                    
-                    // Generate sample audio data (base64 encoded WAV)
-                    const sampleAudioData = this.generateSampleAudioData();
-                    console.log('✅ Sample audio data generated, length:', sampleAudioData.length);
-                    
-                    // Create demo playlist
-                    const demoPlaylist = {
-                        id: crypto.randomUUID(),
-                        name: '🎵 Demo Playlist',
-                        description: 'Sample playlist with demo tracks for testing',
-                        playlist_items: [
-                            {
-                                id: crypto.randomUUID(),
-                                position: 0,
-                                audio_file: {
-                                    id: crypto.randomUUID(),
-                                    title: 'Demo Track 1 - Electronic Vibes',
-                                    originalName: 'demo_track_1.wav',
-                                    filename: 'demo_track_1.wav',
-                                    mime_type: 'audio/wav',
-                                    file_size: sampleAudioData.length,
-                                    audio_data: sampleAudioData,
-                                    url: 'demo_local'
-                                }
-                            },
-                            {
-                                id: crypto.randomUUID(),
-                                position: 1,
-                                audio_file: {
-                                    id: crypto.randomUUID(),
-                                    title: 'Demo Track 2 - Ambient Sounds',
-                                    originalName: 'demo_track_2.wav',
-                                    filename: 'demo_track_2.wav',
-                                    mime_type: 'audio/wav',
-                                    file_size: sampleAudioData.length,
-                                    audio_data: sampleAudioData,
-                                    url: 'demo_local'
-                                }
-                            },
-                            {
-                                id: crypto.randomUUID(),
-                                position: 2,
-                                audio_file: {
-                                    id: crypto.randomUUID(),
-                                    title: 'Demo Track 3 - Chill Beats',
-                                    originalName: 'demo_track_3.wav',
-                                    filename: 'demo_track_3.wav',
-                                    mime_type: 'audio/wav',
-                                    file_size: sampleAudioData.length,
-                                    audio_data: sampleAudioData,
-                                    url: 'demo_local'
-                                }
-                            }
-                        ]
-                    };
-                    
-                    // Add to playlists
-                    this.playlists.push(demoPlaylist);
-                    this.saveLocalPlaylists();
-                    this.updatePlaylistUI();
-                    
-                    console.log('✅ Demo playlist created successfully:', demoPlaylist);
-                    this.updateStatus('success', '🎵 Demo playlist created with 3 sample tracks! Try playing it now.');
-                    
-                    return demoPlaylist;
-                } catch (error) {
-                    console.error('❌ Error creating demo playlist:', error);
-                    this.updateStatus('error', `Failed to create demo playlist: ${error.message}`);
-                    return null;
-                }
-            }
 
-            generateSampleAudioData() {
-                // Generate a simple sine wave audio as base64
-                const sampleRate = 44100;
-                const duration = 3; // 3 seconds
-                const frequency = 440; // A4 note
-                const samples = sampleRate * duration;
-                
-                // Create WAV header
-                const header = new ArrayBuffer(44);
-                const view = new DataView(header);
-                
-                // WAV header
-                const writeString = (offset, string) => {
-                    for (let i = 0; i < string.length; i++) {
-                        view.setUint8(offset + i, string.charCodeAt(i));
-                    }
-                };
-                
-                writeString(0, 'RIFF');
-                view.setUint32(4, 36 + samples * 2, true);
-                writeString(8, 'WAVE');
-                writeString(12, 'fmt ');
-                view.setUint32(16, 16, true);
-                view.setUint16(20, 1, true);
-                view.setUint16(22, 1, true);
-                view.setUint32(24, sampleRate, true);
-                view.setUint32(28, sampleRate * 2, true);
-                view.setUint16(32, 2, true);
-                view.setUint16(34, 16, true);
-                writeString(36, 'data');
-                view.setUint32(40, samples * 2, true);
-                
-                // Generate audio data
-                const audioData = new Int16Array(samples);
-                for (let i = 0; i < samples; i++) {
-                    const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3;
-                    audioData[i] = Math.floor(sample * 32767);
-                }
-                
-                // Combine header and audio data
-                const wavBuffer = new Uint8Array(44 + samples * 2);
-                wavBuffer.set(new Uint8Array(header), 0);
-                wavBuffer.set(new Uint8Array(audioData.buffer), 44);
-                
-                // Convert to base64
-                let binary = '';
-                for (let i = 0; i < wavBuffer.length; i++) {
-                    binary += String.fromCharCode(wavBuffer[i]);
-                }
-                
-                return btoa(binary);
-            }
 
             async loadAudioFromBlob(blob, title) {
                 try {
@@ -5743,6 +5609,12 @@
                     // Check if base64 is valid
                     if (!base64) {
                         throw new Error('Base64 data is null or undefined');
+                    }
+                    
+                    // Handle Blob objects directly
+                    if (base64 instanceof Blob) {
+                        console.log('✅ Received Blob object, returning as-is');
+                        return base64;
                     }
                     
                     // Convert to string if it's not already
