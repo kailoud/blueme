@@ -4404,7 +4404,14 @@
             }
 
             showDownloadSection(filename, format, size) {
-                this.convertedFileName.textContent = `${filename}.${format}`;
+                // Check if filename already has the format extension
+                const formatExtension = format.toLowerCase();
+                const hasExtension = filename.toLowerCase().endsWith(`.${formatExtension}`);
+                
+                // Only add extension if it's not already there
+                const displayFilename = hasExtension ? filename : `${filename}.${format}`;
+                
+                this.convertedFileName.textContent = displayFilename;
                 this.convertedFileInfo.textContent = `${format.toUpperCase()} • ${this.formatFileSize(size)} • Ready to sync`;
                 this.downloadSection.classList.remove('hidden');
             }
@@ -5010,6 +5017,15 @@
                         } catch (base64Error) {
                             console.error('❌ Base64 decoding failed for track:', audioFile.title || audioFile.originalName || audioFile.filename);
                             console.error('❌ Base64 error:', base64Error);
+                            console.error('❌ Audio file details:', {
+                                title: audioFile.title,
+                                originalName: audioFile.originalName,
+                                filename: audioFile.filename,
+                                mime_type: audioFile.mime_type,
+                                hasAudioData: !!audioFile.audio_data,
+                                audioDataLength: audioFile.audio_data ? audioFile.audio_data.length : 0,
+                                audioDataType: typeof audioFile.audio_data
+                            });
                             
                             // Try to find the track in the audio library as fallback
                             const libraryTrack = this.audioLibrary.find(audio => 
