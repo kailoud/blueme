@@ -1,11 +1,25 @@
 -- Fix RLS policies to allow guest users (null user_id) to insert audio files
 -- This script updates the policies to work without authentication
 
--- Drop existing policies for audio_files
-DROP POLICY IF EXISTS "Users can view their own audio files" ON audio_files;
-DROP POLICY IF EXISTS "Users can insert their own audio files" ON audio_files;
-DROP POLICY IF EXISTS "Users can update their own audio files" ON audio_files;
-DROP POLICY IF EXISTS "Users can delete their own audio files" ON audio_files;
+-- First, let's see what policies currently exist
+SELECT 
+    schemaname,
+    tablename,
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies 
+WHERE schemaname = 'public' 
+ORDER BY tablename, policyname;
+
+-- Drop ALL existing policies for audio_files (using CASCADE to handle dependencies)
+DROP POLICY IF EXISTS "Users can view their own audio files" ON audio_files CASCADE;
+DROP POLICY IF EXISTS "Users can insert their own audio files" ON audio_files CASCADE;
+DROP POLICY IF EXISTS "Users can update their own audio files" ON audio_files CASCADE;
+DROP POLICY IF EXISTS "Users can delete their own audio files" ON audio_files CASCADE;
 
 -- Create new policies that allow guest users (null user_id)
 CREATE POLICY "Anyone can view audio files" ON audio_files
