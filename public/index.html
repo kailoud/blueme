@@ -4294,7 +4294,7 @@
                             url: url,
                             format: this.formatSelect.value,
                             quality: this.qualitySelect.value,
-                            userId: currentUser?.id
+                            userId: null // Guest mode - no user ID needed
                         })
                     });
 
@@ -4319,14 +4319,9 @@
                             this.convertedAudioBlob = await this.fetchAudioBlob(result.file.url);
                         }
                         
-                        // Automatically save to database if user is logged in
-                        if (currentUser) {
-                            console.log('Saving converted audio to database for user:', currentUser.id);
-                            await this.saveConvertedAudioToDatabase(result.file);
-                        } else {
-                            console.log('No user logged in, skipping database save');
-                            this.updateStatus('info', '💡 Sign in to save your converted audio to your library!');
-                        }
+                        // Save to local storage (guest mode)
+                        console.log('Saving converted audio to local storage (guest mode)');
+                        await this.saveConvertedAudioToLocalStorage(result.file);
                         
                         this.showDownloadSection(result.file.filename, this.formatSelect.value, result.file.size);
                         
@@ -4369,6 +4364,15 @@
                 this.convertedAudioBlob = convertedBlob;
                 const filename = this.extractFilenameFromUrl(url) || 'converted_audio';
                 this.showDownloadSection(filename, format, convertedBlob.size);
+                
+                // Save to local storage (guest mode)
+                await this.saveConvertedAudioToLocalStorage({
+                    filename: filename,
+                    url: URL.createObjectURL(convertedBlob),
+                    size: convertedBlob.size,
+                    format: format,
+                    quality: quality
+                });
                 
                 // Add to audio library
                 this.loadUserAudioLibrary();
@@ -4723,16 +4727,13 @@
                     return;
                 }
 
-                // Check if user is authenticated
-                if (!this.isAuthenticated || !this.currentUser) {
-                    this.updateStatus('error', 'Please sign in to create playlists');
-                    return;
-                }
+                // Guest mode - no authentication required
+                console.log('Creating playlist in guest mode');
 
-                // Check if playlist name already exists for this user
+                // Check if playlist name already exists for guest user
                 const existingPlaylist = this.playlists.find(p => 
                     p.name.toLowerCase() === name.toLowerCase() && 
-                    p.user_id === this.currentUser.id
+                    p.user_id === 'guest'
                 );
                 if (existingPlaylist) {
                     this.updateStatus('error', 'A playlist with this name already exists');
@@ -4740,17 +4741,17 @@
                 }
 
                 try {
-                    // Create new playlist object with user information
+                    // Create new playlist object for guest user
                     const newPlaylist = {
                         id: crypto.randomUUID(),
                         name: name.trim(),
                         description: description.trim(),
-                        user_id: this.currentUser.id,
-                        user_email: this.currentUser.email,
-                        user_username: this.currentUser.username,
+                        user_id: 'guest', // Guest mode
+                        user_email: 'guest@blueme.app',
+                        user_username: 'Guest User',
                         is_public: false,
-                        is_premium: this.currentUser.isPremium || false,
-                        max_songs: this.currentUser.isPremium ? 10 : 2,
+                        is_premium: false, // Guest users are not premium
+                        max_songs: 5, // Guest users get 5 songs per playlist
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         playlist_items: []
@@ -4780,11 +4781,8 @@
                 console.log('🎵 Adding to playlist:', playlistId, audioFile);
 
                 try {
-                    // Check if user is authenticated
-                    if (!this.isAuthenticated || !this.currentUser) {
-                        this.updateStatus('error', 'Please sign in to add tracks to playlists');
-                        return;
-                    }
+                    // Guest mode - no authentication required
+                    console.log('Adding track to playlist in guest mode');
 
                     // Find the playlist
                     const playlist = this.playlists.find(p => p.id === playlistId);
@@ -4793,28 +4791,28 @@
                         return;
                     }
 
-                    // Check if user owns this playlist
-                    if (playlist.user_id !== this.currentUser.id) {
+                    // Check if user owns this playlist (guest mode)
+                    if (playlist.user_id !== 'guest') {
                         this.updateStatus('error', 'You can only add tracks to your own playlists');
                         return;
                     }
 
-                    // Check playlist limits
+                    // Check playlist limits (guest mode)
                     const currentSongs = playlist.playlist_items.length;
-                    const maxSongs = playlist.max_songs || (this.currentUser.isPremium ? 10 : 2);
+                    const maxSongs = playlist.max_songs || 5; // Guest users get 5 songs per playlist
                     
                     if (currentSongs >= maxSongs) {
-                        this.updateStatus('error', `Playlist limit reached (${maxSongs} songs). ${this.currentUser.isPremium ? '' : 'Upgrade to premium for more songs.'}`);
+                        this.updateStatus('error', `Playlist limit reached (${maxSongs} songs). Create a new playlist for more songs.`);
                         return;
                     }
 
-                    // Create playlist item with user information
+                    // Create playlist item for guest user
                     const playlistItem = {
                         id: crypto.randomUUID(),
                         playlist_id: playlistId,
                         position: playlist.playlist_items.length + 1,
                         audio_file: audioFile,
-                        user_id: this.currentUser.id,
+                        user_id: 'guest', // Guest mode
                         added_at: new Date().toISOString()
                     };
 
@@ -4842,11 +4840,8 @@
             ensurePlaylistSection() {
                 console.log('🎵 Ensuring playlist section exists...');
                 
-                // Check if user is authenticated
-                if (!this.isAuthenticated || !this.currentUser) {
-                    console.log('🔐 User not authenticated - playlist section not available');
-                    return;
-                }
+                // Guest mode - load playlists from local storage
+                console.log('🔐 Loading playlists in guest mode');
                 
                 // Create playlist section for authenticated users only
                 let playlistSection = document.getElementById('playlistSection');
@@ -4908,15 +4903,9 @@
                     if (storedPlaylists) {
                         const allPlaylists = JSON.parse(storedPlaylists);
                         
-                        // Filter playlists by current user if authenticated
-                        if (this.isAuthenticated && this.currentUser) {
-                            this.playlists = allPlaylists.filter(p => p.user_id === this.currentUser.id);
-                            console.log(`✅ Loaded ${this.playlists.length} playlists for user ${this.currentUser.username || this.currentUser.email}`);
-                        } else {
-                            // For non-authenticated users, show all playlists (legacy support)
-                            this.playlists = allPlaylists;
-                            console.log('✅ Loaded all playlists (guest mode):', this.playlists.length);
-                        }
+                        // Filter playlists by guest user
+                        this.playlists = allPlaylists.filter(p => p.user_id === 'guest');
+                        console.log(`✅ Loaded ${this.playlists.length} playlists for guest user`);
                         
                         this.updatePlaylistUI();
                     } else {
@@ -5431,8 +5420,9 @@
                     newEmailInput.focus();
                     newEmailInput.value = 'truesliks@gmail.com';
                     
-                console.log('✅ Email input fixed and set to:', newEmailInput.value);
-                this.updateStatus('success', 'Keyboard input fixed! Email field updated.');
+                    console.log('✅ Email input fixed and set to:', newEmailInput.value);
+                    this.updateStatus('success', 'Keyboard input fixed! Email field updated.');
+                }
             }
 
             // Fix the specific "m" key issue
@@ -6000,51 +5990,43 @@
                 }
             }
 
-            async saveConvertedAudioToDatabase(fileData) {
-                if (!currentUser) {
-                    console.log('No current user, cannot save to database');
-                    return;
-                }
-
-                console.log('Attempting to save audio file:', fileData);
-
+            async saveConvertedAudioToLocalStorage(fileData) {
                 try {
-                    const insertData = {
+                    console.log('Saving converted audio to local storage:', fileData);
+                    
+                    // Get existing audio library from localStorage
+                    const existingLibrary = JSON.parse(localStorage.getItem('blueMeAudioLibrary') || '[]');
+                    
+                    // Create new audio file entry
+                    const newAudioFile = {
+                        id: crypto.randomUUID(),
                         file_name: fileData.filename || 'converted_audio.mp3',
-                        original_name: fileData.originalName || 'YouTube Audio',
+                        original_name: fileData.originalName || fileData.filename || 'Converted Audio',
                         file_path: fileData.url || 'local',
                         file_size: fileData.size || 0,
                         mime_type: fileData.mimeType || 'audio/mpeg',
                         public_url: fileData.url || 'local',
-                        user_id: currentUser.id,
+                        user_id: 'guest', // Guest mode
                         duration: fileData.duration || 0,
-                        title: fileData.originalName || 'YouTube Audio',
-                        artist: 'YouTube',
-                        album: 'Converted Audio'
+                        title: fileData.originalName || fileData.filename || 'Converted Audio',
+                        artist: 'Converted Audio',
+                        album: 'Local Library',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                     };
-
-                    console.log('Inserting data:', insertData);
-
-                    const { data, error } = await supabase
-                        .from('audio_files')
-                        .insert(insertData)
-                        .select()
-                        .single();
-
-                    if (error) {
-                        console.error('Supabase error:', error);
-                        throw error;
-                    }
-
-                    console.log('Audio file saved to database successfully:', data);
+                    
+                    // Add to library
+                    existingLibrary.push(newAudioFile);
+                    
+                    // Save back to localStorage
+                    localStorage.setItem('blueMeAudioLibrary', JSON.stringify(existingLibrary));
+                    
+                    console.log('✅ Audio saved to local storage:', newAudioFile);
                     this.updateStatus('success', 'Audio saved to your library!');
                     
-                    // Reload the audio library to show the new file
-                    await this.loadUserAudioLibrary();
-                    
-                    return data;
+                    return newAudioFile;
                 } catch (error) {
-                    console.error('Error saving audio to database:', error);
+                    console.error('Error saving audio to local storage:', error);
                     this.updateStatus('error', `Failed to save audio to library: ${error.message}`);
                 }
             }
