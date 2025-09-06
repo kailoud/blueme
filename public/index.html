@@ -2614,6 +2614,13 @@
                     </svg>
                     <span>Marquee</span>
                 </button>
+                <button class="quick-btn" onclick="app.debugDatabaseConnection()" title="Debug Database Connection" style="background: linear-gradient(45deg, #ff9800, #ff5722);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                    </svg>
+                    <span>Debug DB</span>
+                </button>
                 <button class="quick-btn" onclick="app.pushToDatabase()" title="Push Audio Files to Database" style="background: linear-gradient(45deg, #2196F3, #21CBF3);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -5620,6 +5627,73 @@
                 } catch (error) {
                     console.error('❌ Error deleting audio file:', error);
                     this.updateStatus('error', `Failed to delete audio file: ${error.message}`);
+                }
+            }
+
+            async debugDatabaseConnection() {
+                try {
+                    console.log('🔍 Debugging database connection...');
+                    
+                    if (!isSupabaseConfigured || !supabase) {
+                        console.error('❌ Supabase not configured');
+                        this.updateStatus('error', '❌ Supabase not configured');
+                        return;
+                    }
+                    
+                    console.log('✅ Supabase client available');
+                    
+                    // Test basic connection
+                    const { data, error } = await supabase
+                        .from('audio_files')
+                        .select('count')
+                        .limit(1);
+                    
+                    if (error) {
+                        console.error('❌ Database connection error:', error);
+                        this.updateStatus('error', `Database error: ${error.message}`);
+                        return;
+                    }
+                    
+                    console.log('✅ Database connection successful');
+                    
+                    // Test insert permission with a simple test
+                    const testId = 'test-' + Date.now();
+                    const { data: insertData, error: insertError } = await supabase
+                        .from('audio_files')
+                        .insert([{
+                            id: testId,
+                            file_name: 'test',
+                            original_name: 'test',
+                            file_path: 'test',
+                            file_size: 1,
+                            mime_type: 'audio/mpeg',
+                            public_url: 'test',
+                            user_id: null,
+                            duration: 1,
+                            title: 'Test',
+                            artist: 'Test',
+                            album: 'Test',
+                            uploaded_at: new Date().toISOString()
+                        }])
+                        .select();
+                    
+                    if (insertError) {
+                        console.error('❌ Insert test failed:', insertError);
+                        this.updateStatus('error', `Insert failed: ${insertError.message}`);
+                        
+                        // Try to clean up test record
+                        await supabase.from('audio_files').delete().eq('id', testId);
+                    } else {
+                        console.log('✅ Insert test successful');
+                        this.updateStatus('success', '✅ Database connection and insert permissions working');
+                        
+                        // Clean up test record
+                        await supabase.from('audio_files').delete().eq('id', testId);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Debug error:', error);
+                    this.updateStatus('error', `Debug failed: ${error.message}`);
                 }
             }
 
