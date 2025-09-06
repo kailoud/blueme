@@ -3101,6 +3101,13 @@
                     </svg>
                     <span>Fix M</span>
                 </button>
+                <button class="quick-btn" onclick="app.forceRefreshProfile()" title="Force Refresh Profile" style="background: linear-gradient(45deg, #17a2b8, #138496);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    <span>Refresh</span>
+                </button>
                 <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -5638,7 +5645,10 @@
             }
 
             updateAuthUI() {
-                console.log('🔄 Updating UI (no authentication)...');
+                console.log('🔄 Updating UI with authentication state...', {
+                    isAuthenticated: this.isAuthenticated,
+                    currentUser: this.currentUser
+                });
                 
                 // Remove existing profile sections
                 const existingProfile = document.querySelector('.user-profile-section');
@@ -5646,7 +5656,21 @@
                     existingProfile.remove();
                 }
 
-                // Create simple profile section without authentication
+                // Determine display name and status
+                let displayName = 'BlueMe User';
+                let statusText = 'Guest User';
+                let statusClass = 'free';
+                
+                if (this.isAuthenticated && this.currentUser) {
+                    displayName = this.currentUser.username || this.currentUser.email || 'Authenticated User';
+                    statusText = this.currentUser.is_premium ? 'Premium User' : 'Free User';
+                    statusClass = this.currentUser.is_premium ? 'premium' : 'free';
+                    console.log('✅ User authenticated, showing:', displayName);
+                } else {
+                    console.log('❌ User not authenticated, showing guest');
+                }
+
+                // Create profile section with correct authentication state
                 const profileSection = document.createElement('div');
                 profileSection.className = 'user-profile-section';
                 profileSection.innerHTML = `
@@ -5661,9 +5685,9 @@
                                 <div class="avatar-circle">🎵</div>
                             </div>
                             <div class="profile-info">
-                                <h3 class="profile-name" id="profileName">BlueMe User</h3>
+                                <h3 class="profile-name" id="profileName">${displayName}</h3>
                                 <div class="profile-status">
-                                    <span class="status-badge free">Guest User</span>
+                                    <span class="status-badge ${statusClass}">${statusText}</span>
                                 </div>
                             </div>
                         </div>
@@ -6889,6 +6913,11 @@
             }
 
             updateAuthUI() {
+                console.log('🔄 Updating auth UI (second method)...', {
+                    isAuthenticated: this.isAuthenticated,
+                    currentUser: this.currentUser
+                });
+                
                 const profileName = document.getElementById('profileName');
                 const signInMenuItem = document.getElementById('signInMenuItem');
                 const signUpMenuItem = document.getElementById('signUpMenuItem');
@@ -6896,8 +6925,12 @@
                 
                 if (this.isAuthenticated && this.currentUser) {
                     // User is signed in
+                    const displayName = this.currentUser.username || this.currentUser.email || 'Authenticated User';
+                    console.log('✅ Updating profile name to:', displayName);
+                    
                     if (profileName) {
-                        profileName.textContent = this.currentUser.username || this.currentUser.email;
+                        profileName.textContent = displayName;
+                        profileName.style.color = '#00ff88'; // Green for authenticated
                     }
                     if (signInMenuItem) signInMenuItem.style.display = 'none';
                     if (signUpMenuItem) signUpMenuItem.style.display = 'none';
@@ -6908,8 +6941,11 @@
                     this.ensurePlaylistSection();
                 } else {
                     // User is not signed in
+                    console.log('❌ User not authenticated, showing guest');
+                    
                     if (profileName) {
                         profileName.textContent = 'BlueMe User';
+                        profileName.style.color = '#ff6b6b'; // Red for guest
                     }
                     if (signInMenuItem) signInMenuItem.style.display = 'block';
                     if (signUpMenuItem) signUpMenuItem.style.display = 'block';
@@ -6922,6 +6958,30 @@
                         playlistSection.remove();
                     }
                 }
+            }
+
+            // Force refresh profile display
+            forceRefreshProfile() {
+                console.log('🔄 Force refreshing profile display...');
+                console.log('Current auth state:', {
+                    isAuthenticated: this.isAuthenticated,
+                    currentUser: this.currentUser,
+                    globalCurrentUser: window.currentUser
+                });
+                
+                // Force update the UI
+                this.updateAuthUI();
+                
+                // Also update any existing profile elements
+                const profileName = document.getElementById('profileName');
+                if (profileName && this.isAuthenticated && this.currentUser) {
+                    const displayName = this.currentUser.username || this.currentUser.email || 'Authenticated User';
+                    profileName.textContent = displayName;
+                    profileName.style.color = '#00ff88';
+                    console.log('✅ Profile name updated to:', displayName);
+                }
+                
+                this.updateStatus('success', 'Profile refreshed! Should show authenticated user now.');
             }
 
             debugPlayButton() {
