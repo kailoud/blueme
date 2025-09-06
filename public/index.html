@@ -3108,6 +3108,24 @@
                     </svg>
                     <span>Refresh</span>
                 </button>
+                <button class="quick-btn" onclick="app.checkUserInDatabase()" title="Check User in Database" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+                        <path d="M13 12h3a2 2 0 0 1 2 2v1"></path>
+                        <path d="M13 12H9a2 2 0 0 0-2 2v1"></path>
+                    </svg>
+                    <span>Check DB</span>
+                </button>
+                <button class="quick-btn" onclick="app.saveCurrentUserToDatabase()" title="Save User to Database" style="background: linear-gradient(45deg, #007bff, #0056b3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17,21 17,13 7,13 7,21"></polyline>
+                        <polyline points="7,3 7,8 15,8"></polyline>
+                    </svg>
+                    <span>Save to DB</span>
+                </button>
                 <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -4042,7 +4060,7 @@
                         console.error('❌ Play failed:', error);
                         this.updateStatus('error', 'Play failed: ' + error.message);
                     });
-                } else {
+                    } else {
                     console.log('🎵 Audio is playing, pausing...');
                     this.audioPlayer.pause();
                     this.playBtn.innerHTML = '▶';
@@ -6575,7 +6593,43 @@
                 }
             }
 
-            // Database integration methods (for future Supabase re-enablement)
+            // Database integration methods (for Supabase integration)
+            async saveUserToDatabase(user) {
+                console.log('💾 Saving user to database:', user);
+                
+                try {
+                    // Check if Supabase is available
+                    if (typeof supabase === 'undefined') {
+                        console.log('⚠️ Supabase not available, skipping database save');
+                        return { success: false, reason: 'Supabase not configured' };
+                    }
+                    
+                    const { data, error } = await supabase
+                        .from('users')
+                        .insert({
+                            id: user.id,
+                            email: user.email,
+                            username: user.username,
+                            is_premium: user.isPremium || false,
+                            created_at: new Date().toISOString()
+                        })
+                        .select()
+                        .single();
+                    
+                    if (error) {
+                        console.error('❌ Error saving user to database:', error);
+                        return { success: false, error: error.message };
+                    }
+                    
+                    console.log('✅ User saved to database:', data);
+                    return { success: true, data };
+                    
+                } catch (error) {
+                    console.error('❌ Database save error:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+
             async savePlaylistToDatabase(playlist) {
                 console.log('💾 Saving playlist to database:', playlist);
                 
@@ -6835,7 +6889,7 @@
                     isPremium: false
                 };
                 
-                // Store user data
+                // Store user data locally
                 existingUsers.push(newUser);
                 localStorage.setItem('blueMeUsers', JSON.stringify(existingUsers));
                 
@@ -6846,6 +6900,21 @@
                 
                 this.currentUser = newUser;
                 this.isAuthenticated = true;
+                
+                // Also save to database
+                try {
+                    const dbResult = await this.saveUserToDatabase(newUser);
+                    if (dbResult.success) {
+                        console.log('✅ User saved to both local storage and database');
+                        this.updateStatus('success', 'Account created and saved to database!');
+                    } else {
+                        console.log('⚠️ User saved locally but not to database:', dbResult.reason || dbResult.error);
+                        this.updateStatus('warning', 'Account created locally. Database save failed: ' + (dbResult.reason || dbResult.error));
+                    }
+                } catch (error) {
+                    console.error('❌ Database save failed:', error);
+                    this.updateStatus('warning', 'Account created locally. Database save failed: ' + error.message);
+                }
                 
                 // Sync global variable for compatibility
                 currentUser = newUser;
@@ -6957,6 +7026,77 @@
                     if (playlistSection) {
                         playlistSection.remove();
                     }
+                }
+            }
+
+            // Check if current user exists in database
+            async checkUserInDatabase() {
+                console.log('🔍 Checking if current user exists in database...');
+                
+                if (!this.isAuthenticated || !this.currentUser) {
+                    console.log('❌ No authenticated user to check');
+                    this.updateStatus('error', 'Please sign in first to check database');
+                    return;
+                }
+                
+                try {
+                    // Check if Supabase is available
+                    if (typeof supabase === 'undefined') {
+                        console.log('⚠️ Supabase not available');
+                        this.updateStatus('error', 'Supabase not configured - cannot check database');
+                        return;
+                    }
+                    
+                    console.log('🔍 Checking for user:', this.currentUser.email);
+                    
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('email', this.currentUser.email)
+                        .single();
+                    
+                    if (error) {
+                        if (error.code === 'PGRST116') {
+                            console.log('❌ User not found in database');
+                            this.updateStatus('error', 'User not found in database. Click "Save to DB" to add them.');
+                        } else {
+                            console.error('❌ Database query error:', error);
+                            this.updateStatus('error', 'Database error: ' + error.message);
+                        }
+                        return;
+                    }
+                    
+                    console.log('✅ User found in database:', data);
+                    this.updateStatus('success', `✅ User found in database! ID: ${data.id}, Username: ${data.username}`);
+                    
+                } catch (error) {
+                    console.error('❌ Error checking user in database:', error);
+                    this.updateStatus('error', 'Error checking database: ' + error.message);
+                }
+            }
+
+            // Save current user to database
+            async saveCurrentUserToDatabase() {
+                console.log('💾 Saving current user to database...');
+                
+                if (!this.isAuthenticated || !this.currentUser) {
+                    console.log('❌ No authenticated user to save');
+                    this.updateStatus('error', 'Please sign in first to save to database');
+                    return;
+                }
+                
+                try {
+                    const dbResult = await this.saveUserToDatabase(this.currentUser);
+                    if (dbResult.success) {
+                        console.log('✅ Current user saved to database');
+                        this.updateStatus('success', '✅ User saved to database successfully!');
+                    } else {
+                        console.log('❌ Failed to save user to database:', dbResult.error);
+                        this.updateStatus('error', 'Failed to save to database: ' + dbResult.error);
+                    }
+                } catch (error) {
+                    console.error('❌ Error saving user to database:', error);
+                    this.updateStatus('error', 'Error saving to database: ' + error.message);
                 }
             }
 
