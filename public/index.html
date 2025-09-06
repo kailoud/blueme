@@ -2690,6 +2690,41 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
+        // Supabase Configuration
+        // 🔧 TO ENABLE DATABASE STORAGE:
+        // 1. Go to https://supabase.com and create a project
+        // 2. Get your Project URL and anon key from Settings > API
+        // 3. Replace the values below with your actual Supabase credentials
+        // 4. Run the database schema from database/schema.sql in your Supabase SQL Editor
+        
+        const SUPABASE_URL = 'https://your-project-id.supabase.co'; // Replace with your Supabase URL
+        const SUPABASE_ANON_KEY = 'your-anon-key-here'; // Replace with your Supabase anon key
+        
+        // 🎯 EXAMPLE:
+        // const SUPABASE_URL = 'https://abcdefghijklmnop.supabase.co';
+        // const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+        
+        // Initialize Supabase client
+        let supabase = null;
+        let isSupabaseConfigured = false;
+        
+        // Check if Supabase is properly configured
+        if (SUPABASE_URL && SUPABASE_ANON_KEY && 
+            SUPABASE_URL !== 'https://your-project-id.supabase.co' && 
+            SUPABASE_ANON_KEY !== 'your-anon-key-here') {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                isSupabaseConfigured = true;
+                console.log('✅ Supabase client initialized successfully');
+            } catch (error) {
+                console.error('❌ Supabase initialization error:', error);
+                isSupabaseConfigured = false;
+            }
+        } else {
+            console.log('⚠️ Supabase not configured - using local storage only');
+            isSupabaseConfigured = false;
+        }
+        
         // Simple guest user system
         let currentUser = null; // Always null for guest mode
 
@@ -4487,8 +4522,10 @@
                     // Save to local storage
                     this.saveLocalPlaylists();
                     
-                    // TODO: Save to database when Supabase is re-enabled
-                    // await this.savePlaylistToDatabase(newPlaylist);
+                    // Save to database if Supabase is configured
+                    if (isSupabaseConfigured && supabase) {
+                        await this.savePlaylistToDatabase(newPlaylist);
+                    }
                     
                     // Update UI
                     this.updatePlaylistUI();
@@ -4547,8 +4584,10 @@
                     // Save to local storage
                     this.saveLocalPlaylists();
                     
-                    // TODO: Save to database when Supabase is re-enabled
-                    // await this.savePlaylistItemToDatabase(playlistItem);
+                    // Save to database if Supabase is configured
+                    if (isSupabaseConfigured && supabase) {
+                        await this.savePlaylistItemToDatabase(playlistItem);
+                    }
                     
                     // Update UI
                     this.updatePlaylistUI();
@@ -4620,7 +4659,7 @@
                 console.log('🎵 Playlist section setup complete');
             }
 
-            loadLocalPlaylists() {
+            async loadLocalPlaylists() {
                 console.log('🎵 Loading playlists from local storage...');
                 try {
                     const storedPlaylists = localStorage.getItem('blueme_playlists');
@@ -4630,12 +4669,21 @@
                         // Filter playlists by guest user
                         this.playlists = allPlaylists.filter(p => p.user_id === 'guest');
                         console.log(`✅ Loaded ${this.playlists.length} playlists for guest user`);
-                        
-                        this.updatePlaylistUI();
                     } else {
                         this.playlists = [];
-                        console.log('ℹ️ No playlists found in local storage');
                     }
+                    
+                    // Also load from database if Supabase is configured
+                    if (isSupabaseConfigured && supabase) {
+                        const dbPlaylists = await this.loadPlaylistsFromDatabase();
+                        // Merge database playlists with local storage (avoid duplicates)
+                        const existingIds = new Set(this.playlists.map(playlist => playlist.id));
+                        const newDbPlaylists = dbPlaylists.filter(playlist => !existingIds.has(playlist.id));
+                        this.playlists = [...this.playlists, ...newDbPlaylists];
+                        console.log(`✅ Loaded ${newDbPlaylists.length} additional playlists from database`);
+                    }
+                    
+                    this.updatePlaylistUI();
                 } catch (error) {
                     console.error('❌ Error loading playlists from local storage:', error);
                     this.playlists = [];
@@ -5205,81 +5253,97 @@
             async savePlaylistToDatabase(playlist) {
                 console.log('💾 Saving playlist to database:', playlist);
                 
-                // TODO: Implement Supabase integration
-                // const { data, error } = await supabase
-                //     .from('playlists')
-                //     .insert([{
-                //         id: playlist.id,
-                //         name: playlist.name,
-                //         description: playlist.description,
-                //         user_id: playlist.user_id,
-                //         is_public: playlist.is_public,
-                //         is_premium: playlist.is_premium,
-                //         max_songs: playlist.max_songs,
-                //         created_at: playlist.created_at,
-                //         updated_at: playlist.updated_at
-                //     }])
-                //     .select();
+                if (!isSupabaseConfigured || !supabase) {
+                    console.log('⚠️ Supabase not configured, skipping database save');
+                    return;
+                }
                 
-                // if (error) {
-                //     throw new Error(`Database error: ${error.message}`);
-                // }
+                const { data, error } = await supabase
+                    .from('playlists')
+                    .insert([{
+                        id: playlist.id,
+                        name: playlist.name,
+                        description: playlist.description,
+                        user_id: null, // Guest mode - no user ID
+                        is_public: playlist.is_public,
+                        is_premium: playlist.is_premium,
+                        max_songs: playlist.max_songs,
+                        created_at: playlist.created_at,
+                        updated_at: playlist.updated_at
+                    }])
+                    .select();
                 
-                console.log('✅ Playlist saved to database (simulated)');
+                if (error) {
+                    console.error('❌ Error saving playlist to database:', error);
+                    throw error;
+                }
+                
+                console.log('✅ Playlist saved to database:', data[0]);
+                return data[0];
             }
 
             async savePlaylistItemToDatabase(playlistItem) {
                 console.log('💾 Saving playlist item to database:', playlistItem);
                 
-                // TODO: Implement Supabase integration
-                // const { data, error } = await supabase
-                //     .from('playlist_items')
-                //     .insert([{
-                //         id: playlistItem.id,
-                //         playlist_id: playlistItem.playlist_id,
-                //         position: playlistItem.position,
-                //         audio_file_id: playlistItem.audio_file.id,
-                //         user_id: playlistItem.user_id,
-                //         added_at: playlistItem.added_at
-                //     }])
-                //     .select();
+                if (!isSupabaseConfigured || !supabase) {
+                    console.log('⚠️ Supabase not configured, skipping database save');
+                    return;
+                }
                 
-                // if (error) {
-                //     throw new Error(`Database error: ${error.message}`);
-                // }
+                const { data, error } = await supabase
+                    .from('playlist_items')
+                    .insert([{
+                        id: playlistItem.id,
+                        playlist_id: playlistItem.playlist_id,
+                        position: playlistItem.position,
+                        audio_file_id: playlistItem.audio_file.id,
+                        added_at: playlistItem.added_at
+                    }])
+                    .select();
                 
-                console.log('✅ Playlist item saved to database (simulated)');
+                if (error) {
+                    console.error('❌ Error saving playlist item to database:', error);
+                    throw error;
+                }
+                
+                console.log('✅ Playlist item saved to database:', data[0]);
+                return data[0];
             }
 
             async loadPlaylistsFromDatabase() {
                 console.log('📥 Loading playlists from database...');
                 
-                if (!this.isAuthenticated || !this.currentUser) {
-                    console.log('🔐 User not authenticated - cannot load from database');
+                if (!isSupabaseConfigured || !supabase) {
+                    console.log('⚠️ Supabase not configured, skipping database load');
                     return;
                 }
                 
-                // TODO: Implement Supabase integration
-                // const { data, error } = await supabase
-                //     .from('playlists')
-                //     .select(`
-                //         *,
-                //         playlist_items (
-                //             *,
-                //             audio_files (*)
-                //         )
-                //     `)
-                //     .eq('user_id', this.currentUser.id)
-                //     .order('created_at', { ascending: false });
-                
-                // if (error) {
-                //     throw new Error(`Database error: ${error.message}`);
-                // }
-                
-                // this.playlists = data || [];
-                // this.updatePlaylistUI();
-                
-                console.log('✅ Playlists loaded from database (simulated)');
+                try {
+                    // Load playlists for guest user (user_id = null)
+                    const { data, error } = await supabase
+                        .from('playlists')
+                        .select(`
+                            *,
+                            playlist_items (
+                                *,
+                                audio_files (*)
+                            )
+                        `)
+                        .eq('user_id', null) // Guest mode
+                        .order('created_at', { ascending: false });
+                    
+                    if (error) {
+                        console.error('❌ Error loading playlists from database:', error);
+                        throw error;
+                    }
+                    
+                    console.log('✅ Playlists loaded from database:', data);
+                    return data || [];
+                    
+                } catch (error) {
+                    console.error('❌ Error loading playlists from database:', error);
+                    return [];
+                }
             }
 
 
@@ -5731,6 +5795,11 @@
                     // Save back to localStorage
                     localStorage.setItem('blueMeAudioLibrary', JSON.stringify(existingLibrary));
                     
+                    // Also save to database if Supabase is configured
+                    if (isSupabaseConfigured && supabase) {
+                        await this.saveAudioToDatabase(newAudioFile, fileData);
+                    }
+                    
                     console.log('✅ Audio saved to local storage:', newAudioFile);
                     this.updateStatus('success', 'Audio saved to your library!');
                     
@@ -5741,13 +5810,99 @@
                 }
             }
 
-            loadUserAudioLibrary() {
+            async saveAudioToDatabase(audioFile, fileData) {
+                try {
+                    console.log('💾 Saving audio to database:', audioFile);
+                    
+                    if (!isSupabaseConfigured || !supabase) {
+                        console.log('⚠️ Supabase not configured, skipping database save');
+                        return;
+                    }
+                    
+                    // Prepare audio file data for database
+                    const dbAudioFile = {
+                        id: audioFile.id,
+                        file_name: audioFile.file_name,
+                        original_name: audioFile.original_name,
+                        file_path: audioFile.file_path,
+                        file_size: audioFile.file_size,
+                        mime_type: audioFile.mime_type,
+                        public_url: audioFile.public_url,
+                        user_id: null, // Guest mode - no user ID
+                        duration: audioFile.duration,
+                        title: audioFile.title,
+                        artist: audioFile.artist,
+                        album: audioFile.album,
+                        audio_data: fileData.audioData || null, // Base64 audio data for local storage
+                        uploaded_at: audioFile.created_at
+                    };
+                    
+                    // Insert into database
+                    const { data, error } = await supabase
+                        .from('audio_files')
+                        .insert([dbAudioFile])
+                        .select();
+                    
+                    if (error) {
+                        console.error('❌ Database save error:', error);
+                        throw error;
+                    }
+                    
+                    console.log('✅ Audio saved to database:', data[0]);
+                    return data[0];
+                    
+                } catch (error) {
+                    console.error('❌ Error saving audio to database:', error);
+                    // Don't throw error - local storage is still working
+                }
+            }
+
+            async loadAudioFilesFromDatabase() {
+                console.log('📥 Loading audio files from database...');
+                
+                if (!isSupabaseConfigured || !supabase) {
+                    console.log('⚠️ Supabase not configured, skipping database load');
+                    return [];
+                }
+                
+                try {
+                    // Load audio files for guest user (user_id = null)
+                    const { data, error } = await supabase
+                        .from('audio_files')
+                        .select('*')
+                        .eq('user_id', null) // Guest mode
+                        .order('uploaded_at', { ascending: false });
+                    
+                    if (error) {
+                        console.error('❌ Error loading audio files from database:', error);
+                        throw error;
+                    }
+                    
+                    console.log('✅ Audio files loaded from database:', data);
+                    return data || [];
+                    
+                } catch (error) {
+                    console.error('❌ Error loading audio files from database:', error);
+                    return [];
+                }
+            }
+
+            async loadUserAudioLibrary() {
                 console.log('Loading audio library from local storage...');
 
                 try {
                     // Load from local storage
                     const storedLibrary = localStorage.getItem('blueme_audio_library');
                     this.audioLibrary = storedLibrary ? JSON.parse(storedLibrary) : [];
+                    
+                    // Also load from database if Supabase is configured
+                    if (isSupabaseConfigured && supabase) {
+                        const dbAudioFiles = await this.loadAudioFilesFromDatabase();
+                        // Merge database files with local storage (avoid duplicates)
+                        const existingIds = new Set(this.audioLibrary.map(file => file.id));
+                        const newDbFiles = dbAudioFiles.filter(file => !existingIds.has(file.id));
+                        this.audioLibrary = [...this.audioLibrary, ...newDbFiles];
+                    }
                     
                     // Add current converted audio if available
                     if (this.convertedAudioBlob && this.convertedFileName) {
