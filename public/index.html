@@ -2832,6 +2832,12 @@
                     </svg>
                     <span>Debug</span>
                 </button>
+                <button class="quick-btn" onclick="app.testPlaylistPlayback()" title="Test Playlist Playback" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5,3 19,12 5,21"></polygon>
+                    </svg>
+                    <span>Test</span>
+                </button>
                 <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -5952,6 +5958,44 @@
                 });
                 
                 this.updateStatus('info', `🔍 Debug complete! Check console for details. Found ${this.playlists.length} playlists and ${this.audioLibrary.length} audio files.`);
+            }
+
+            // New method to test playlist playback
+            testPlaylistPlayback() {
+                console.log('🧪 Testing playlist playback...');
+                
+                if (this.playlists.length === 0) {
+                    this.updateStatus('error', 'No playlists found. Create a playlist first!');
+                    return;
+                }
+                
+                const firstPlaylist = this.playlists[0];
+                console.log('🎵 Testing with playlist:', firstPlaylist.name);
+                
+                if (!firstPlaylist.playlist_items || firstPlaylist.playlist_items.length === 0) {
+                    this.updateStatus('error', 'Playlist is empty. Add some tracks first!');
+                    return;
+                }
+                
+                const firstTrack = firstPlaylist.playlist_items[0];
+                console.log('🎵 First track:', firstTrack);
+                
+                if (!firstTrack.audio_file) {
+                    this.updateStatus('error', 'First track has no audio_file data');
+                    return;
+                }
+                
+                const audioFile = firstTrack.audio_file;
+                console.log('🎵 Audio file data:', audioFile);
+                
+                // Test different ways to access audio data
+                console.log('🔍 Audio data checks:');
+                console.log('   audioFile.audioData (Blob):', audioFile.audioData);
+                console.log('   audioFile.audio_data (base64):', audioFile.audio_data);
+                console.log('   audioFile.audioData instanceof Blob:', audioFile.audioData instanceof Blob);
+                console.log('   typeof audioFile.audio_data:', typeof audioFile.audio_data);
+                
+                this.updateStatus('info', 'Check console for detailed debug info');
             }
 
             debugPlayButton() {
