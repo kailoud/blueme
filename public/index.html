@@ -2771,6 +2771,220 @@
                 gap: 4px;
             }
         }
+
+        /* Authentication Modal Styles */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-modal .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-modal .modal-content {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 0;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 0 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .auth-modal .modal-header h2 {
+            color: white;
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .auth-modal .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .auth-modal .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin: 0 24px 20px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .auth-form {
+            padding: 0 24px 24px 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .auth-submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        .auth-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-status {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .auth-status.success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            display: block;
+        }
+
+        .auth-status.error {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            display: block;
+        }
+
+        .auth-status.info {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+            border: 1px solid rgba(23, 162, 184, 0.3);
+            display: block;
+        }
+
+        /* Mobile responsive auth modal */
+        @media (max-width: 768px) {
+            .auth-modal .modal-content {
+                margin: 20px;
+                max-width: none;
+                width: calc(100% - 40px);
+            }
+
+            .auth-modal .modal-header {
+                padding: 20px 20px 0 20px;
+            }
+
+            .auth-form {
+                padding: 0 20px 20px 20px;
+            }
+
+            .auth-tabs {
+                margin: 0 20px 16px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -3115,6 +3329,11 @@
                 this.socket = null;
                 this.convertedAudioBlob = null;
                 this.currentTime = 0;
+                
+                // Authentication properties
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                this.authModal = null;
                 this.duration = 0;
                 this.progressInterval = null;
                 this.socket = null;
@@ -3235,6 +3454,12 @@
                 this.downloadBtn.addEventListener('click', () => this.downloadConvertedFile());
                 this.useConvertedBtn.addEventListener('click', () => this.useConvertedInPlayer());
                 this.addToPlaylistBtn.addEventListener('click', () => this.showAddToPlaylistModal());
+
+                // Authentication form
+                const authForm = document.getElementById('authForm');
+                if (authForm) {
+                    authForm.addEventListener('submit', (e) => this.handleAuthSubmit(e));
+                }
                 
                 // Audio player events
                 this.audioPlayer.addEventListener('loadedmetadata', () => this.updateTrackInfo());
@@ -5212,8 +5437,21 @@
             }
 
             async initializeAuth() {
-                // Authentication removed - app works without sign-in
-                console.log('🔓 App running without authentication');
+                console.log('🔐 Initializing authentication system');
+                
+                // Check if user is already signed in
+                const savedUser = localStorage.getItem('blueMeCurrentUser');
+                if (savedUser) {
+                    try {
+                        this.currentUser = JSON.parse(savedUser);
+                        this.isAuthenticated = true;
+                        console.log('👤 User already signed in:', this.currentUser.username || this.currentUser.email);
+                    } catch (error) {
+                        console.error('Error parsing saved user:', error);
+                        localStorage.removeItem('blueMeCurrentUser');
+                    }
+                }
+                
                 this.updateAuthUI();
                 this.ensurePlaylistSection();
             }
@@ -5363,7 +5601,7 @@
                                 <div class="avatar-circle">🎵</div>
                             </div>
                             <div class="profile-info">
-                                <h3 class="profile-name">BlueMe User</h3>
+                                <h3 class="profile-name" id="profileName">BlueMe User</h3>
                                 <div class="profile-status">
                                     <span class="status-badge free">Guest User</span>
                                 </div>
@@ -5996,6 +6234,242 @@
                 console.log('   typeof audioFile.audio_data:', typeof audioFile.audio_data);
                 
                 this.updateStatus('info', 'Check console for detailed debug info');
+            }
+
+            // Authentication Methods
+            showSignInModal() {
+                this.showAuthModal('signin');
+            }
+
+            showSignUpModal() {
+                this.showAuthModal('signup');
+            }
+
+            showAuthModal(mode = 'signin') {
+                this.authModal = document.getElementById('authModal');
+                if (!this.authModal) {
+                    console.error('Auth modal not found');
+                    return;
+                }
+
+                this.authModal.style.display = 'flex';
+                this.switchAuthTab(mode);
+                
+                // Focus on email input
+                setTimeout(() => {
+                    const emailInput = document.getElementById('email');
+                    if (emailInput) emailInput.focus();
+                }, 100);
+            }
+
+            closeAuthModal() {
+                if (this.authModal) {
+                    this.authModal.style.display = 'none';
+                    this.clearAuthForm();
+                }
+            }
+
+            switchAuthTab(mode) {
+                const signInTab = document.getElementById('signInTab');
+                const signUpTab = document.getElementById('signUpTab');
+                const authModalTitle = document.getElementById('authModalTitle');
+                const usernameGroup = document.getElementById('usernameGroup');
+                const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+                const authSubmitBtn = document.querySelector('.auth-submit-btn');
+
+                if (mode === 'signin') {
+                    signInTab.classList.add('active');
+                    signUpTab.classList.remove('active');
+                    authModalTitle.textContent = 'Sign In';
+                    usernameGroup.style.display = 'none';
+                    confirmPasswordGroup.style.display = 'none';
+                    authSubmitBtn.textContent = 'Sign In';
+                } else {
+                    signInTab.classList.remove('active');
+                    signUpTab.classList.add('active');
+                    authModalTitle.textContent = 'Sign Up';
+                    usernameGroup.style.display = 'block';
+                    confirmPasswordGroup.style.display = 'block';
+                    authSubmitBtn.textContent = 'Sign Up';
+                }
+
+                this.clearAuthForm();
+            }
+
+            clearAuthForm() {
+                const form = document.getElementById('authForm');
+                if (form) form.reset();
+                
+                const status = document.getElementById('authStatus');
+                if (status) {
+                    status.className = 'auth-status';
+                    status.style.display = 'none';
+                }
+            }
+
+            showAuthStatus(message, type = 'info') {
+                const status = document.getElementById('authStatus');
+                if (status) {
+                    status.textContent = message;
+                    status.className = `auth-status ${type}`;
+                    status.style.display = 'block';
+                }
+            }
+
+            async handleAuthSubmit(event) {
+                event.preventDefault();
+                
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const username = document.getElementById('username').value.trim();
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                const isSignUp = document.getElementById('signUpTab').classList.contains('active');
+                
+                if (!email || !password) {
+                    this.showAuthStatus('Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                if (isSignUp) {
+                    if (!username) {
+                        this.showAuthStatus('Please enter a username', 'error');
+                        return;
+                    }
+                    if (password !== confirmPassword) {
+                        this.showAuthStatus('Passwords do not match', 'error');
+                        return;
+                    }
+                    if (password.length < 6) {
+                        this.showAuthStatus('Password must be at least 6 characters', 'error');
+                        return;
+                    }
+                }
+                
+                try {
+                    if (isSignUp) {
+                        await this.signUp(email, password, username);
+                    } else {
+                        await this.signIn(email, password);
+                    }
+                } catch (error) {
+                    console.error('Auth error:', error);
+                    this.showAuthStatus(error.message || 'Authentication failed', 'error');
+                }
+            }
+
+            async signUp(email, password, username) {
+                this.showAuthStatus('Creating account...', 'info');
+                
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check if user already exists (simulate)
+                const existingUsers = JSON.parse(localStorage.getItem('blueMeUsers') || '[]');
+                if (existingUsers.find(user => user.email === email)) {
+                    throw new Error('User already exists with this email');
+                }
+                
+                // Create new user
+                const newUser = {
+                    id: crypto.randomUUID(),
+                    email,
+                    username,
+                    createdAt: new Date().toISOString(),
+                    isPremium: false
+                };
+                
+                // Store user data
+                existingUsers.push(newUser);
+                localStorage.setItem('blueMeUsers', JSON.stringify(existingUsers));
+                
+                // Store credentials (in real app, this would be hashed)
+                const credentials = JSON.parse(localStorage.getItem('blueMeCredentials') || '{}');
+                credentials[email] = { password, userId: newUser.id };
+                localStorage.setItem('blueMeCredentials', JSON.stringify(credentials));
+                
+                this.currentUser = newUser;
+                this.isAuthenticated = true;
+                
+                // Save current user to localStorage
+                localStorage.setItem('blueMeCurrentUser', JSON.stringify(newUser));
+                
+                this.showAuthStatus('Account created successfully!', 'success');
+                setTimeout(() => {
+                    this.closeAuthModal();
+                    this.updateAuthUI();
+                }, 1500);
+            }
+
+            async signIn(email, password) {
+                this.showAuthStatus('Signing in...', 'info');
+                
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check credentials
+                const credentials = JSON.parse(localStorage.getItem('blueMeCredentials') || '{}');
+                const userCreds = credentials[email];
+                
+                if (!userCreds || userCreds.password !== password) {
+                    throw new Error('Invalid email or password');
+                }
+                
+                // Get user data
+                const users = JSON.parse(localStorage.getItem('blueMeUsers') || '[]');
+                const user = users.find(u => u.id === userCreds.userId);
+                
+                if (!user) {
+                    throw new Error('User not found');
+                }
+                
+                this.currentUser = user;
+                this.isAuthenticated = true;
+                
+                // Save current user to localStorage
+                localStorage.setItem('blueMeCurrentUser', JSON.stringify(user));
+                
+                this.showAuthStatus('Signed in successfully!', 'success');
+                setTimeout(() => {
+                    this.closeAuthModal();
+                    this.updateAuthUI();
+                }, 1500);
+            }
+
+            signOut() {
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                
+                // Remove current user from localStorage
+                localStorage.removeItem('blueMeCurrentUser');
+                
+                this.updateAuthUI();
+                this.updateStatus('success', 'Signed out successfully');
+            }
+
+            updateAuthUI() {
+                const profileName = document.getElementById('profileName');
+                const signInMenuItem = document.getElementById('signInMenuItem');
+                const signUpMenuItem = document.getElementById('signUpMenuItem');
+                const signOutMenuItem = document.getElementById('signOutMenuItem');
+                
+                if (this.isAuthenticated && this.currentUser) {
+                    // User is signed in
+                    if (profileName) {
+                        profileName.textContent = this.currentUser.username || this.currentUser.email;
+                    }
+                    if (signInMenuItem) signInMenuItem.style.display = 'none';
+                    if (signUpMenuItem) signUpMenuItem.style.display = 'none';
+                    if (signOutMenuItem) signOutMenuItem.style.display = 'block';
+                } else {
+                    // User is not signed in
+                    if (profileName) {
+                        profileName.textContent = 'BlueMe User';
+                    }
+                    if (signInMenuItem) signInMenuItem.style.display = 'block';
+                    if (signUpMenuItem) signUpMenuItem.style.display = 'block';
+                    if (signOutMenuItem) signOutMenuItem.style.display = 'none';
+                }
             }
 
             debugPlayButton() {
@@ -7193,13 +7667,17 @@
                         </div>
                     </div>
                     <div class="profile-menu">
-                        <button class="menu-item signin-btn" onclick="window.location.href='/auth.html'">
+                        <button class="menu-item" id="signInMenuItem" onclick="app.showSignInModal()">
                             <span class="menu-icon">🔐</span>
-                            <span class="menu-text">Sign In / Sign Up</span>
+                            <span class="menu-text">Sign In</span>
                         </button>
-                        <button class="menu-item" onclick="app.showSignInModal()">
-                            <span class="menu-icon">ℹ️</span>
-                            <span class="menu-text">Why Sign In?</span>
+                        <button class="menu-item" id="signUpMenuItem" onclick="app.showSignUpModal()">
+                            <span class="menu-icon">📝</span>
+                            <span class="menu-text">Sign Up</span>
+                        </button>
+                        <button class="menu-item" id="signOutMenuItem" onclick="app.signOut()" style="display: none;">
+                            <span class="menu-icon">🚪</span>
+                            <span class="menu-text">Sign Out</span>
                         </button>
                     </div>
                 </div>
@@ -7250,5 +7728,42 @@
         // Service worker registration removed to prevent errors
         // Will be added back when proper sw.js file is created
     </script>
+
+    <!-- Authentication Modal -->
+    <div id="authModal" class="auth-modal" style="display: none;">
+        <div class="modal-overlay" onclick="app.closeAuthModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="authModalTitle">Sign In</h2>
+                <button class="close-btn" onclick="app.closeAuthModal()">×</button>
+            </div>
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="signInTab" onclick="app.switchAuthTab('signin')">Sign In</button>
+                <button class="tab-btn" id="signUpTab" onclick="app.switchAuthTab('signup')">Sign Up</button>
+            </div>
+            <div class="auth-form">
+                <form id="authForm">
+                    <div class="form-group" id="usernameGroup" style="display: none;">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Enter email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter password" required>
+                    </div>
+                    <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm password">
+                    </div>
+                    <button type="submit" class="btn btn-primary auth-submit-btn">Sign In</button>
+                </form>
+                <div class="auth-status" id="authStatus"></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
