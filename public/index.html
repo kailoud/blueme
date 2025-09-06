@@ -3052,6 +3052,20 @@
                     </svg>
                     <span>Test</span>
                 </button>
+                <button class="quick-btn" onclick="app.debugAuthState()" title="Debug Auth State" style="background: linear-gradient(45deg, #6c757d, #495057);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                    </svg>
+                    <span>Auth</span>
+                </button>
+                <button class="quick-btn" onclick="app.clearAllAuthData()" title="Clear All Auth Data" style="background: linear-gradient(45deg, #dc3545, #c82333);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3,6 5,6 21,6"></polyline>
+                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                    </svg>
+                    <span>Clear</span>
+                </button>
                 <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -3311,8 +3325,8 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-        // Authentication removed - app works without sign-in
-        let currentUser = null; // Keep for compatibility but not used
+        // Authentication system - using local storage
+        let currentUser = null; // Global variable for compatibility
         let userProfile = null;
 
         // Simple loading state
@@ -5445,11 +5459,22 @@
                     try {
                         this.currentUser = JSON.parse(savedUser);
                         this.isAuthenticated = true;
+                        
+                        // Sync global variable for compatibility
+                        currentUser = this.currentUser;
+                        
                         console.log('👤 User already signed in:', this.currentUser.username || this.currentUser.email);
                     } catch (error) {
                         console.error('Error parsing saved user:', error);
                         localStorage.removeItem('blueMeCurrentUser');
+                        this.currentUser = null;
+                        this.isAuthenticated = false;
+                        currentUser = null;
                     }
+                } else {
+                    this.currentUser = null;
+                    this.isAuthenticated = false;
+                    currentUser = null;
                 }
                 
                 this.updateAuthUI();
@@ -6303,6 +6328,48 @@
                 this.updateStatus('info', 'Check console for detailed debug info');
             }
 
+            // Debug and fix authentication issues
+            debugAuthState() {
+                console.log('🔍 === AUTH DEBUG ===');
+                console.log('🔐 this.isAuthenticated:', this.isAuthenticated);
+                console.log('👤 this.currentUser:', this.currentUser);
+                console.log('🌐 currentUser (global):', currentUser);
+                console.log('💾 localStorage blueMeCurrentUser:', localStorage.getItem('blueMeCurrentUser'));
+                console.log('💾 localStorage blueMeUsers:', localStorage.getItem('blueMeUsers'));
+                console.log('💾 localStorage blueMeCredentials:', localStorage.getItem('blueMeCredentials'));
+                
+                // Check profile elements
+                const profileName = document.getElementById('profileName');
+                console.log('📝 Profile name element:', profileName);
+                console.log('📝 Profile name text:', profileName?.textContent);
+                
+                console.log('🔍 === END AUTH DEBUG ===');
+            }
+
+            // Clear all authentication data
+            clearAllAuthData() {
+                console.log('🧹 Clearing all authentication data...');
+                
+                // Clear class variables
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                
+                // Clear global variables
+                currentUser = null;
+                userProfile = null;
+                
+                // Clear localStorage
+                localStorage.removeItem('blueMeCurrentUser');
+                localStorage.removeItem('blueMeUsers');
+                localStorage.removeItem('blueMeCredentials');
+                
+                // Update UI
+                this.updateAuthUI();
+                
+                console.log('✅ All authentication data cleared');
+                this.updateStatus('success', 'Authentication data cleared. Please sign in again.');
+            }
+
             // Database integration methods (for future Supabase re-enablement)
             async savePlaylistToDatabase(playlist) {
                 console.log('💾 Saving playlist to database:', playlist);
@@ -6400,13 +6467,19 @@
                     return;
                 }
 
+                console.log('🔐 Opening auth modal in mode:', mode);
                 this.authModal.style.display = 'flex';
                 this.switchAuthTab(mode);
                 
                 // Focus on email input
                 setTimeout(() => {
                     const emailInput = document.getElementById('email');
-                    if (emailInput) emailInput.focus();
+                    if (emailInput) {
+                        emailInput.focus();
+                        console.log('📧 Email input focused');
+                    } else {
+                        console.error('❌ Email input not found');
+                    }
                 }, 100);
             }
 
@@ -6539,6 +6612,9 @@
                 this.currentUser = newUser;
                 this.isAuthenticated = true;
                 
+                // Sync global variable for compatibility
+                currentUser = newUser;
+                
                 // Save current user to localStorage
                 localStorage.setItem('blueMeCurrentUser', JSON.stringify(newUser));
                 
@@ -6574,6 +6650,9 @@
                 this.currentUser = user;
                 this.isAuthenticated = true;
                 
+                // Sync global variable for compatibility
+                currentUser = user;
+                
                 // Save current user to localStorage
                 localStorage.setItem('blueMeCurrentUser', JSON.stringify(user));
                 
@@ -6587,6 +6666,9 @@
             signOut() {
                 this.currentUser = null;
                 this.isAuthenticated = false;
+                
+                // Sync global variable for compatibility
+                currentUser = null;
                 
                 // Remove current user from localStorage
                 localStorage.removeItem('blueMeCurrentUser');
