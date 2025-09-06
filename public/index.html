@@ -1319,6 +1319,80 @@
             overflow-wrap: break-word;
             white-space: normal;
             max-width: 100%;
+            position: relative;
+        }
+
+        /* Console Effect Styles */
+        .console-display {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #00ff00;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            animation: consoleGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes consoleGlow {
+            0% {
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+                border-color: #00ff00;
+            }
+            100% {
+                box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+                border-color: #00ff41;
+            }
+        }
+
+        .console-line {
+            margin: 4px 0;
+            opacity: 0;
+            animation: typeIn 0.5s ease-in forwards;
+        }
+
+        .console-line:nth-child(1) { animation-delay: 0.1s; }
+        .console-line:nth-child(2) { animation-delay: 0.3s; }
+        .console-line:nth-child(3) { animation-delay: 0.5s; }
+        .console-line:nth-child(4) { animation-delay: 0.7s; }
+
+        @keyframes typeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .console-prompt {
+            color: #00ff41;
+        }
+
+        .console-command {
+            color: #ffffff;
+        }
+
+        .console-result {
+            color: #00ff00;
+        }
+
+        .console-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
 
         .album-art {
@@ -2468,12 +2542,29 @@
                 <div class="album-art" id="albumArt">🎵</div>
                 <div class="track-title" id="trackTitle">Choose Your Vibe</div>
                 <div class="track-artist" id="trackArtist">Ready to sync with friends</div>
+                
+                <!-- Console Display -->
+                <div class="console-display" id="consoleDisplay" style="display: none;">
+                    <div class="console-line">
+                        <span class="console-prompt">blueme@audio:~$</span> <span class="console-command">status</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">🎵 Audio Player Status: Ready</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">📡 Connection: Active</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-prompt">blueme@audio:~$</span> <span class="console-cursor"></span>
+                    </div>
+                </div>
             </div>
 
             <div class="controls">
                 <button class="control-btn" id="prevBtn">⏮</button>
                 <button class="control-btn play-btn" id="playBtn">▶</button>
                 <button class="control-btn" id="nextBtn">⏭</button>
+                <button class="control-btn" id="consoleToggleBtn" title="Toggle Console Display">💻</button>
             </div>
             
             <!-- Quick Access Buttons -->
@@ -2846,10 +2937,12 @@
                 this.playBtn = document.getElementById('playBtn');
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
+                this.consoleToggleBtn = document.getElementById('consoleToggleBtn');
                 this.volumeSlider = document.getElementById('volumeSlider');
                 this.trackTitle = document.getElementById('trackTitle');
                 this.trackArtist = document.getElementById('trackArtist');
                 this.audioPlayer = document.getElementById('audioPlayer');
+                this.consoleDisplay = document.getElementById('consoleDisplay');
                 this.audioFile = document.getElementById('audioFile');
                 this.progressFill = document.getElementById('progressFill');
                 this.currentTimeDisplay = document.getElementById('currentTime');
@@ -2887,6 +2980,7 @@
                 this.playBtn.addEventListener('click', () => this.togglePlayback());
                 this.prevBtn.addEventListener('click', () => this.previousTrack());
                 this.nextBtn.addEventListener('click', () => this.nextTrack());
+                this.consoleToggleBtn.addEventListener('click', () => this.toggleConsoleDisplay());
                 this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
                 this.audioFile.addEventListener('change', (e) => this.loadAudioFile(e));
                 
@@ -4888,6 +4982,9 @@
                         this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
                         
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                        
+                        // Show console display with track info
+                        this.updateConsoleDisplay(audioFile);
                     } else if (audioFile.audio_data) {
                         // Handle base64 audio data
                         try {
@@ -5919,6 +6016,75 @@
                 } catch (error) {
                     console.error('❌ Error loading audio files from database:', error);
                     return [];
+                }
+            }
+
+            // Console Display Methods
+            showConsoleDisplay() {
+                if (this.consoleDisplay) {
+                    this.consoleDisplay.style.display = 'block';
+                }
+            }
+
+            hideConsoleDisplay() {
+                if (this.consoleDisplay) {
+                    this.consoleDisplay.style.display = 'none';
+                }
+            }
+
+            updateConsoleDisplay(trackInfo) {
+                if (!this.consoleDisplay) return;
+                
+                const trackName = trackInfo.title || trackInfo.originalName || trackInfo.filename || 'Unknown Track';
+                const artist = trackInfo.artist || 'Unknown Artist';
+                const duration = trackInfo.duration ? this.formatTime(trackInfo.duration) : 'Unknown';
+                const status = this.isPlaying ? 'Playing' : 'Paused';
+                
+                this.consoleDisplay.innerHTML = `
+                    <div class="console-line">
+                        <span class="console-prompt">blueme@audio:~$</span> <span class="console-command">now-playing</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">🎵 Track: ${trackName}</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">🎤 Artist: ${artist}</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">⏱️ Duration: ${duration}</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">▶️ Status: ${status}</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-result">📡 Connection: ${this.socket ? 'Connected' : 'Disconnected'}</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-prompt">blueme@audio:~$</span> <span class="console-cursor"></span>
+                    </div>
+                `;
+                
+                this.showConsoleDisplay();
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            toggleConsoleDisplay() {
+                if (!this.consoleDisplay) return;
+                
+                const isVisible = this.consoleDisplay.style.display !== 'none';
+                if (isVisible) {
+                    this.hideConsoleDisplay();
+                    this.consoleToggleBtn.textContent = '💻';
+                    this.consoleToggleBtn.title = 'Show Console Display';
+                } else {
+                    this.showConsoleDisplay();
+                    this.consoleToggleBtn.textContent = '🖥️';
+                    this.consoleToggleBtn.title = 'Hide Console Display';
                 }
             }
 
