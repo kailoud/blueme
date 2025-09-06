@@ -3510,7 +3510,16 @@
                         this.isPlaying = true;
                     }).catch(error => {
                         console.error('❌ Play failed:', error);
-                        this.updateStatus('error', 'Play failed: ' + error.message);
+                        
+                        // Provide more helpful error messages
+                        let errorMessage = error.message;
+                        if (error.message.includes('no supported sources')) {
+                            errorMessage = 'No valid audio source available. The audio file may be corrupted or in an unsupported format.';
+                        } else if (error.message.includes('NotSupportedError')) {
+                            errorMessage = 'Audio format not supported by your browser. Try converting to a different format.';
+                        }
+                        
+                        this.updateStatus('error', 'Play failed: ' + errorMessage);
                     });
                     } else {
                     console.log('🎵 Audio is playing, pausing...');
@@ -5067,6 +5076,28 @@
                             }
                             
                             // If still no audio, try next track
+                            // Try to use a simple test tone as fallback
+                            console.log('🔄 Attempting fallback audio source...');
+                            
+                            try {
+                                const fallbackAudioData = this.generateSampleAudioData();
+                                const fallbackBlob = await this.base64ToBlob(fallbackAudioData, 'audio/wav');
+                                const fallbackUrl = URL.createObjectURL(fallbackBlob);
+                                
+                                this.audioPlayer.src = fallbackUrl;
+                                this.audioPlayer.load();
+                                await this.audioPlayer.play();
+                                this.isPlaying = true;
+                                this.playBtn.innerHTML = '⏸';
+                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                
+                                this.updateStatus('warning', `⚠️ Using fallback audio for: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                                return;
+                            } catch (fallbackError) {
+                                console.error('❌ Fallback audio also failed:', fallbackError);
+                            }
+                            
+                            // If fallback also fails, skip to next track
                             if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
                                 this.currentTrackIndex++;
                                 this.updateStatus('info', `⏭️ Skipping corrupted track, trying next...`);
