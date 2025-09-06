@@ -5768,12 +5768,35 @@
                         throw new Error('Base64 string is too short or empty');
                     }
                     
+                    // Check if base64 length is valid (must be multiple of 4)
+                    if (cleanBase64.length % 4 !== 0) {
+                        throw new Error('Base64 string length must be multiple of 4');
+                    }
+                    
+                    // Try to decode the base64
                     const byteCharacters = atob(cleanBase64);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
                         byteNumbers[i] = byteCharacters.charCodeAt(i);
                     }
                     const byteArray = new Uint8Array(byteNumbers);
+                    
+                    // Validate the resulting blob
+                    if (byteArray.length === 0) {
+                        throw new Error('Decoded audio data is empty');
+                    }
+                    
+                    // Check for common audio file headers
+                    const header = Array.from(byteArray.slice(0, 12)).map(b => String.fromCharCode(b)).join('');
+                    console.log('🔍 Audio file header:', header);
+                    
+                    // Validate audio format based on header
+                    if (mimeType === 'audio/wav' && !header.startsWith('RIFF')) {
+                        console.warn('⚠️ WAV file missing RIFF header');
+                    } else if (mimeType === 'audio/mp3' && !header.startsWith('ID3') && !header.startsWith('\xFF\xFB')) {
+                        console.warn('⚠️ MP3 file missing ID3 or MP3 header');
+                    }
+                    
                     return new Blob([byteArray], { type: mimeType });
                 } catch (error) {
                     console.error('❌ Base64 decoding failed:', error);
