@@ -5686,8 +5686,23 @@
 
             base64ToBlob(base64, mimeType) {
                 try {
+                    // Check if base64 is valid
+                    if (!base64) {
+                        throw new Error('Base64 data is null or undefined');
+                    }
+                    
+                    // Convert to string if it's not already
+                    let base64String = base64;
+                    if (typeof base64 !== 'string') {
+                        if (typeof base64 === 'object' && base64.data) {
+                            base64String = base64.data;
+                        } else {
+                            base64String = String(base64);
+                        }
+                    }
+                    
                     // Clean the base64 string (remove any whitespace or invalid characters)
-                    const cleanBase64 = base64.replace(/[^A-Za-z0-9+/=]/g, '');
+                    const cleanBase64 = base64String.replace(/[^A-Za-z0-9+/=]/g, '');
                     
                     // Validate base64 format
                     if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanBase64)) {
@@ -5708,8 +5723,9 @@
                     return new Blob([byteArray], { type: mimeType });
                 } catch (error) {
                     console.error('❌ Base64 decoding failed:', error);
-                    console.error('❌ Base64 string length:', base64 ? base64.length : 'null');
-                    console.error('❌ Base64 preview:', base64 ? base64.substring(0, 100) + '...' : 'null');
+                    console.error('❌ Base64 type:', typeof base64);
+                    console.error('❌ Base64 value:', base64);
+                    console.error('❌ Base64 string length:', base64 ? (typeof base64 === 'string' ? base64.length : 'not a string') : 'null');
                     throw new Error(`Base64 decoding failed: ${error.message}`);
                 }
             }
