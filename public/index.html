@@ -3085,6 +3085,15 @@
                     </svg>
                     <span>Fix</span>
                 </button>
+                <button class="quick-btn" onclick="app.clearAllLocalData()" title="Clear All Local Data" style="background: linear-gradient(45deg, #6f42c1, #5a32a3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3,6 5,6 21,6"></polyline>
+                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                    <span>Clear All</span>
+                </button>
                 <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -6387,6 +6396,41 @@
                 
                 console.log('✅ All authentication data cleared');
                 this.updateStatus('success', 'Authentication data cleared. Please sign in again.');
+            }
+
+            // Clear all local storage data (including playlists and audio library)
+            clearAllLocalData() {
+                console.log('🧹 Clearing ALL local storage data...');
+                
+                // Clear authentication data
+                this.clearAllAuthData();
+                
+                // Clear additional BlueMe data
+                localStorage.removeItem('blueme_playlists');
+                localStorage.removeItem('blueme_audio_library');
+                
+                // Clear any other BlueMe-related data
+                Object.keys(localStorage).forEach(key => {
+                    if (key.toLowerCase().includes('blueme') || 
+                        key.toLowerCase().includes('blue') ||
+                        key.toLowerCase().includes('audio') ||
+                        key.toLowerCase().includes('playlist')) {
+                        localStorage.removeItem(key);
+                        console.log('🗑️ Removed:', key);
+                    }
+                });
+                
+                // Reset app state
+                this.playlists = [];
+                this.audioLibrary = [];
+                this.currentPlaylist = null;
+                this.currentTrackIndex = 0;
+                
+                // Update UI
+                this.updateAuthUI();
+                
+                console.log('✅ ALL local storage data cleared!');
+                this.updateStatus('success', 'All local data cleared! Please refresh the page.');
             }
 
             // Test keyboard input functionality
