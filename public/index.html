@@ -1337,6 +1337,136 @@
             animation: consoleGlow 2s ease-in-out infinite alternate;
         }
 
+        /* Horizontal Carousel Styles */
+        .carousel-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            margin: 16px 0;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            gap: 16px;
+        }
+
+        .carousel-item {
+            min-width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .carousel-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .carousel-item h3 {
+            margin: 0 0 8px 0;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .carousel-item p {
+            margin: 4px 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .carousel-item .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .carousel-item .status-connected {
+            background: #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .carousel-item .status-disconnected {
+            background: #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+
+        .carousel-item .status-ready {
+            background: #ffaa00;
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-dot.active {
+            background: #fff;
+            transform: scale(1.2);
+        }
+
+        .carousel-dot:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .carousel-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: 8px;
+        }
+
+        .carousel-nav.next {
+            right: 8px;
+        }
+
+        .carousel-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         @keyframes consoleGlow {
             0% {
                 box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
@@ -2760,7 +2890,7 @@
             </div>
         </div>
 
-        <!-- Bluetooth Devices Card -->
+        <!-- Connected Devices Carousel Card -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
@@ -2771,10 +2901,23 @@
                     </span>
                 </div>
                 <div class="card-subtitle" id="deviceSubtitle">Connect up to 2 friends for shared listening</div>
-                <div class="bluetooth-status" id="bluetoothStatus">⚪ Bluetooth Ready</div>
             </div>
             <div class="card-content">
-                <button class="btn btn-primary" id="scanBtn" style="width: 100%; margin-bottom: 20px;">
+                <!-- Horizontal Carousel -->
+                <div class="carousel-container">
+                    <div class="carousel-track" id="carouselTrack">
+                        <!-- Carousel items will be populated here -->
+                    </div>
+                    <button class="carousel-nav prev" id="carouselPrev">‹</button>
+                    <button class="carousel-nav next" id="carouselNext">›</button>
+                </div>
+                
+                <!-- Carousel Controls -->
+                <div class="carousel-controls" id="carouselControls">
+                    <!-- Dots will be populated here -->
+                </div>
+
+                <button class="btn btn-primary" id="scanBtn" style="width: 100%; margin-top: 20px;">
                     <span id="scanText">🔍 Find Audio Devices</span>
                     <span id="scanLoader" class="loading-spinner hidden"></span>
                 </button>
@@ -2782,28 +2925,6 @@
                 <div id="statusMessage" class="status-toast status-info">
                     <span>💡</span>
                     Make sure your Bluetooth headphones are in pairing mode
-                </div>
-
-                <div class="device-grid" id="deviceList">
-                    <!-- Devices will be populated here -->
-                </div>
-
-                <div id="emptyDeviceState" class="empty-state">
-                    <div class="empty-icon">🎧</div>
-                    <div style="font-weight: 600; margin-bottom: 8px;">No devices connected</div>
-                    <div>Share your music with up to 2 friends</div>
-                </div>
-
-                <div id="connectionLimit" class="connection-limit hidden">
-                    🎯 Premium limit: 2 simultaneous connections<br>
-                    <small>Upgrade to SyncBeats Elite for unlimited devices</small>
-                </div>
-
-                <div class="feature-grid">
-                    <div class="feature-pill">🔄 Instant Sync</div>
-                    <div class="feature-pill">🔋 Battery Monitor</div>
-                    <div class="feature-pill">🎛 Audio Quality</div>
-                    <div class="feature-pill">📱 Cross Platform</div>
                 </div>
             </div>
         </div>
@@ -2886,6 +3007,7 @@
                 this.initializeDragAndDrop();
                 this.updateAuthUI(); // Initialize as guest user
                 this.updateUI();
+                this.initializeCarousel();
             }
 
             initializeSocketIO() {
@@ -2953,6 +3075,13 @@
                 this.scanText = document.getElementById('scanText');
                 this.scanLoader = document.getElementById('scanLoader');
                 this.statusMessage = document.getElementById('statusMessage');
+                
+                // Carousel elements
+                this.carouselTrack = document.getElementById('carouselTrack');
+                this.carouselControls = document.getElementById('carouselControls');
+                this.carouselPrev = document.getElementById('carouselPrev');
+                this.carouselNext = document.getElementById('carouselNext');
+                this.currentCarouselIndex = 0;
                 this.deviceList = document.getElementById('deviceList');
                 this.deviceSubtitle = document.getElementById('deviceSubtitle');
                 this.syncIndicator = document.getElementById('syncIndicator');
@@ -2986,6 +3115,10 @@
                 
                 // Bluetooth controls
                 this.scanBtn.addEventListener('click', () => this.scanForDevices());
+                
+                // Carousel controls
+                this.carouselPrev.addEventListener('click', () => this.previousCarouselItem());
+                this.carouselNext.addEventListener('click', () => this.nextCarouselItem());
                 
                 // Audio converter controls
                 this.convertBtn.addEventListener('click', () => this.convertAudio());
@@ -3515,6 +3648,7 @@
                         console.log('✅ Audio started playing');
                         this.playBtn.innerHTML = '⏸';
                         this.isPlaying = true;
+                        this.updateCarousel(); // Update carousel with new play state
                     }).catch(error => {
                         console.error('❌ Play failed:', error);
                         this.updateStatus('error', 'Play failed: ' + error.message);
@@ -3524,6 +3658,7 @@
                     this.audioPlayer.pause();
                     this.playBtn.innerHTML = '▶';
                     this.isPlaying = false;
+                    this.updateCarousel(); // Update carousel with new pause state
                 }
             }
 
@@ -4985,6 +5120,9 @@
                         
                         // Show console display with track info
                         this.updateConsoleDisplay(audioFile);
+                        
+                        // Update carousel with new track info
+                        this.updateCarousel();
                     } else if (audioFile.audio_data) {
                         // Handle base64 audio data
                         try {
@@ -6086,6 +6224,130 @@
                     this.consoleToggleBtn.textContent = '🖥️';
                     this.consoleToggleBtn.title = 'Hide Console Display';
                 }
+            }
+
+            // Carousel Methods
+            initializeCarousel() {
+                this.updateCarousel();
+                this.setupCarouselAutoPlay();
+            }
+
+            updateCarousel() {
+                if (!this.carouselTrack || !this.carouselControls) return;
+
+                const carouselItems = [
+                    {
+                        title: "🎵 Audio Status",
+                        content: [
+                            { text: "Current Track: " + (this.trackTitle?.textContent || "None"), status: "ready" },
+                            { text: "Status: " + (this.isPlaying ? "Playing" : "Paused"), status: this.isPlaying ? "connected" : "disconnected" },
+                            { text: "Volume: " + (this.audioPlayer?.volume ? Math.round(this.audioPlayer.volume * 100) + "%" : "50%"), status: "ready" }
+                        ]
+                    },
+                    {
+                        title: "📶 Connection Status",
+                        content: [
+                            { text: "Bluetooth: Ready", status: "ready" },
+                            { text: "Connected Devices: " + this.connectedDevices.size, status: this.connectedDevices.size > 0 ? "connected" : "disconnected" },
+                            { text: "Sync Status: " + (this.socket ? "Connected" : "Disconnected"), status: this.socket ? "connected" : "disconnected" }
+                        ]
+                    },
+                    {
+                        title: "🎧 Device Info",
+                        content: [
+                            { text: "Max Connections: 2", status: "ready" },
+                            { text: "Audio Quality: High", status: "connected" },
+                            { text: "Battery: Good", status: "connected" }
+                        ]
+                    }
+                ];
+
+                // Clear existing content
+                this.carouselTrack.innerHTML = '';
+                this.carouselControls.innerHTML = '';
+
+                // Create carousel items
+                carouselItems.forEach((item, index) => {
+                    const carouselItem = document.createElement('div');
+                    carouselItem.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+                    
+                    carouselItem.innerHTML = `
+                        <h3>${item.title}</h3>
+                        ${item.content.map(content => `
+                            <p>
+                                <span class="status-indicator status-${content.status}"></span>
+                                ${content.text}
+                            </p>
+                        `).join('')}
+                    `;
+                    
+                    this.carouselTrack.appendChild(carouselItem);
+                });
+
+                // Create control dots
+                carouselItems.forEach((_, index) => {
+                    const dot = document.createElement('button');
+                    dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+                    dot.addEventListener('click', () => this.goToCarouselItem(index));
+                    this.carouselControls.appendChild(dot);
+                });
+
+                // Update navigation buttons
+                this.updateCarouselNavigation();
+            }
+
+            goToCarouselItem(index) {
+                if (!this.carouselTrack) return;
+
+                const items = this.carouselTrack.children;
+                const dots = this.carouselControls.children;
+
+                // Remove active class from all items and dots
+                Array.from(items).forEach(item => item.classList.remove('active'));
+                Array.from(dots).forEach(dot => dot.classList.remove('active'));
+
+                // Add active class to current item and dot
+                if (items[index]) items[index].classList.add('active');
+                if (dots[index]) dots[index].classList.add('active');
+
+                // Update track position
+                this.carouselTrack.style.transform = `translateX(-${index * 100}%)`;
+                this.currentCarouselIndex = index;
+
+                // Update navigation buttons
+                this.updateCarouselNavigation();
+            }
+
+            nextCarouselItem() {
+                const totalItems = this.carouselTrack?.children.length || 0;
+                const nextIndex = (this.currentCarouselIndex + 1) % totalItems;
+                this.goToCarouselItem(nextIndex);
+            }
+
+            previousCarouselItem() {
+                const totalItems = this.carouselTrack?.children.length || 0;
+                const prevIndex = this.currentCarouselIndex === 0 ? totalItems - 1 : this.currentCarouselIndex - 1;
+                this.goToCarouselItem(prevIndex);
+            }
+
+            updateCarouselNavigation() {
+                const totalItems = this.carouselTrack?.children.length || 0;
+                
+                if (this.carouselPrev) {
+                    this.carouselPrev.disabled = totalItems <= 1;
+                }
+                if (this.carouselNext) {
+                    this.carouselNext.disabled = totalItems <= 1;
+                }
+            }
+
+            setupCarouselAutoPlay() {
+                // Auto-advance carousel every 5 seconds
+                setInterval(() => {
+                    if (this.carouselTrack?.children.length > 1) {
+                        this.nextCarouselItem();
+                    }
+                }, 5000);
             }
 
             async loadUserAudioLibrary() {
