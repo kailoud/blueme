@@ -1901,8 +1901,22 @@
 
         .download-actions {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-actions .btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            min-height: 32px;
+            border-radius: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .loading-spinner {
@@ -2342,15 +2356,15 @@
             }
 
             .download-actions {
-                gap: 8px;
+                gap: 4px;
             }
 
             .download-actions .btn {
-                padding: 12px 16px;
+                padding: 6px 8px;
                 font-weight: 500;
-                border-radius: 8px;
-                min-height: 40px;
-                font-size: 0.9rem;
+                border-radius: 6px;
+                min-height: 28px;
+                font-size: 0.7rem;
             }
         }
 
@@ -2463,11 +2477,11 @@
             }
 
             .download-actions .btn {
-                padding: 10px 14px;
+                padding: 5px 6px;
                 font-weight: 500;
-                min-height: 40px;
-                border-radius: 8px;
-                font-size: 0.85rem;
+                min-height: 26px;
+                border-radius: 5px;
+                font-size: 0.65rem;
             }
 
             /* Mobile Modal Styles */
