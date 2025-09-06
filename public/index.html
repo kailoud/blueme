@@ -1369,6 +1369,50 @@
             line-height: 1.3;
         }
 
+        /* Marquee Effect Styles */
+        .marquee-container {
+            width: 100%;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            margin: 16px 0;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .marquee-text {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0 20px;
+            animation: scroll-left 15s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translate(100vw, -50%); }
+            100% { transform: translate(-100%, -50%); }
+        }
+
+        .marquee-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            font-weight: 400;
+            pointer-events: none;
+            z-index: 1;
+        }
+
         .track-artist {
             color: var(--text-secondary);
             font-size: 1rem;
@@ -2470,6 +2514,12 @@
                 <div class="album-art" id="albumArt">🎵</div>
                 <div class="track-title" id="trackTitle">Choose Your Vibe</div>
                 <div class="track-artist" id="trackArtist">Ready to sync with friends</div>
+                
+                <!-- Marquee Bar for Converted Track Info -->
+                <div class="marquee-container" id="marqueeContainer" style="display: none;">
+                    <div class="marquee-text" id="marqueeText"></div>
+                    <div class="marquee-placeholder" id="marqueePlaceholder">Converted Track Information</div>
+                </div>
             </div>
 
             <div class="controls">
@@ -2852,6 +2902,9 @@
                 this.trackTitle = document.getElementById('trackTitle');
                 this.trackArtist = document.getElementById('trackArtist');
                 this.audioPlayer = document.getElementById('audioPlayer');
+                this.marqueeContainer = document.getElementById('marqueeContainer');
+                this.marqueeText = document.getElementById('marqueeText');
+                this.marqueePlaceholder = document.getElementById('marqueePlaceholder');
                 this.audioFile = document.getElementById('audioFile');
                 this.progressFill = document.getElementById('progressFill');
                 this.currentTimeDisplay = document.getElementById('currentTime');
@@ -4375,6 +4428,15 @@
                 this.updateStatus('success', '🎵 Converted track loaded as individual file! Use "▶️ Play in Main Player" on playlists to play multiple tracks');
                 this.updateConversionStatus('success', '🎉 Track loaded into player!');
                 
+                // Show marquee with converted track information
+                const trackInfo = {
+                    title: filename,
+                    artist: 'Converted Track',
+                    format: this.formatSelect?.value || 'MP3',
+                    size: this.convertedAudioBlob?.size ? (this.convertedAudioBlob.size / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown'
+                };
+                this.showMarquee(trackInfo);
+                
                 // Auto-play the converted audio
             setTimeout(() => {
                     if (this.audioPlayer.readyState >= 2) {
@@ -4890,6 +4952,9 @@
                         this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
                         
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                        
+                        // Show marquee with track information
+                        this.showMarquee(audioFile);
                     } else if (audioFile.audio_data) {
                         // Handle base64 audio data
                         try {
@@ -5925,6 +5990,37 @@
             }
 
 
+
+            // Marquee Methods
+            showMarquee(trackInfo) {
+                if (!this.marqueeContainer || !this.marqueeText) return;
+                
+                const trackName = trackInfo.title || trackInfo.originalName || trackInfo.filename || 'Unknown Track';
+                const artist = trackInfo.artist || 'Unknown Artist';
+                const duration = trackInfo.duration ? this.formatTime(trackInfo.duration) : 'Unknown';
+                const format = trackInfo.format || 'MP3';
+                const size = trackInfo.size || 'Unknown';
+                
+                // Create marquee text with track information
+                const marqueeContent = `🎵 ${trackName} • 🎤 ${artist} • ⏱️ ${duration} • 📁 ${format} • 💾 ${size}`;
+                
+                this.marqueeText.textContent = marqueeContent;
+                this.marqueeContainer.style.display = 'block';
+                this.marqueePlaceholder.style.display = 'none';
+            }
+
+            hideMarquee() {
+                if (!this.marqueeContainer) return;
+                
+                this.marqueeContainer.style.display = 'none';
+                this.marqueePlaceholder.style.display = 'block';
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
 
             async loadUserAudioLibrary() {
                 console.log('Loading audio library from local storage...');
