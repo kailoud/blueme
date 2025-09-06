@@ -2614,6 +2614,16 @@
                     </svg>
                     <span>Marquee</span>
                 </button>
+                <button class="quick-btn" onclick="app.fixCorruptedAudio()" title="Fix Corrupted Audio Files" style="background: linear-gradient(45deg, #4caf50, #8bc34a);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+                        <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"></path>
+                        <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"></path>
+                    </svg>
+                    <span>Fix Audio</span>
+                </button>
                 <button class="quick-btn" onclick="app.debugDatabaseConnection()" title="Debug Database Connection" style="background: linear-gradient(45deg, #ff9800, #ff5722);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -5627,6 +5637,85 @@
                 } catch (error) {
                     console.error('❌ Error deleting audio file:', error);
                     this.updateStatus('error', `Failed to delete audio file: ${error.message}`);
+                }
+            }
+
+            async fixCorruptedAudio() {
+                try {
+                    console.log('🔧 Fixing corrupted audio files...');
+                    
+                    if (this.audioLibrary.length === 0) {
+                        this.updateStatus('info', '📭 No audio files to fix.');
+                        return;
+                    }
+                    
+                    let fixedCount = 0;
+                    let removedCount = 0;
+                    
+                    // Check each audio file for corruption
+                    for (let i = this.audioLibrary.length - 1; i >= 0; i--) {
+                        const audioFile = this.audioLibrary[i];
+                        const audioTitle = audioFile.title || audioFile.original_name || 'Unknown';
+                        
+                        console.log(`🔍 Checking: ${audioTitle}`);
+                        
+                        // Check if audio data exists and is valid
+                        if (!audioFile.audio_data && !audioFile.audioData) {
+                            console.log(`❌ No audio data found for: ${audioTitle}`);
+                            this.audioLibrary.splice(i, 1);
+                            removedCount++;
+                            continue;
+                        }
+                        
+                        // Try to validate the audio data
+                        try {
+                            const audioData = audioFile.audio_data || audioFile.audioData;
+                            if (typeof audioData === 'string') {
+                                // Check if it's valid base64
+                                const cleanBase64 = audioData.replace(/[^A-Za-z0-9+/=]/g, '');
+                                if (cleanBase64.length % 4 !== 0) {
+                                    console.log(`❌ Invalid base64 for: ${audioTitle}`);
+                                    this.audioLibrary.splice(i, 1);
+                                    removedCount++;
+                                    continue;
+                                }
+                                
+                                // Try to create a blob to test if it's valid
+                                const blob = await this.base64ToBlob(audioData, audioFile.mime_type || 'audio/mpeg');
+                                if (blob.size === 0) {
+                                    console.log(`❌ Empty blob for: ${audioTitle}`);
+                                    this.audioLibrary.splice(i, 1);
+                                    removedCount++;
+                                    continue;
+                                }
+                            }
+                            
+                            console.log(`✅ Valid audio data for: ${audioTitle}`);
+                            fixedCount++;
+                            
+                        } catch (error) {
+                            console.log(`❌ Corrupted audio data for: ${audioTitle}:`, error.message);
+                            this.audioLibrary.splice(i, 1);
+                            removedCount++;
+                        }
+                    }
+                    
+                    // Save the cleaned library
+                    this.saveAudioLibraryToLocal();
+                    this.updateAudioLibraryUI();
+                    
+                    // Update status
+                    if (removedCount > 0) {
+                        this.updateStatus('success', `🔧 Fixed audio library: ${fixedCount} valid files, ${removedCount} corrupted files removed`);
+                    } else {
+                        this.updateStatus('info', `✅ All ${fixedCount} audio files are valid`);
+                    }
+                    
+                    console.log(`🔧 Audio cleanup complete: ${fixedCount} valid, ${removedCount} removed`);
+                    
+                } catch (error) {
+                    console.error('❌ Error fixing corrupted audio:', error);
+                    this.updateStatus('error', `Failed to fix audio: ${error.message}`);
                 }
             }
 
