@@ -2614,6 +2614,14 @@
                     </svg>
                     <span>Marquee</span>
                 </button>
+                <button class="quick-btn" onclick="app.pushToDatabase()" title="Push Audio Files to Database" style="background: linear-gradient(45deg, #2196F3, #21CBF3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7,10 12,15 17,10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Push DB</span>
+                </button>
                 <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -5561,6 +5569,90 @@
                 this.updateStatus('info', '🔍 Play button debug complete! Check console for details.');
             }
 
+            async pushToDatabase() {
+                try {
+                    console.log('🚀 Pushing audio files to database...');
+                    
+                    if (!isSupabaseConfigured || !supabase) {
+                        this.updateStatus('error', '❌ Supabase not configured. Cannot push to database.');
+                        return;
+                    }
+                    
+                    if (this.audioLibrary.length === 0) {
+                        this.updateStatus('info', '📭 No audio files to push to database.');
+                        return;
+                    }
+                    
+                    let successCount = 0;
+                    let errorCount = 0;
+                    
+                    for (const audioFile of this.audioLibrary) {
+                        try {
+                            // Check if file already exists in database
+                            const { data: existing } = await supabase
+                                .from('audio_files')
+                                .select('id')
+                                .eq('id', audioFile.id)
+                                .single();
+                            
+                            if (existing) {
+                                console.log(`⏭️ File ${audioFile.title || audioFile.original_name} already exists in database, skipping...`);
+                                continue;
+                            }
+                            
+                            // Prepare data for database
+                            const dbAudioFile = {
+                                id: audioFile.id,
+                                file_name: audioFile.file_name || audioFile.original_name,
+                                original_name: audioFile.original_name,
+                                file_path: audioFile.file_path || 'local',
+                                file_size: audioFile.file_size || 0,
+                                mime_type: audioFile.mime_type || 'audio/mpeg',
+                                public_url: audioFile.public_url || 'local',
+                                user_id: null, // Guest mode
+                                duration: audioFile.duration || 0,
+                                title: audioFile.title || audioFile.original_name,
+                                artist: audioFile.artist || 'Unknown Artist',
+                                album: audioFile.album || 'Unknown Album',
+                                audio_data: audioFile.audio_data || null,
+                                uploaded_at: audioFile.created_at || new Date().toISOString()
+                            };
+                            
+                            // Insert into database
+                            const { data, error } = await supabase
+                                .from('audio_files')
+                                .insert([dbAudioFile])
+                                .select();
+                            
+                            if (error) {
+                                console.error(`❌ Error saving ${audioFile.title || audioFile.original_name}:`, error);
+                                errorCount++;
+                            } else {
+                                console.log(`✅ Saved to database: ${audioFile.title || audioFile.original_name}`);
+                                successCount++;
+                            }
+                            
+                        } catch (fileError) {
+                            console.error(`❌ Error processing ${audioFile.title || audioFile.original_name}:`, fileError);
+                            errorCount++;
+                        }
+                    }
+                    
+                    // Update status
+                    if (successCount > 0) {
+                        this.updateStatus('success', `✅ Pushed ${successCount} files to database${errorCount > 0 ? ` (${errorCount} errors)` : ''}`);
+                    } else if (errorCount > 0) {
+                        this.updateStatus('error', `❌ Failed to push files to database (${errorCount} errors)`);
+                    } else {
+                        this.updateStatus('info', 'ℹ️ All files already exist in database');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error pushing to database:', error);
+                    this.updateStatus('error', `Failed to push to database: ${error.message}`);
+                }
+            }
+
 
 
             async loadAudioFromBlob(blob, title) {
@@ -5932,7 +6024,7 @@
                         title: audioFile.title,
                         artist: audioFile.artist,
                         album: audioFile.album,
-                        audio_data: fileData.audioData || null, // Base64 audio data for local storage
+                        audio_data: fileData.audioData || fileData.audio_data || null, // Base64 audio data for local storage
                         uploaded_at: audioFile.created_at
                     };
                     
