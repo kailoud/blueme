@@ -5719,7 +5719,7 @@
                 }
             }
 
-            createPlaylist(name, description = '') {
+            async createPlaylist(name, description = '') {
                 console.log('🎵 createPlaylist called with:', { name, description });
                 
                 if (!name || !name.trim()) {
@@ -5727,39 +5727,69 @@
                     return;
                 }
 
-                // Check if playlist name already exists
-                const existingPlaylist = this.playlists.find(p => p.name.toLowerCase() === name.toLowerCase());
+                // Check if user is authenticated
+                if (!this.isAuthenticated || !this.currentUser) {
+                    this.updateStatus('error', 'Please sign in to create playlists');
+                    return;
+                }
+
+                // Check if playlist name already exists for this user
+                const existingPlaylist = this.playlists.find(p => 
+                    p.name.toLowerCase() === name.toLowerCase() && 
+                    p.user_id === this.currentUser.id
+                );
                 if (existingPlaylist) {
                     this.updateStatus('error', 'A playlist with this name already exists');
                     return;
                 }
 
-                // Create new playlist object
-                const newPlaylist = {
-                    id: crypto.randomUUID(),
-                    name: name.trim(),
-                    description: description.trim(),
-                    created_at: new Date().toISOString(),
-                    playlist_items: []
-                };
+                try {
+                    // Create new playlist object with user information
+                    const newPlaylist = {
+                        id: crypto.randomUUID(),
+                        name: name.trim(),
+                        description: description.trim(),
+                        user_id: this.currentUser.id,
+                        user_email: this.currentUser.email,
+                        user_username: this.currentUser.username,
+                        is_public: false,
+                        is_premium: this.currentUser.isPremium || false,
+                        max_songs: this.currentUser.isPremium ? 10 : 2,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        playlist_items: []
+                    };
 
-                // Add to playlists array
-                this.playlists.push(newPlaylist);
-                
-                // Save to local storage
-                this.saveLocalPlaylists();
-                
-                // Update UI
-                this.updatePlaylistUI();
-                
-                this.updateStatus('success', `Playlist "${name}" created successfully!`);
-                console.log('✅ Playlist created:', newPlaylist);
+                    // Add to playlists array
+                    this.playlists.push(newPlaylist);
+                    
+                    // Save to local storage
+                    this.saveLocalPlaylists();
+                    
+                    // TODO: Save to database when Supabase is re-enabled
+                    // await this.savePlaylistToDatabase(newPlaylist);
+                    
+                    // Update UI
+                    this.updatePlaylistUI();
+                    
+                    this.updateStatus('success', `Playlist "${name}" created successfully!`);
+                    console.log('✅ Playlist created:', newPlaylist);
+                } catch (error) {
+                    console.error('Error creating playlist:', error);
+                    this.updateStatus('error', 'Failed to create playlist');
+                }
             }
 
-            addToPlaylist(playlistId, audioFile) {
+            async addToPlaylist(playlistId, audioFile) {
                 console.log('🎵 Adding to playlist:', playlistId, audioFile);
 
                 try {
+                    // Check if user is authenticated
+                    if (!this.isAuthenticated || !this.currentUser) {
+                        this.updateStatus('error', 'Please sign in to add tracks to playlists');
+                        return;
+                    }
+
                     // Find the playlist
                     const playlist = this.playlists.find(p => p.id === playlistId);
                     if (!playlist) {
@@ -5767,24 +5797,45 @@
                         return;
                     }
 
-                    // Create playlist item
+                    // Check if user owns this playlist
+                    if (playlist.user_id !== this.currentUser.id) {
+                        this.updateStatus('error', 'You can only add tracks to your own playlists');
+                        return;
+                    }
+
+                    // Check playlist limits
+                    const currentSongs = playlist.playlist_items.length;
+                    const maxSongs = playlist.max_songs || (this.currentUser.isPremium ? 10 : 2);
+                    
+                    if (currentSongs >= maxSongs) {
+                        this.updateStatus('error', `Playlist limit reached (${maxSongs} songs). ${this.currentUser.isPremium ? '' : 'Upgrade to premium for more songs.'}`);
+                        return;
+                    }
+
+                    // Create playlist item with user information
                     const playlistItem = {
                         id: crypto.randomUUID(),
+                        playlist_id: playlistId,
                         position: playlist.playlist_items.length + 1,
                         audio_file: audioFile,
+                        user_id: this.currentUser.id,
                         added_at: new Date().toISOString()
                     };
 
                     // Add to playlist
                     playlist.playlist_items.push(playlistItem);
+                    playlist.updated_at = new Date().toISOString();
                     
                     // Save to local storage
                     this.saveLocalPlaylists();
                     
+                    // TODO: Save to database when Supabase is re-enabled
+                    // await this.savePlaylistItemToDatabase(playlistItem);
+                    
                     // Update UI
                     this.updatePlaylistUI();
                     
-                    this.updateStatus('success', `Track added to "${playlist.name}"`);
+                    this.updateStatus('success', `Track added to "${playlist.name}" (${currentSongs + 1}/${maxSongs})`);
                     console.log('✅ Track added to playlist:', playlistItem);
                 } catch (error) {
                     console.error('❌ Error adding to playlist:', error);
@@ -5795,7 +5846,13 @@
             ensurePlaylistSection() {
                 console.log('🎵 Ensuring playlist section exists...');
                 
-                // Create playlist section for all users (no authentication required)
+                // Check if user is authenticated
+                if (!this.isAuthenticated || !this.currentUser) {
+                    console.log('🔐 User not authenticated - playlist section not available');
+                    return;
+                }
+                
+                // Create playlist section for authenticated users only
                 let playlistSection = document.getElementById('playlistSection');
                 if (!playlistSection) {
                     console.log('🎵 Creating new playlist section...');
@@ -5853,8 +5910,18 @@
                 try {
                     const storedPlaylists = localStorage.getItem('blueme_playlists');
                     if (storedPlaylists) {
-                        this.playlists = JSON.parse(storedPlaylists);
-                        console.log('✅ Loaded playlists from local storage:', this.playlists.length);
+                        const allPlaylists = JSON.parse(storedPlaylists);
+                        
+                        // Filter playlists by current user if authenticated
+                        if (this.isAuthenticated && this.currentUser) {
+                            this.playlists = allPlaylists.filter(p => p.user_id === this.currentUser.id);
+                            console.log(`✅ Loaded ${this.playlists.length} playlists for user ${this.currentUser.username || this.currentUser.email}`);
+                        } else {
+                            // For non-authenticated users, show all playlists (legacy support)
+                            this.playlists = allPlaylists;
+                            console.log('✅ Loaded all playlists (guest mode):', this.playlists.length);
+                        }
+                        
                         this.updatePlaylistUI();
                     } else {
                         this.playlists = [];
@@ -6236,6 +6303,87 @@
                 this.updateStatus('info', 'Check console for detailed debug info');
             }
 
+            // Database integration methods (for future Supabase re-enablement)
+            async savePlaylistToDatabase(playlist) {
+                console.log('💾 Saving playlist to database:', playlist);
+                
+                // TODO: Implement Supabase integration
+                // const { data, error } = await supabase
+                //     .from('playlists')
+                //     .insert([{
+                //         id: playlist.id,
+                //         name: playlist.name,
+                //         description: playlist.description,
+                //         user_id: playlist.user_id,
+                //         is_public: playlist.is_public,
+                //         is_premium: playlist.is_premium,
+                //         max_songs: playlist.max_songs,
+                //         created_at: playlist.created_at,
+                //         updated_at: playlist.updated_at
+                //     }])
+                //     .select();
+                
+                // if (error) {
+                //     throw new Error(`Database error: ${error.message}`);
+                // }
+                
+                console.log('✅ Playlist saved to database (simulated)');
+            }
+
+            async savePlaylistItemToDatabase(playlistItem) {
+                console.log('💾 Saving playlist item to database:', playlistItem);
+                
+                // TODO: Implement Supabase integration
+                // const { data, error } = await supabase
+                //     .from('playlist_items')
+                //     .insert([{
+                //         id: playlistItem.id,
+                //         playlist_id: playlistItem.playlist_id,
+                //         position: playlistItem.position,
+                //         audio_file_id: playlistItem.audio_file.id,
+                //         user_id: playlistItem.user_id,
+                //         added_at: playlistItem.added_at
+                //     }])
+                //     .select();
+                
+                // if (error) {
+                //     throw new Error(`Database error: ${error.message}`);
+                // }
+                
+                console.log('✅ Playlist item saved to database (simulated)');
+            }
+
+            async loadPlaylistsFromDatabase() {
+                console.log('📥 Loading playlists from database...');
+                
+                if (!this.isAuthenticated || !this.currentUser) {
+                    console.log('🔐 User not authenticated - cannot load from database');
+                    return;
+                }
+                
+                // TODO: Implement Supabase integration
+                // const { data, error } = await supabase
+                //     .from('playlists')
+                //     .select(`
+                //         *,
+                //         playlist_items (
+                //             *,
+                //             audio_files (*)
+                //         )
+                //     `)
+                //     .eq('user_id', this.currentUser.id)
+                //     .order('created_at', { ascending: false });
+                
+                // if (error) {
+                //     throw new Error(`Database error: ${error.message}`);
+                // }
+                
+                // this.playlists = data || [];
+                // this.updatePlaylistUI();
+                
+                console.log('✅ Playlists loaded from database (simulated)');
+            }
+
             // Authentication Methods
             showSignInModal() {
                 this.showAuthModal('signin');
@@ -6461,6 +6609,10 @@
                     if (signInMenuItem) signInMenuItem.style.display = 'none';
                     if (signUpMenuItem) signUpMenuItem.style.display = 'none';
                     if (signOutMenuItem) signOutMenuItem.style.display = 'block';
+                    
+                    // Load user's playlists and ensure playlist section exists
+                    this.loadLocalPlaylists();
+                    this.ensurePlaylistSection();
                 } else {
                     // User is not signed in
                     if (profileName) {
@@ -6469,6 +6621,13 @@
                     if (signInMenuItem) signInMenuItem.style.display = 'block';
                     if (signUpMenuItem) signUpMenuItem.style.display = 'block';
                     if (signOutMenuItem) signOutMenuItem.style.display = 'none';
+                    
+                    // Clear playlists and remove playlist section
+                    this.playlists = [];
+                    const playlistSection = document.getElementById('playlistSection');
+                    if (playlistSection) {
+                        playlistSection.remove();
+                    }
                 }
             }
 
