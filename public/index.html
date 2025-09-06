@@ -2616,6 +2616,12 @@
                     </svg>
                     <span>Play Debug</span>
                 </button>
+                <button class="quick-btn" onclick="app.testMarquee()" title="Test Marquee Effect" style="background: linear-gradient(45deg, #9c27b0, #e91e63);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12h18m-9-9l9 9-9 9"></path>
+                    </svg>
+                    <span>Marquee</span>
+                </button>
                 <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -6089,7 +6095,10 @@
 
             // Marquee Methods
             showMarquee(trackInfo) {
-                if (!this.marqueeContainer || !this.marqueeText) return;
+                if (!this.marqueeContainer || !this.marqueeText) {
+                    console.log('❌ Marquee elements not found');
+                    return;
+                }
                 
                 const trackName = trackInfo.title || trackInfo.originalName || trackInfo.filename || 'Unknown Track';
                 const artist = trackInfo.artist || 'Unknown Artist';
@@ -6100,10 +6109,14 @@
                 // Create marquee text with track information
                 const marqueeContent = `🎵 ${trackName} • 🎤 ${artist} • ⏱️ ${duration} • 📁 ${format} • 💾 ${size}`;
                 
+                console.log('🎬 Showing marquee with content:', marqueeContent);
+                
                 this.marqueeText.textContent = marqueeContent;
                 this.marqueeText.setAttribute('data-text', marqueeContent);
                 this.marqueeContainer.style.display = 'block';
                 this.marqueePlaceholder.style.display = 'none';
+                
+                console.log('✅ Marquee should now be visible');
             }
 
             hideMarquee() {
@@ -6111,6 +6124,26 @@
                 
                 this.marqueeContainer.style.display = 'none';
                 this.marqueePlaceholder.style.display = 'block';
+            }
+
+            testMarquee() {
+                console.log('🎬 Testing marquee effect...');
+                
+                const testTrackInfo = {
+                    title: 'Test Track - Marquee Effect',
+                    artist: 'BlueMe Test',
+                    duration: 180,
+                    format: 'WAV',
+                    size: '3.2 MB'
+                };
+                
+                this.showMarquee(testTrackInfo);
+                
+                // Hide after 5 seconds
+                setTimeout(() => {
+                    this.hideMarquee();
+                    console.log('🎬 Marquee test completed');
+                }, 5000);
             }
 
             formatTime(seconds) {
