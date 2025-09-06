@@ -573,8 +573,8 @@
             margin-left: 8px;
         }
 
-        /* Professional User Profile Section - Mobile Optimized */
-        .user-profile-section {
+        /* Professional Guest Profile Section - Mobile Optimized */
+        .guest-profile-section {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -594,20 +594,20 @@
             overflow: hidden;
         }
 
-        .user-profile-section.expanded {
+        .guest-profile-section.expanded {
             min-width: 300px;
             max-width: 350px;
             height: auto;
             padding: 20px;
         }
 
-        .user-profile-section:hover {
+        .guest-profile-section:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
 
         /* Make profile more visible */
-        .user-profile-section {
+        .guest-profile-section {
             animation: profilePulse 3s ease-in-out infinite;
         }
 
@@ -781,31 +781,6 @@
             transform: scale(1.1);
         }
 
-        .signin-btn {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
-            color: white !important;
-            font-weight: 600 !important;
-            font-size: 0.9rem !important;
-            padding: 12px 20px !important;
-            border: none !important;
-            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3) !important;
-            animation: signinPulse 2s ease-in-out infinite !important;
-        }
-
-        .signin-btn:hover {
-            background: linear-gradient(45deg, #ff5252, #26c6da) !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4) !important;
-        }
-
-        @keyframes signinPulse {
-            0%, 100% {
-                box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
-            }
-            50% {
-                box-shadow: 0 4px 20px rgba(78, 205, 196, 0.5);
-            }
-        }
 
         /* Profile Notification */
         /* Profile notification CSS removed as requested */
@@ -1729,45 +1704,6 @@
             font-size: 1rem;
         }
 
-        /* Sign In Modal */
-        .signin-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-        }
-
-        .signin-modal {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 450px;
-            width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .signin-options {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin: 20px 0;
-        }
-
-        .signin-options .btn {
-            width: 100%;
-            justify-content: center;
-            padding: 14px 20px;
-            font-size: 1rem;
-        }
 
         .features-preview {
             margin-top: 20px;
@@ -1792,72 +1728,6 @@
             font-size: 0.95rem;
         }
 
-        /* New Auth Form Styles */
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 5px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            color: white;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-
-        .form-group input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 12px;
-            color: white;
-            font-size: 1rem;
-        }
-
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #4ecdc4;
-            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
-        }
-
-        .auth-status {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
 
         .progress-section {
             margin-bottom: 24px;
@@ -2320,8 +2190,8 @@
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
             }
 
-            /* Modern User Profile */
-            .user-profile-section {
+            /* Modern Guest Profile */
+            .guest-profile-section {
                 position: fixed;
                 top: 12px;
                 right: 12px;
@@ -2629,7 +2499,7 @@
                 box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
             }
 
-            .user-profile-section {
+            .guest-profile-section {
                 top: 8px;
                 right: 8px;
                 left: 8px;
@@ -4147,181 +4017,10 @@
                 }
             }
 
-            async checkAuthStatus() {
-                console.log('🔍 Manual auth status check...');
-                console.log('Current user:', currentUser);
-                console.log('User profile:', userProfile);
-                
-                try {
-                    const { data: { session }, error } = await supabase.auth.getSession();
-                    console.log('Session check result:', { session: !!session, user: session?.user?.email, error });
-                    
-                    if (session) {
-                        console.log('✅ User is authenticated:', session.user.email);
-                        currentUser = session.user;
-                        await this.loadUserProfile();
-                        this.updateAuthUI();
-                        this.updateStatus('success', `✅ Authenticated as: ${session.user.email}`);
-                    } else {
-                        console.log('❌ No active session');
-                        this.updateStatus('info', '❌ No active session - please sign in');
-                    }
-                } catch (error) {
-                    console.error('❌ Error checking auth status:', error);
-                    this.updateStatus('error', `❌ Auth check failed: ${error.message}`);
-                }
-            }
 
-            async forceRefreshProfile() {
-                console.log('🔄 Force refreshing profile...');
-                try {
-                    // Check if user is authenticated
-                    const { data: { session } } = await supabase.auth.getSession();
-                    console.log('🔍 Current session:', session);
-                    
-                    if (!session) {
-                        this.updateStatus('error', 'No active session - please sign in first');
-                        console.log('❌ No session found');
-                        return;
-                    }
 
-                    currentUser = session.user;
-                    console.log('👤 Current user:', currentUser.email);
 
-                    // Force reload profile data
-                    await this.loadUserProfile();
-                    console.log('👤 Profile loaded:', userProfile);
 
-                    // Force update UI
-                    this.updateAuthUI();
-                    console.log('🔄 UI updated');
-
-                    // Check if profile section exists
-                    const profileSection = document.getElementById('userInfo');
-                    if (profileSection) {
-                        this.updateStatus('success', '✅ Profile refreshed successfully');
-                        console.log('✅ Profile section found after refresh');
-                    } else {
-                        this.updateStatus('error', '❌ Profile section still not visible');
-                        console.error('❌ Profile section not found after refresh');
-                    }
-                } catch (error) {
-                    console.error('❌ Error force refreshing profile:', error);
-                    this.updateStatus('error', `Profile refresh failed: ${error.message}`);
-                }
-            }
-
-            async checkSignInStatus() {
-                console.log('🔍 Checking sign-in status...');
-                try {
-                    const { data: { session }, error } = await supabase.auth.getSession();
-                    console.log('📋 Session check result:', { session: !!session, user: session?.user?.email, error });
-                    console.log('📋 Full session object:', session);
-                    
-                    if (session && session.user) {
-                        console.log('✅ User is signed in:', session.user.email);
-                        currentUser = session.user;
-                        
-                        // Load profile and update UI
-                        await this.loadUserProfile();
-                        this.updateAuthUI();
-                        this.ensurePlaylistSection();
-                        
-                        this.updateStatus('success', `✅ You are signed in as: ${session.user.email}`);
-                        return true;
-                    } else {
-                        console.log('❌ No active session');
-                        this.updateStatus('info', '❌ Not signed in - please sign in');
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('❌ Error checking sign-in status:', error);
-                    this.updateStatus('error', `Sign-in check failed: ${error.message}`);
-                    return false;
-                }
-            }
-
-            async testSignIn() {
-                console.log('🔐 Testing sign-in functionality...');
-                try {
-                    // Test with a known email/password
-                    const testEmail = prompt('Enter your email:');
-                    const testPassword = prompt('Enter your password:');
-                    
-                    if (!testEmail || !testPassword) {
-                        this.updateStatus('error', 'Email and password required');
-                        return;
-                    }
-
-                    console.log('🔐 Attempting sign-in with:', testEmail);
-                    
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email: testEmail,
-                        password: testPassword
-                    });
-
-                    if (error) {
-                        console.error('❌ Sign-in error:', error);
-                        this.updateStatus('error', `Sign-in failed: ${error.message}`);
-                        return;
-                    }
-
-                    console.log('✅ Sign-in successful:', data.user.email);
-                    currentUser = data.user;
-                    
-                    // Load profile and update UI
-                    await this.loadUserProfile();
-                    this.updateAuthUI();
-                    this.ensurePlaylistSection();
-                    
-                    this.updateStatus('success', `✅ Successfully signed in as: ${data.user.email}`);
-                    
-                } catch (error) {
-                    console.error('❌ Error testing sign-in:', error);
-                    this.updateStatus('error', `Sign-in test failed: ${error.message}`);
-                }
-            }
-
-            async loadFirstPlaylist() {
-                console.log('🎵 Loading first available playlist...');
-                try {
-                    if (!currentUser) {
-                        this.updateStatus('error', 'Please sign in first');
-                        return;
-                    }
-
-                    // Load playlists if not already loaded
-                    if (!this.playlists || this.playlists.length === 0) {
-                        await this.loadUserPlaylists();
-                    }
-
-                    if (this.playlists && this.playlists.length > 0) {
-                        const firstPlaylist = this.playlists[0];
-                        console.log('🎵 Loading playlist:', firstPlaylist.name);
-                        
-                        this.currentPlaylist = firstPlaylist;
-                        this.currentTrackIndex = 0;
-                        
-                        this.updateStatus('success', `🎵 Loaded playlist: ${firstPlaylist.name}`);
-                        
-                        // Update track info in main player
-                        if (firstPlaylist.playlist_items && firstPlaylist.playlist_items.length > 0) {
-                            const firstTrack = firstPlaylist.playlist_items[0];
-                            if (firstTrack.audio_files) {
-                                this.trackTitle.textContent = `${firstTrack.audio_files.title || firstTrack.audio_files.original_name} (1/${firstPlaylist.playlist_items.length})`;
-                                this.trackArtist.textContent = `${firstTrack.audio_files.artist || 'Unknown Artist'} • ${firstPlaylist.name}`;
-                            }
-                        }
-                        
-                        this.updateStatus('success', `🎵 Ready to play: ${firstPlaylist.name}. Click play to start!`);
-                    } else {
-                        this.updateStatus('info', 'No playlists found. Create a playlist first!');
-                    }
-                } catch (error) {
-                    console.error('❌ Error loading first playlist:', error);
-                    this.updateStatus('error', `Failed to load playlist: ${error.message}`);
-                }
-            }
 
             async checkPlaylistHealth() {
                 console.log('🔍 Checking playlist health...');
@@ -4566,7 +4265,7 @@
                     // Force create profile section immediately
                     const userInfo = document.createElement('div');
                     userInfo.id = 'userInfo';
-                    userInfo.className = 'user-profile-section';
+                    userInfo.className = 'guest-profile-section';
                     userInfo.innerHTML = `
                         <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
                             <span></span>
@@ -4655,190 +4354,9 @@
                 return true;
             }
 
-            showSignInModal() {
-                // Create a sign-in modal overlay with direct sign-in form
-                const overlay = document.createElement('div');
-                overlay.className = 'signin-modal-overlay';
-                overlay.innerHTML = `
-                    <div class="signin-modal">
-                        <div class="modal-header">
-                            <h3>🔐 Sign In to BlueMe</h3>
-                            <button class="close-btn" onclick="this.closest('.signin-modal-overlay').remove()">×</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="auth-tabs">
-                                <button class="tab-btn active" onclick="app.switchAuthTab('signin')">Sign In</button>
-                                <button class="tab-btn" onclick="app.switchAuthTab('signup')">Sign Up</button>
-                            </div>
-                            
-                            <form id="signinForm" class="auth-form">
-                                <div class="form-group">
-                                    <label>Email</label>
-                                    <input type="email" id="signinEmail" required placeholder="your@email.com">
-                                </div>
-                                <div class="form-group">
-                                    <label>Password</label>
-                                    <input type="password" id="signinPassword" required placeholder="Your password">
-                                </div>
-                                <button type="submit" class="btn btn-primary">🔐 Sign In</button>
-                            </form>
-                            
-                            <form id="signupForm" class="auth-form" style="display: none;">
-                                <div class="form-group">
-                                    <label>Email</label>
-                                    <input type="email" id="signupEmail" required placeholder="your@email.com">
-                                </div>
-                                <div class="form-group">
-                                    <label>Password</label>
-                                    <input type="password" id="signupPassword" required placeholder="Min 6 characters">
-                                </div>
-                                <div class="form-group">
-                                    <label>Username</label>
-                                    <input type="text" id="signupUsername" required placeholder="Your username">
-                                </div>
-                                <button type="submit" class="btn btn-primary">🚀 Sign Up</button>
-                            </form>
-                            
-                            <div class="auth-status" id="authStatus"></div>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.appendChild(overlay);
-                
-                // Add event listeners
-                document.getElementById('signinForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleSignIn();
-                });
-                
-                document.getElementById('signupForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleSignUp();
-                });
-                
-                // Close on overlay click
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        overlay.remove();
-                    }
-                });
-            }
 
-            switchAuthTab(tab) {
-                const signinForm = document.getElementById('signinForm');
-                const signupForm = document.getElementById('signupForm');
-                const tabs = document.querySelectorAll('.tab-btn');
-                
-                tabs.forEach(t => t.classList.remove('active'));
-                event.target.classList.add('active');
-                
-                if (tab === 'signin') {
-                    signinForm.style.display = 'block';
-                    signupForm.style.display = 'none';
-                } else {
-                    signinForm.style.display = 'none';
-                    signupForm.style.display = 'block';
-                }
-            }
 
-            async handleSignIn() {
-                const email = document.getElementById('signinEmail').value;
-                const password = document.getElementById('signinPassword').value;
-                const statusEl = document.getElementById('authStatus');
-                
-                if (!email || !password) {
-                    statusEl.innerHTML = '<span style="color: #ff6b6b;">❌ Please fill in all fields</span>';
-                    return;
-                }
-                
-                statusEl.innerHTML = '<span style="color: #4ecdc4;">🔄 Signing in...</span>';
-                
-                try {
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email: email,
-                        password: password
-                    });
-                    
-                    if (error) {
-                        statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ ${error.message}</span>`;
-                        return;
-                    }
-                    
-                    statusEl.innerHTML = '<span style="color: #4ecdc4;">✅ Signed in successfully!</span>';
-                    
-                    // Close modal after successful sign-in
-                    setTimeout(() => {
-                        document.querySelector('.signin-modal-overlay').remove();
-                    }, 1000);
-                    
-                } catch (error) {
-                    statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ Sign-in failed: ${error.message}</span>`;
-                }
-            }
 
-            async handleSignUp() {
-                const email = document.getElementById('signupEmail').value;
-                const password = document.getElementById('signupPassword').value;
-                const username = document.getElementById('signupUsername').value;
-                const statusEl = document.getElementById('authStatus');
-                
-                if (!email || !password || !username) {
-                    statusEl.innerHTML = '<span style="color: #ff6b6b;">❌ Please fill in all fields</span>';
-                    return;
-                }
-                
-                if (password.length < 6) {
-                    statusEl.innerHTML = '<span style="color: #ff6b6b;">❌ Password must be at least 6 characters</span>';
-                    return;
-                }
-                
-                statusEl.innerHTML = '<span style="color: #4ecdc4;">🔄 Creating account...</span>';
-                
-                try {
-                    const { data, error } = await supabase.auth.signUp({
-                        email: email,
-                        password: password,
-                        options: {
-                            data: {
-                                full_name: username
-                            }
-                        }
-                    });
-                    
-                    if (error) {
-                        statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ ${error.message}</span>`;
-                        return;
-                    }
-                    
-                    // Create user profile in custom users table
-                    if (data.user) {
-                        const { error: profileError } = await supabase
-                            .from('users')
-                            .insert([{
-                                id: data.user.id,
-                                email: data.user.email,
-                                username: username,
-                                created_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            }]);
-                        
-                        if (profileError) {
-                            console.error('Profile creation error:', profileError);
-                        }
-                    }
-                    
-                    statusEl.innerHTML = '<span style="color: #4ecdc4;">✅ Account created! Check your email to confirm.</span>';
-                    
-                    // Close modal after successful sign-up
-                    setTimeout(() => {
-                        document.querySelector('.signin-modal-overlay').remove();
-                    }, 2000);
-                    
-                } catch (error) {
-                    statusEl.innerHTML = `<span style="color: #ff6b6b;">❌ Sign-up failed: ${error.message}</span>`;
-                }
-            }
 
             // Audio Conversion Methods
             async convertAudio() {
@@ -5321,7 +4839,7 @@
                 });
                 
                 // Remove existing profile sections
-                const existingProfile = document.querySelector('.user-profile-section');
+                const existingProfile = document.querySelector('.guest-profile-section');
                 if (existingProfile) {
                     existingProfile.remove();
                 }
@@ -5342,7 +4860,7 @@
 
                 // Create profile section with correct authentication state
                 const profileSection = document.createElement('div');
-                profileSection.className = 'user-profile-section';
+                profileSection.className = 'guest-profile-section';
                 profileSection.innerHTML = `
                     <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
                         <span></span>
@@ -5386,7 +4904,7 @@
             }
 
             toggleProfileMenu() {
-                const profileSection = document.querySelector('.user-profile-section');
+                const profileSection = document.querySelector('.guest-profile-section');
                 const profileContent = profileSection?.querySelector('.profile-content');
                 const hamburgerIcon = profileSection?.querySelector('.hamburger-icon');
                 
@@ -7448,7 +6966,7 @@
         
         // Create guest profile immediately if no user is logged in
         function ensureProfileExists() {
-            const existingProfile = document.querySelector('.user-profile-section');
+            const existingProfile = document.querySelector('.guest-profile-section');
             if (!existingProfile) {
                 console.log('👤 No profile found, creating guest profile...');
                 createGuestProfileSection();
@@ -7543,14 +7061,14 @@
             console.log('👤 Creating guest profile section...');
             
             // Create a guest profile section for non-authenticated users
-            const existingProfile = document.querySelector('.user-profile-section');
+            const existingProfile = document.querySelector('.guest-profile-section');
             if (existingProfile) {
                 console.log('👤 Removing existing profile...');
                 existingProfile.remove();
             }
 
             const profileSection = document.createElement('div');
-            profileSection.className = 'user-profile-section';
+            profileSection.className = 'guest-profile-section';
             profileSection.innerHTML = `
                 <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
                     <span></span>
