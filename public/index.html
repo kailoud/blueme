@@ -573,131 +573,11 @@
             margin-left: 8px;
         }
 
-        /* Professional Guest Profile Section - Mobile Optimized */
-        .guest-profile-section {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 0;
-            color: white;
-            font-size: 0.9rem;
-            z-index: 1000;
-            min-width: 60px;
-            max-width: 60px;
-            height: 60px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-
-        .guest-profile-section.expanded {
-            min-width: 300px;
-            max-width: 350px;
-            height: auto;
-            padding: 20px;
-        }
-
-        .guest-profile-section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Make profile more visible */
-        .guest-profile-section {
-            animation: profilePulse 3s ease-in-out infinite;
-        }
-
-        /* Hamburger Menu Icon */
-        .hamburger-icon {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .hamburger-icon span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background: white;
-            margin: 4px 0;
-            transition: all 0.3s ease;
-            border-radius: 2px;
-        }
-
-        .hamburger-icon:hover span {
-            background: #4ecdc4;
-        }
-
-        .hamburger-icon.active span:nth-child(1) {
-            transform: rotate(45deg) translate(6px, 6px);
-        }
-
-        .hamburger-icon.active span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .hamburger-icon.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(6px, -6px);
-        }
-
-        /* Profile Content */
-        .profile-content {
-            padding: 20px;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes profilePulse {
-            0%, 100% {
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-                border-color: rgba(255, 255, 255, 0.3);
-            }
-            50% {
-                box-shadow: 0 12px 40px rgba(78, 205, 196, 0.4);
-                border-color: rgba(78, 205, 196, 0.5);
-            }
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
 
 
-        .premium-crown {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
-        }
+
+
+
 
         .profile-info {
             flex: 1;
@@ -2173,68 +2053,9 @@
             }
 
             /* Modern Guest Profile */
-            .guest-profile-section {
-                position: fixed;
-                top: 12px;
-                right: 12px;
-                left: 12px;
-                min-width: auto;
-                max-width: none;
-                padding: 16px;
-                border-radius: 16px;
-                backdrop-filter: blur(20px);
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            }
-
-            .profile-header {
-                gap: 12px;
-            }
 
 
-            .premium-crown {
-                width: 18px;
-                height: 18px;
-                font-size: 0.8rem;
-            }
 
-            .profile-name {
-                font-size: 1rem;
-                font-weight: 600;
-                letter-spacing: -0.01em;
-            }
-
-            .profile-stats {
-                gap: 12px;
-                padding: 12px 0;
-            }
-
-            .stat-label {
-                font-size: 0.7rem;
-                font-weight: 500;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .stat-value {
-                font-size: 1.1rem;
-                font-weight: 700;
-            }
-
-            .menu-item {
-                padding: 14px 16px;
-                font-size: 0.9rem;
-                font-weight: 500;
-                border-radius: 12px;
-                margin-bottom: 4px;
-                transition: all 0.3s ease;
-            }
-
-            .menu-item:hover {
-                background: rgba(255, 255, 255, 0.1);
-                transform: translateX(4px);
-            }
 
             /* Modern Section Headers */
             .playlist-section h3,
@@ -2474,23 +2295,6 @@
                 box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
             }
 
-            .guest-profile-section {
-                top: 8px;
-                right: 8px;
-                left: 8px;
-                padding: 14px;
-                border-radius: 14px;
-            }
-
-            .profile-header {
-                gap: 10px;
-            }
-
-
-            .profile-name {
-                font-size: 0.95rem;
-                font-weight: 600;
-            }
 
             .playlist-section,
             .audio-library-section {
@@ -4622,54 +4426,8 @@
                 console.log('✅ Simple profile section created');
             }
 
-            toggleProfileMenu() {
-                const profileSection = document.querySelector('.guest-profile-section');
-                const profileContent = profileSection?.querySelector('.profile-content');
-                const hamburgerIcon = profileSection?.querySelector('.hamburger-icon');
-                
-                if (!profileSection || !profileContent || !hamburgerIcon) return;
-                
-                const isExpanded = profileSection.classList.contains('expanded');
-                
-                if (isExpanded) {
-                    // Collapse the menu
-                    profileSection.classList.remove('expanded');
-                    profileContent.style.display = 'none';
-                    hamburgerIcon.classList.remove('active');
-                } else {
-                    // Expand the menu
-                    profileSection.classList.add('expanded');
-                    profileContent.style.display = 'block';
-                    hamburgerIcon.classList.add('active');
-                }
-            }
 
-            showPlaylists() {
-                this.ensurePlaylistSection();
-                const playlistSection = document.getElementById('playlistSection');
-                if (playlistSection) {
-                    playlistSection.scrollIntoView({ behavior: 'smooth' });
-                }
-                this.toggleProfileMenu();
-            }
 
-            showAudioLibrary() {
-                const audioLibrarySection = document.getElementById('audioLibrarySection');
-                if (audioLibrarySection) {
-                    audioLibrarySection.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    this.loadUserAudioLibrary();
-                }
-                this.toggleProfileMenu();
-            }
-
-            async logout() {
-                try {
-                    await supabase.auth.signOut();
-                } catch (error) {
-                    console.error('Error logging out:', error);
-                }
-            }
 
             async checkDownloadLimit() {
                 // For now, allow unlimited downloads
@@ -5529,20 +5287,6 @@
 
 
 
-            updateAuthUI() {
-                console.log('🔄 Updating UI for guest mode...');
-                
-                // Always show guest user
-                const profileName = document.getElementById('profileName');
-                if (profileName) {
-                    profileName.textContent = 'Guest User';
-                    profileName.style.color = '#ff6b6b'; // Red for guest
-                }
-                
-                // Load local playlists and ensure playlist section exists
-                this.loadLocalPlaylists();
-                this.ensurePlaylistSection();
-            }
 
 
 
@@ -6600,21 +6344,6 @@
         // Initialize the app when the page loads
         let app;
         
-        // Create guest profile immediately if no user is logged in
-        function ensureProfileExists() {
-            const existingProfile = document.querySelector('.guest-profile-section');
-            if (!existingProfile) {
-                console.log('👤 No profile found, creating guest profile...');
-                createGuestProfileSection();
-            }
-        }
-        
-        // Try to create profile immediately
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', ensureProfileExists);
-        } else {
-            ensureProfileExists();
-        }
         
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -6693,71 +6422,6 @@
             }
         }
 
-        function createGuestProfileSection() {
-            console.log('👤 Creating guest profile section...');
-            
-            // Create a guest profile section for non-authenticated users
-            const existingProfile = document.querySelector('.guest-profile-section');
-            if (existingProfile) {
-                console.log('👤 Removing existing profile...');
-                existingProfile.remove();
-            }
-
-            const profileSection = document.createElement('div');
-            profileSection.className = 'guest-profile-section';
-            profileSection.innerHTML = `
-                <div class="hamburger-icon" onclick="app.toggleProfileMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="profile-content" style="display: none;">
-                    <div class="profile-header">
-                        <div class="profile-info">
-                            <h3 class="profile-name">Guest User</h3>
-                            <div class="profile-status">
-                                <span class="status-badge free">🆓 Free User</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="profile-stats">
-                        <div class="stat-item">
-                            <div class="stat-label">Playlists</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Tracks</div>
-                            <div class="stat-value">0</div>
-                        </div>
-                    </div>
-                    <div class="profile-menu">
-                        <button class="menu-item" onclick="app.showPlaylists()">
-                            <span class="menu-icon">🎵</span>
-                            <span class="menu-text">My Playlists</span>
-                        </button>
-                        <button class="menu-item" onclick="app.showAudioLibrary()">
-                            <span class="menu-icon">🎧</span>
-                            <span class="menu-text">Audio Library</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            // Insert at the top of the app container
-            const appContainer = document.querySelector('.app-container');
-            if (appContainer) {
-                console.log('👤 App container found, inserting profile...');
-                appContainer.insertBefore(profileSection, appContainer.firstChild);
-                console.log('✅ Guest profile section created successfully');
-                
-                // Profile notification disabled as requested
-            } else {
-                console.error('❌ App container not found!');
-                // Fallback: append to body
-                document.body.appendChild(profileSection);
-                console.log('✅ Guest profile section created as fallback');
-            }
-        }
 
         // Drag and drop functionality will be initialized by the BlueMe class
 
