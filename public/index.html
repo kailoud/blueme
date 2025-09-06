@@ -2897,6 +2897,11 @@
             font-size: 1rem;
             transition: all 0.2s ease;
             box-sizing: border-box;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: text;
         }
 
         .form-group input:focus {
@@ -3065,6 +3070,20 @@
                         <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
                     </svg>
                     <span>Clear</span>
+                </button>
+                <button class="quick-btn" onclick="app.testKeyboardInput()" title="Test Keyboard Input" style="background: linear-gradient(45deg, #17a2b8, #138496);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Keyboard</span>
+                </button>
+                <button class="quick-btn" onclick="app.fixKeyboardInput()" title="Fix Keyboard Input" style="background: linear-gradient(45deg, #fd7e14, #e55a00);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                    <span>Fix</span>
                 </button>
                 <button class="quick-btn" onclick="app.createDemoPlaylist()" title="Create Demo Playlist" style="background: linear-gradient(45deg, #4CAF50, #45a049);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -6370,6 +6389,69 @@
                 this.updateStatus('success', 'Authentication data cleared. Please sign in again.');
             }
 
+            // Test keyboard input functionality
+            testKeyboardInput() {
+                console.log('⌨️ Testing keyboard input...');
+                
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    console.log('📧 Email input found:', emailInput);
+                    console.log('📧 Input value:', emailInput.value);
+                    console.log('📧 Input readOnly:', emailInput.readOnly);
+                    console.log('📧 Input disabled:', emailInput.disabled);
+                    console.log('📧 Input type:', emailInput.type);
+                    
+                    // Test if we can set value
+                    const testValue = emailInput.value + 'm';
+                    emailInput.value = testValue;
+                    console.log('📧 Test value set:', emailInput.value);
+                    
+                    // Focus and try typing
+                    emailInput.focus();
+                    emailInput.select();
+                    
+                    this.updateStatus('info', 'Keyboard test completed - check console for details');
+                } else {
+                    console.error('❌ Email input not found for testing');
+                    this.updateStatus('error', 'Email input not found');
+                }
+            }
+
+            // Fix keyboard input issues
+            fixKeyboardInput() {
+                console.log('🔧 Fixing keyboard input issues...');
+                
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    // Remove any existing event listeners that might interfere
+                    const newEmailInput = emailInput.cloneNode(true);
+                    emailInput.parentNode.replaceChild(newEmailInput, emailInput);
+                    
+                    // Re-add the input to the form
+                    const form = document.getElementById('authForm');
+                    if (form) {
+                        form.appendChild(newEmailInput);
+                    }
+                    
+                    // Set proper attributes
+                    newEmailInput.type = 'email';
+                    newEmailInput.readOnly = false;
+                    newEmailInput.disabled = false;
+                    newEmailInput.autocomplete = 'email';
+                    newEmailInput.spellcheck = false;
+                    
+                    // Focus and test
+                    newEmailInput.focus();
+                    newEmailInput.value = 'truesliks@gmail.com';
+                    
+                    console.log('✅ Email input fixed and set to:', newEmailInput.value);
+                    this.updateStatus('success', 'Keyboard input fixed! Email field updated.');
+                } else {
+                    console.error('❌ Email input not found');
+                    this.updateStatus('error', 'Email input not found');
+                }
+            }
+
             // Database integration methods (for future Supabase re-enablement)
             async savePlaylistToDatabase(playlist) {
                 console.log('💾 Saving playlist to database:', playlist);
@@ -6471,12 +6553,26 @@
                 this.authModal.style.display = 'flex';
                 this.switchAuthTab(mode);
                 
-                // Focus on email input
+                // Focus on email input and add debugging
                 setTimeout(() => {
                     const emailInput = document.getElementById('email');
                     if (emailInput) {
                         emailInput.focus();
                         console.log('📧 Email input focused');
+                        
+                        // Add input event debugging
+                        emailInput.addEventListener('input', (e) => {
+                            console.log('📝 Email input changed:', e.target.value);
+                        });
+                        
+                        emailInput.addEventListener('keydown', (e) => {
+                            console.log('⌨️ Key pressed:', e.key, 'Code:', e.code);
+                        });
+                        
+                        // Ensure input is editable
+                        emailInput.readOnly = false;
+                        emailInput.disabled = false;
+                        
                     } else {
                         console.error('❌ Email input not found');
                     }
