@@ -4105,7 +4105,8 @@
                         album: 'Test Album',
                         duration: 10,
                         file_size: sampleAudioData.length,
-                        file_path: `test-${Date.now()}.mp3`,
+                        file_path: `test-${Date.now()}.wav`,
+                        mime_type: 'audio/wav',
                         audio_data: sampleAudioData,
                         created_at: new Date().toISOString()
                     };
@@ -5535,9 +5536,9 @@
                                 audio_file: {
                                     id: crypto.randomUUID(),
                                     title: 'Demo Track 1 - Electronic Vibes',
-                                    originalName: 'demo_track_1.mp3',
-                                    filename: 'demo_track_1.mp3',
-                                    mime_type: 'audio/mp3',
+                                    originalName: 'demo_track_1.wav',
+                                    filename: 'demo_track_1.wav',
+                                    mime_type: 'audio/wav',
                                     file_size: sampleAudioData.length,
                                     audio_data: sampleAudioData,
                                     url: 'demo_local'
@@ -5549,9 +5550,9 @@
                                 audio_file: {
                                     id: crypto.randomUUID(),
                                     title: 'Demo Track 2 - Ambient Sounds',
-                                    originalName: 'demo_track_2.mp3',
-                                    filename: 'demo_track_2.mp3',
-                                    mime_type: 'audio/mp3',
+                                    originalName: 'demo_track_2.wav',
+                                    filename: 'demo_track_2.wav',
+                                    mime_type: 'audio/wav',
                                     file_size: sampleAudioData.length,
                                     audio_data: sampleAudioData,
                                     url: 'demo_local'
@@ -5563,9 +5564,9 @@
                                 audio_file: {
                                     id: crypto.randomUUID(),
                                     title: 'Demo Track 3 - Chill Beats',
-                                    originalName: 'demo_track_3.mp3',
-                                    filename: 'demo_track_3.mp3',
-                                    mime_type: 'audio/mp3',
+                                    originalName: 'demo_track_3.wav',
+                                    filename: 'demo_track_3.wav',
+                                    mime_type: 'audio/wav',
                                     file_size: sampleAudioData.length,
                                     audio_data: sampleAudioData,
                                     url: 'demo_local'
