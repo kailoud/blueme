@@ -5868,7 +5868,7 @@
                     console.log('Saving converted audio to local storage:', fileData);
                     
                     // Get existing audio library from localStorage
-                    const existingLibrary = JSON.parse(localStorage.getItem('blueMeAudioLibrary') || '[]');
+                    const existingLibrary = JSON.parse(localStorage.getItem('blueme_audio_library') || '[]');
                     
                     // Create new audio file entry
                     const newAudioFile = {
@@ -5892,7 +5892,7 @@
                     existingLibrary.push(newAudioFile);
                     
                     // Save back to localStorage
-                    localStorage.setItem('blueMeAudioLibrary', JSON.stringify(existingLibrary));
+                    localStorage.setItem('blueme_audio_library', JSON.stringify(existingLibrary));
                     
                     // Also save to database if Supabase is configured
                     if (isSupabaseConfigured && supabase) {
