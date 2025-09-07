@@ -720,113 +720,6 @@
             font-weight: 500;
         }
 
-        /* Add Track Dropdown Styles */
-        .add-track-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-toggle {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            position: relative;
-        }
-
-        .dropdown-toggle svg {
-            transition: transform 0.2s ease;
-        }
-
-        .dropdown-toggle.open svg {
-            transform: rotate(180deg);
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 4px;
-        }
-
-        .dropdown-header {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .tracks-list {
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .track-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .track-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .track-item:last-child {
-            border-bottom: none;
-        }
-
-        .track-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .track-name {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .track-meta {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        .track-action {
-            color: var(--accent);
-            font-size: 0.8rem;
-        }
-
-        .loading-tracks {
-            padding: 12px;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-
-        .no-tracks {
-            padding: 12px;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
 
         /* Add to Playlist Modal Styles */
         .add-to-playlist-modal {
@@ -5038,22 +4931,11 @@
                                         <small>${currentSongs} tracks</small>
                                     </div>
                                     <div class="playlist-actions">
-                                        <div class="add-track-dropdown">
-                                            <button onclick="app.toggleAddTrackDropdown('${playlist.id}')" 
-                                                    class="btn btn-small dropdown-toggle"
-                                                    title="Add track to this playlist">
-                                                ➕ Add Track
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <polyline points="6,9 12,15 18,9"></polyline>
-                                                </svg>
-                                            </button>
-                                            <div class="dropdown-menu" id="dropdown-${playlist.id}" style="display: none;">
-                                                <div class="dropdown-header">Select Track to Add:</div>
-                                                <div class="tracks-list" id="tracks-${playlist.id}">
-                                                    <div class="loading-tracks">Loading tracks...</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <button onclick="app.showAddTrackModal('${playlist.id}')" 
+                                                class="btn btn-small"
+                                                title="Add track to this playlist">
+                                            ➕ Add Track
+                                        </button>
                                         <button onclick="app.viewPlaylist('${playlist.id}')" class="btn btn-small">👁️ View</button>
                                         <button onclick="app.playPlaylist('${playlist.id}')" class="btn btn-small btn-primary" style="background: linear-gradient(45deg, #007bff, #00d4ff); font-weight: bold; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);">▶️ Play in Main Player</button>
                                         <button onclick="app.deletePlaylist('${playlist.id}')" class="btn btn-small btn-danger">🗑️</button>
@@ -7133,32 +7015,52 @@
                 }
             }
 
-            toggleAddTrackDropdown(playlistId) {
-                const dropdown = document.getElementById(`dropdown-${playlistId}`);
-                const button = document.querySelector(`[onclick="app.toggleAddTrackDropdown('${playlistId}')"]`);
-                
-                if (!dropdown || !button) return;
-                
-                // Close all other dropdowns
-                document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                    if (menu.id !== `dropdown-${playlistId}`) {
-                        menu.style.display = 'none';
-                    }
-                });
-                
-                // Toggle current dropdown
-                const isOpen = dropdown.style.display === 'block';
-                dropdown.style.display = isOpen ? 'none' : 'block';
-                button.classList.toggle('open', !isOpen);
-                
-                // Load tracks if opening
-                if (!isOpen) {
-                    this.loadTracksForDropdown(playlistId);
+            showAddTrackModal(playlistId) {
+                const playlist = this.playlists.find(p => p.id === playlistId);
+                if (!playlist) {
+                    this.updateStatus('error', 'Playlist not found');
+                    return;
                 }
+                
+                const modal = document.createElement('div');
+                modal.className = 'add-to-playlist-modal';
+                modal.innerHTML = `
+                    <div class="modal-overlay" onclick="app.closeAddTrackModal()"></div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="header-info">
+                                <h2>Add Track to Playlist</h2>
+                                <p class="track-info">${playlist.name}</p>
+                            </div>
+                            <button class="close-btn" onclick="app.closeAddTrackModal()">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="tracks-section">
+                                <h3>Available Tracks</h3>
+                                <div class="tracks-list" id="addTrackModalTracks">
+                                    <div class="loading-tracks">Loading tracks...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="app.closeAddTrackModal()">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                this.loadTracksForModal(playlistId);
             }
 
-            async loadTracksForDropdown(playlistId) {
-                const tracksList = document.getElementById(`tracks-${playlistId}`);
+            async loadTracksForModal(playlistId) {
+                const tracksList = document.getElementById('addTrackModalTracks');
                 if (!tracksList) return;
                 
                 try {
@@ -7191,17 +7093,17 @@
                     }
                     
                     tracksList.innerHTML = availableTracks.map(track => `
-                        <div class="track-item" onclick="app.addTrackToPlaylistFromDropdown('${playlistId}', '${track.id}')">
+                        <div class="modal-playlist-item" onclick="app.addTrackToPlaylistFromModal('${playlistId}', '${track.id}')">
                             <div class="track-info">
                                 <div class="track-name">${track.title || track.original_name || 'Unknown Track'}</div>
                                 <div class="track-meta">${track.artist || 'Unknown Artist'} • ${this.formatFileSize(track.file_size)}</div>
                             </div>
-                            <div class="track-action">+</div>
+                            <div class="playlist-action">+ Add</div>
                         </div>
                     `).join('');
                     
                 } catch (error) {
-                    console.error('Error loading tracks for dropdown:', error);
+                    console.error('Error loading tracks for modal:', error);
                     tracksList.innerHTML = `
                         <div class="no-tracks">
                             Error loading tracks
@@ -7210,7 +7112,7 @@
                 }
             }
 
-            async addTrackToPlaylistFromDropdown(playlistId, trackId) {
+            async addTrackToPlaylistFromModal(playlistId, trackId) {
                 try {
                     const track = this.audioLibrary.find(t => t.id === trackId);
                     if (!track) {
@@ -7220,17 +7122,21 @@
                     
                     await this.addToPlaylist(playlistId, track);
                     
-                    // Close dropdown
-                    const dropdown = document.getElementById(`dropdown-${playlistId}`);
-                    const button = document.querySelector(`[onclick="app.toggleAddTrackDropdown('${playlistId}')"]`);
-                    if (dropdown) dropdown.style.display = 'none';
-                    if (button) button.classList.remove('open');
+                    // Close modal
+                    this.closeAddTrackModal();
                     
                     this.updateStatus('success', `Track added to playlist!`);
                     
                 } catch (error) {
                     console.error('Error adding track to playlist:', error);
                     this.updateStatus('error', `Failed to add track: ${error.message}`);
+                }
+            }
+
+            closeAddTrackModal() {
+                const modal = document.querySelector('.add-to-playlist-modal');
+                if (modal) {
+                    modal.remove();
                 }
             }
 
@@ -7400,17 +7306,6 @@
                 // Initialize the app
                 app = new BlueMe();
                 
-                // Add click outside handler for dropdowns
-                document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.add-track-dropdown')) {
-                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                            menu.style.display = 'none';
-                        });
-                        document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-                            btn.classList.remove('open');
-                        });
-                    }
-                });
                 isLoading = false;
                 
                 // Clear any leftover status messages
