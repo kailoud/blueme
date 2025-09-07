@@ -5412,6 +5412,12 @@
                 console.log('🔍 Playlist items:', playlist.playlist_items);
                 console.log('🔍 First track:', playlist.playlist_items[0]);
                 
+                // Ensure audio library is loaded before playing
+                if (this.audioLibrary.length === 0) {
+                    console.log('📚 Loading audio library before playing playlist...');
+                    await this.loadUserAudioLibrary();
+                }
+                
                 this.currentPlaylist = playlist;
                 this.currentTrackIndex = 0;
                 this.isPlaying = false;
@@ -5455,14 +5461,34 @@
                 // Try to find the full audio data in the audio library
                 let fullAudioData = audioFile;
                 if (!audioFile.audioData && !audioFile.audio_data) {
-                    const libraryTrack = this.audioLibrary.find(audio => 
-                        audio.id === audioFile.id || 
-                        audio.title === audioFile.title ||
-                        audio.original_name === audioFile.original_name
-                    );
+                    // First try to find by ID
+                    let libraryTrack = this.audioLibrary.find(audio => audio.id === audioFile.id);
+                    
+                    // If not found by ID, try to find by title or original name
+                    if (!libraryTrack) {
+                        libraryTrack = this.audioLibrary.find(audio => 
+                            audio.title === audioFile.title ||
+                            audio.original_name === audioFile.original_name ||
+                            audio.filename === audioFile.filename
+                        );
+                    }
+                    
                     if (libraryTrack) {
                         fullAudioData = libraryTrack;
-                        console.log('✅ Found full audio data in library for:', audioFile.title || audioFile.original_name);
+                        console.log('✅ Found full audio data in library for:', audioFile.title || audioFile.original_name || audioFile.id);
+                    } else {
+                        console.log('❌ Could not find audio data in library for:', {
+                            id: audioFile.id,
+                            title: audioFile.title,
+                            original_name: audioFile.original_name,
+                            filename: audioFile.filename
+                        });
+                        console.log('📚 Available audio library tracks:', this.audioLibrary.map(a => ({
+                            id: a.id,
+                            title: a.title,
+                            original_name: a.original_name,
+                            filename: a.filename
+                        })));
                     }
                 }
                 
@@ -5609,18 +5635,19 @@
                             }
                         }
                     } else {
-                        console.log('❌ No audio data found for track:', audioFile);
-                        this.updateStatus('error', `❌ Audio file not available for: ${audioFile.title || audioFile.originalName || audioFile.filename || 'Unknown track'}`);
+                        console.log('❌ No audio data found for track:', fullAudioData);
+                        this.updateStatus('error', `❌ Audio file not available for: ${fullAudioData.title || fullAudioData.originalName || fullAudioData.filename || 'Unknown track'}`);
                         
                         // Try to find the track in the audio library
                         const libraryTrack = this.audioLibrary.find(audio => 
-                            audio.title === audioFile.title || 
-                            audio.original_name === audioFile.originalName ||
-                            audio.id === audioFile.id
+                            audio.title === fullAudioData.title || 
+                            audio.original_name === fullAudioData.originalName ||
+                            audio.id === fullAudioData.id
                         );
                         
                         if (libraryTrack && (libraryTrack.audio_data || libraryTrack.audioData)) {
                             console.log('✅ Found track in audio library, using that instead');
+                            fullAudioData = libraryTrack;
                             // Use the library track's audio data
                             if (libraryTrack.audioData && libraryTrack.audioData instanceof Blob) {
                                 const url = URL.createObjectURL(libraryTrack.audioData);
