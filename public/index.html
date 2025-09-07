@@ -4584,8 +4584,19 @@
                 try {
                     this.updateConversionStatus('info', '📺 Converting YouTube video...');
                     
-                    // YouTube conversion disabled - Railway backend has CORS issues
-                    throw new Error('YouTube conversion temporarily disabled due to CORS issues with Railway backend');
+                    // Make API call to convert YouTube URL
+                    const response = await fetch('/api/convert-youtube', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            url: url,
+                            format: this.formatSelect.value,
+                            quality: this.qualitySelect.value,
+                            userId: 'anonymous'
+                        })
+                    });
 
                     if (!response.ok) {
                         throw new Error(`Server error: ${response.statusText}`);
