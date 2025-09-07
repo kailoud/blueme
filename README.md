@@ -223,3 +223,4 @@ MIT License - see LICENSE file for details
 **Made with ❤️ for music lovers everywhere**
 
 # Deployment trigger Sun Sep  7 15:31:04 BST 2025
+# EMERGENCY FIX - YouTube conversion broken - Sun Sep  7 15:36:20 BST 2025
