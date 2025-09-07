@@ -5699,8 +5699,7 @@
                     // Remove from audio library
                     this.audioLibrary.splice(audioIndex, 1);
                     
-                    // Save updated library to local storage
-                    this.saveAudioLibraryToLocal();
+                    // No localStorage - database only
                     
                     // Also remove from database if Supabase is configured
                     if (isSupabaseConfigured && supabase) {
@@ -5793,8 +5792,7 @@
                         }
                     }
                     
-                    // Save the cleaned library
-                    this.saveAudioLibraryToLocal();
+                    // No localStorage - database only
                     this.updateAudioLibraryUI();
                     
                     // Update status
@@ -6685,8 +6683,7 @@
                         }
                     }
                     
-                    // Save updated library to local storage
-                    this.saveAudioLibraryToLocal();
+                    // No localStorage - database only
                     
                     this.updateAudioLibraryUI();
                     console.log('Loaded audio library:', this.audioLibrary.length, 'files');
@@ -6700,27 +6697,8 @@
             }
 
             saveAudioLibraryToLocal() {
-                console.log('💾 Saving audio library to local storage...');
-                try {
-                    // Convert blob data to base64 for storage
-                    const libraryToSave = this.audioLibrary.map(audio => {
-                        if (audio.audio_data && audio.audio_data instanceof Blob) {
-                            // Convert blob to base64 for storage
-                            return {
-                                ...audio,
-                                audio_data: 'blob_data', // We'll handle this separately
-                                blob_size: audio.audio_data.size,
-                                blob_type: audio.audio_data.type
-                            };
-                        }
-                        return audio;
-                    });
-                    
-                    localStorage.setItem('blueme_audio_library', JSON.stringify(libraryToSave));
-                    console.log('✅ Audio library saved to local storage');
-                } catch (error) {
-                    console.error('❌ Error saving audio library to local storage:', error);
-                }
+                // Function disabled - database only
+                console.log('💾 Audio library save disabled - using database only');
             }
 
             updateAudioLibraryUI() {
