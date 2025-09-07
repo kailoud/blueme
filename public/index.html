@@ -5537,15 +5537,20 @@
                     return;
                 }
                 
+                const insertData = {
+                    id: playlistItem.id,
+                    playlist_id: playlistItem.playlist_id,
+                    position: playlistItem.position,
+                    audio_file_id: playlistItem.audio_file.id,
+                    added_at: playlistItem.added_at,
+                    user_id: null // Guest mode
+                };
+                
+                console.log('💾 Inserting playlist item:', insertData);
+                
                 const { data, error } = await supabase
                     .from('playlist_items')
-                    .insert([{
-                        id: playlistItem.id,
-                        playlist_id: playlistItem.playlist_id,
-                        position: playlistItem.position,
-                        audio_file_id: playlistItem.audio_file.id,
-                        added_at: playlistItem.added_at
-                    }])
+                    .insert([insertData])
                     .select();
                 
                 if (error) {
@@ -5586,6 +5591,22 @@
                     }
                     
                     console.log('✅ Playlists loaded from database:', data);
+                    console.log('🔍 Detailed playlist data:', JSON.stringify(data, null, 2));
+                    
+                    // Debug: Check if playlist_items exist separately
+                    if (data && data.length > 0) {
+                        const playlistId = data[0].id;
+                        const { data: itemsData, error: itemsError } = await supabase
+                            .from('playlist_items')
+                            .select('*')
+                            .eq('playlist_id', playlistId);
+                        
+                        console.log('🔍 Playlist items for playlist', playlistId, ':', itemsData);
+                        if (itemsError) {
+                            console.error('❌ Error loading playlist items:', itemsError);
+                        }
+                    }
+                    
                     return data || [];
                     
                 } catch (error) {
