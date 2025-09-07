@@ -4775,14 +4775,20 @@
                     if (isSupabaseConfigured && supabase) {
                         await this.savePlaylistItemToDatabase(playlistItem);
                         console.log('✅ Playlist item saved to database');
+                        
+                        // Reload playlists from database to ensure UI is in sync
+                        const dbPlaylists = await this.loadPlaylistsFromDatabase();
+                        this.playlists = dbPlaylists;
+                        console.log('🔄 Reloaded playlists from database:', this.playlists);
+                        this.updatePlaylistUI();
                     } else {
                         // Fallback to localStorage if database not available
                         this.saveLocalPlaylists();
                         console.log('⚠️ Database not available, saved to localStorage');
+                        
+                        // Update UI
+                        this.updatePlaylistUI();
                     }
-                    
-                    // Update UI
-                    this.updatePlaylistUI();
                     
                     this.updateStatus('success', `Track added to "${playlist.name}" (${currentSongs + 1}/${maxSongs})`);
                     console.log('✅ Track added to playlist:', playlistItem);
@@ -4922,6 +4928,7 @@
                     } else {
                         playlistsList.innerHTML = this.playlists.map(playlist => {
                             const currentSongs = playlist.playlist_items?.length || 0;
+                            console.log(`🎵 Playlist "${playlist.name}": ${currentSongs} tracks`, playlist.playlist_items);
                             
                             return `
                                 <div class="playlist-item" data-playlist-id="${playlist.id}">
