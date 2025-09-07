@@ -6811,7 +6811,7 @@
                                 </div>
                                 <div class="audio-actions">
                                     <button onclick="app.loadAudioFromLibrary('${audio.id}')" class="btn btn-small btn-primary">🎵 Load & Play</button>
-                                    <button onclick="app.showAddToPlaylistModal(${JSON.stringify(audio).replace(/"/g, '&quot;')})" class="btn btn-small">➕ Add to Playlist</button>
+                                    <button onclick="app.showAddToPlaylistModal('${audio.id}')" class="btn btn-small">➕ Add to Playlist</button>
                                     <button onclick="app.deleteAudioFromLibrary('${audio.id}')" class="btn btn-small btn-danger" title="Delete Audio File">🗑️ Delete</button>
                                 </div>
                             </div>
@@ -6992,8 +6992,20 @@
                 }
             }
 
-            showAddToPlaylistModal(audioFile = null) {
-                console.log('🎵 Opening Add to Playlist modal for:', audioFile);
+            showAddToPlaylistModal(audioId = null) {
+                console.log('🎵 Opening Add to Playlist modal for audio ID:', audioId);
+                
+                // Find the audio file by ID
+                let audioFile = null;
+                if (audioId) {
+                    audioFile = this.audioLibrary.find(a => a.id === audioId);
+                    if (!audioFile) {
+                        console.error('❌ Audio file not found for ID:', audioId);
+                        this.updateStatus('error', 'Audio file not found');
+                        return;
+                    }
+                }
+                
                 console.log('🔍 Audio file details:', {
                     id: audioFile?.id,
                     title: audioFile?.title,
@@ -7033,7 +7045,7 @@
                             
                             <div class="playlists-section">
                                 <h3>Your Playlists</h3>
-                                <div class="playlists-list" id="modalPlaylistsList">
+                                <div class="playlists-list" id="modalPlaylistsList" data-audio-id="${audioId || ''}">
                                     <div class="loading-playlists">Loading playlists...</div>
                                 </div>
                             </div>
@@ -7397,6 +7409,19 @@
             async loadModalPlaylists(audioFile) {
                 const playlistsList = document.getElementById('modalPlaylistsList');
                 if (!playlistsList) return;
+                
+                // Get audio ID from data attribute if audioFile is not provided
+                let audioId = null;
+                if (audioFile && audioFile.id) {
+                    audioId = audioFile.id;
+                } else {
+                    audioId = playlistsList.getAttribute('data-audio-id');
+                    if (audioId) {
+                        audioFile = this.audioLibrary.find(a => a.id === audioId);
+                    }
+                }
+                
+                console.log('🔍 Loading modal playlists for audio:', audioFile);
 
                 try {
                     // Load playlists from database first
@@ -7419,7 +7444,8 @@
                         return `
                             <div class="modal-playlist-item" 
                                  data-playlist-id="${playlist.id}"
-                                 onclick="app.addToPlaylistFromModal('${playlist.id}', ${audioFile ? JSON.stringify(audioFile).replace(/"/g, '&quot;') : 'null'})">
+                                 data-audio-id="${audioId || ''}"
+                                 onclick="app.addToPlaylistFromModal('${playlist.id}', '${audioId || ''}')">
                                 <div class="playlist-info">
                                     <div class="playlist-name">${playlist.name}</div>
                                     <div class="playlist-meta">
@@ -7444,14 +7470,26 @@
                 }
             }
 
-            async addToPlaylistFromModal(playlistId, audioFile) {
+            async addToPlaylistFromModal(playlistId, audioId) {
                 try {
-                    console.log('🎵 Adding to playlist from modal:', playlistId, audioFile);
-                    console.log('🔍 Audio file object:', audioFile);
-                    console.log('🔍 Audio file type:', typeof audioFile);
-                    console.log('🔍 Audio file stringified:', JSON.stringify(audioFile, null, 2));
+                    console.log('🎵 Adding to playlist from modal:', playlistId, audioId);
+                    console.log('🔍 Audio ID:', audioId);
+                    console.log('🔍 Audio ID type:', typeof audioId);
                     console.log('🔍 Converted audio blob:', this.convertedAudioBlob);
                     console.log('🔍 Available playlists:', this.playlists);
+                    
+                    // Find the audio file by ID
+                    let audioFile = null;
+                    if (audioId && audioId !== 'null' && audioId !== '') {
+                        audioFile = this.audioLibrary.find(a => a.id === audioId);
+                        if (!audioFile) {
+                            console.error('❌ Audio file not found for ID:', audioId);
+                            this.updateStatus('error', 'Audio file not found');
+                            return;
+                        }
+                    }
+                    
+                    console.log('🔍 Found audio file:', audioFile);
                     
                     if (audioFile && audioFile.id) {
                         // Adding existing audio file from library
