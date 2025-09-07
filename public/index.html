@@ -5043,9 +5043,12 @@
                 
                 // Update the main player's track info to show it's from a playlist
                 const firstTrack = playlist.playlist_items[0];
-                if (firstTrack && firstTrack.audio_file) {
-                    this.trackTitle.textContent = `${firstTrack.audio_file.title || firstTrack.audio_file.originalName || firstTrack.audio_file.filename} (from ${playlist.name})`;
-                    this.trackArtist.textContent = firstTrack.audio_file.artist || 'Playlist Track';
+                if (firstTrack) {
+                    const audioFile = firstTrack.audio_files || firstTrack.audio_file;
+                    if (audioFile) {
+                        this.trackTitle.textContent = `${audioFile.title || audioFile.original_name || audioFile.file_name} (from ${playlist.name})`;
+                        this.trackArtist.textContent = audioFile.artist || 'Playlist Track';
+                    }
                 }
             }
 
@@ -5056,12 +5059,17 @@
                 }
 
                 const track = this.currentPlaylist.playlist_items[this.currentTrackIndex];
-                if (!track || !track.audio_file) {
+                if (!track) {
                     this.updateStatus('error', 'Track not found');
                     return;
                 }
 
-                const audioFile = track.audio_file;
+                // Handle both database structure (audio_files) and local structure (audio_file)
+                const audioFile = track.audio_files || track.audio_file;
+                if (!audioFile) {
+                    this.updateStatus('error', 'Audio file not found in track');
+                    return;
+                }
                 
                 try {
                     console.log('🎵 Playing track from playlist:', audioFile);
@@ -5071,8 +5079,9 @@
                         hasAudioDataBase64: !!audioFile.audio_data,
                         mimeType: audioFile.mime_type,
                         title: audioFile.title,
-                        originalName: audioFile.originalName,
-                        filename: audioFile.filename
+                        originalName: audioFile.original_name,
+                        filename: audioFile.file_name,
+                        id: audioFile.id
                     });
                     
                     // Load the audio file into the main player
@@ -5083,7 +5092,7 @@
                         this.audioPlayer.load();
                         
                         // Update track info
-                        this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
+                        this.trackTitle.textContent = audioFile.title || audioFile.original_name || audioFile.file_name || 'Playlist Track';
                         this.trackArtist.textContent = 'Playlist Track';
                         
                         // Auto-play the track
@@ -5092,7 +5101,7 @@
                         this.playBtn.innerHTML = '⏸';
                         this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
                         
-                        this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                        this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || audioFile.file_name}`);
                         
                         // Show marquee with track information
                         this.showMarquee(audioFile);
@@ -5105,7 +5114,7 @@
                             this.audioPlayer.load();
                             
                             // Update track info
-                            this.trackTitle.textContent = audioFile.title || audioFile.originalName || audioFile.filename || 'Playlist Track';
+                            this.trackTitle.textContent = audioFile.title || audioFile.original_name || audioFile.file_name || 'Playlist Track';
                             this.trackArtist.textContent = 'Playlist Track';
                             
                             // Auto-play the track
@@ -5114,14 +5123,14 @@
                             this.playBtn.innerHTML = '⏸';
                             this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
                             
-                            this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
+                            this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || audioFile.file_name}`);
                         } catch (base64Error) {
-                            console.error('❌ Base64 decoding failed for track:', audioFile.title || audioFile.originalName || audioFile.filename);
+                            console.error('❌ Base64 decoding failed for track:', audioFile.title || audioFile.original_name || audioFile.file_name);
                             console.error('❌ Base64 error:', base64Error);
                             console.error('❌ Audio file details:', {
                                 title: audioFile.title,
-                                originalName: audioFile.originalName,
-                                filename: audioFile.filename,
+                                originalName: audioFile.original_name,
+                                filename: audioFile.file_name,
                                 mime_type: audioFile.mime_type,
                                 hasAudioData: !!audioFile.audio_data,
                                 audioDataLength: audioFile.audio_data ? audioFile.audio_data.length : 0,
@@ -5131,7 +5140,7 @@
                             // Try to find the track in the audio library as fallback
                             const libraryTrack = this.audioLibrary.find(audio => 
                                 audio.title === audioFile.title || 
-                                audio.original_name === audioFile.originalName ||
+                                audio.original_name === audioFile.original_name ||
                                 audio.id === audioFile.id
                             );
                             
