@@ -594,20 +594,29 @@ app.post('/api/convert-youtube', async (req, res) => {
                         });
                     }
                 } else {
-                    // Fallback: return JSON with base64 audio data
-                    console.log('📤 Returning audio as base64 JSON');
-                    const base64Audio = audioBuffer.toString('base64');
+                    // Fallback: save file locally and return URL
+                    console.log('📁 Saving audio file locally');
+                    const uploadDir = 'uploads/';
+                    if (!fs.existsSync(uploadDir)) {
+                        fs.mkdirSync(uploadDir, { recursive: true });
+                    }
+                    
+                    const filename = `${sanitizedTitle}_${Date.now()}.${format}`;
+                    const filepath = path.join(uploadDir, filename);
+                    
+                    fs.writeFileSync(filepath, audioBuffer);
+                    
                     res.json({
                         success: true,
                         message: 'YouTube audio converted successfully (local storage)',
                         file: {
-                            filename: `${sanitizedTitle}.${format}`,
+                            filename: filename,
                             originalName: videoTitle,
                             size: audioBuffer.length,
                             format: format,
                             quality: quality,
                             duration: info.videoDetails.lengthSeconds,
-                            audioData: base64Audio,
+                            url: `/uploads/${filename}`,
                             mimeType: `audio/${format}`
                         }
                     });

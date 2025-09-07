@@ -4585,7 +4585,7 @@
                     this.updateConversionStatus('info', '📺 Converting YouTube video...');
                     
                     // Make API call to convert YouTube URL
-                    const response = await fetch('https://blueme-backend.onrender.com/api/convert-youtube', {
+                    const response = await fetch('http://localhost:3000/api/convert-youtube', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -4615,8 +4615,14 @@
                             }
                             this.convertedAudioBlob = new Blob([bytes], { type: result.file.mimeType });
                         } else if (result.file.url) {
-                            // Handle Supabase URL
-                            this.convertedAudioBlob = await this.fetchAudioBlob(result.file.url);
+                            // Handle URL (Supabase or local)
+                            if (result.file.url.startsWith('http')) {
+                                // Supabase URL
+                                this.convertedAudioBlob = await this.fetchAudioBlob(result.file.url);
+                            } else {
+                                // Local URL - fetch from local server
+                                this.convertedAudioBlob = await this.fetchAudioBlob(`http://localhost:3000${result.file.url}`);
+                            }
                         }
                         
                         // Save directly to database (database-first mode)
