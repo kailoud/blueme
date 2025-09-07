@@ -5030,6 +5030,10 @@
                 }
 
                 console.log('🎵 Playing playlist in main player:', playlist.name);
+                console.log('🔍 Playlist data:', playlist);
+                console.log('🔍 Playlist items:', playlist.playlist_items);
+                console.log('🔍 First track:', playlist.playlist_items[0]);
+                
                 this.currentPlaylist = playlist;
                 this.currentTrackIndex = 0;
                 this.isPlaying = false;
@@ -5064,6 +5068,15 @@
                 
                 try {
                     console.log('🎵 Playing track from playlist:', audioFile);
+                    console.log('🔍 Audio file structure:', {
+                        hasAudioData: !!audioFile.audioData,
+                        hasAudioDataBlob: audioFile.audioData instanceof Blob,
+                        hasAudioDataBase64: !!audioFile.audio_data,
+                        mimeType: audioFile.mime_type,
+                        title: audioFile.title,
+                        originalName: audioFile.originalName,
+                        filename: audioFile.filename
+                    });
                     
                     // Load the audio file into the main player
                     if (audioFile.audioData && audioFile.audioData instanceof Blob) {
