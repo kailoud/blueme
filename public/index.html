@@ -2664,6 +2664,16 @@
                     </svg>
                     <span>Load DB Playlists</span>
                 </button>
+                <button class="quick-btn" onclick="app.testPlaylistItemInsert()" title="Test Playlist Item Insert" style="background: linear-gradient(45deg, #e91e63, #f06292);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+                        <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"></path>
+                        <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"></path>
+                    </svg>
+                    <span>Test Insert</span>
+                </button>
                 <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -5544,6 +5554,24 @@
                     return;
                 }
                 
+                console.log('🔍 Audio file object:', playlistItem.audio_file);
+                console.log('🔍 Audio file ID:', playlistItem.audio_file.id);
+                console.log('🔍 Audio file ID type:', typeof playlistItem.audio_file.id);
+                
+                // Validate UUID format
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+                const audioFileId = playlistItem.audio_file.id;
+                
+                if (!uuidRegex.test(audioFileId)) {
+                    console.error('❌ Invalid UUID format for audio_file_id:', audioFileId);
+                    console.log('🔧 Generating new UUID for audio file...');
+                    
+                    // Generate a new UUID for the audio file
+                    const newAudioFileId = crypto.randomUUID();
+                    playlistItem.audio_file.id = newAudioFileId;
+                    console.log('✅ Generated new UUID:', newAudioFileId);
+                }
+                
                 const insertData = {
                     id: playlistItem.id,
                     playlist_id: playlistItem.playlist_id,
@@ -5562,10 +5590,12 @@
                 
                 if (error) {
                     console.error('❌ Error saving playlist item to database:', error);
+                    console.error('❌ Error details:', JSON.stringify(error, null, 2));
                     throw error;
                 }
                 
                 console.log('✅ Playlist item saved to database:', data[0]);
+                console.log('✅ Insert result:', data);
                 return data[0];
             }
 
@@ -7172,6 +7202,69 @@
                 const modal = document.querySelector('.add-to-playlist-modal');
                 if (modal) {
                     modal.remove();
+                }
+            }
+
+            // Test function to manually insert a playlist item
+            async testPlaylistItemInsert() {
+                try {
+                    console.log('🧪 Testing playlist item insert...');
+                    
+                    if (!isSupabaseConfigured || !supabase) {
+                        console.log('❌ Supabase not configured');
+                        return;
+                    }
+                    
+                    // Get first playlist and audio file
+                    const { data: playlists } = await supabase.from('playlists').select('id').limit(1);
+                    const { data: audioFiles } = await supabase.from('audio_files').select('id').limit(1);
+                    
+                    console.log('🧪 Available playlists:', playlists);
+                    console.log('🧪 Available audio files:', audioFiles);
+                    
+                    if (!playlists || playlists.length === 0) {
+                        console.log('❌ No playlists found');
+                        return;
+                    }
+                    
+                    if (!audioFiles || audioFiles.length === 0) {
+                        console.log('❌ No audio files found');
+                        return;
+                    }
+                    
+                    // Validate UUID format for audio file
+                    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+                    let audioFileId = audioFiles[0].id;
+                    
+                    if (!uuidRegex.test(audioFileId)) {
+                        console.log('🔧 Invalid UUID format, generating new one:', audioFileId);
+                        audioFileId = crypto.randomUUID();
+                        console.log('✅ Generated new UUID:', audioFileId);
+                    }
+                    
+                    const testData = {
+                        id: crypto.randomUUID(),
+                        playlist_id: playlists[0].id,
+                        position: 999,
+                        audio_file_id: audioFileId,
+                        added_at: new Date().toISOString()
+                    };
+                    
+                    console.log('🧪 Inserting test data:', testData);
+                    
+                    const { data, error } = await supabase
+                        .from('playlist_items')
+                        .insert([testData])
+                        .select();
+                    
+                    if (error) {
+                        console.error('❌ Test insert failed:', error);
+                    } else {
+                        console.log('✅ Test insert successful:', data);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Test function error:', error);
                 }
             }
 
