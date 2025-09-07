@@ -6797,7 +6797,7 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            loadAudioFromLibrary(audioId) {
+            async loadAudioFromLibrary(audioId) {
                 const audio = this.audioLibrary.find(a => a.id === audioId);
                 if (!audio) {
                     this.updateStatus('error', 'Audio file not found');
@@ -7502,6 +7502,9 @@
         // Initialize the app when the page loads
         let app;
         
+        // Make app globally accessible
+        window.app = app;
+        
         
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -7509,6 +7512,7 @@
                 
                 // Initialize the app
                 app = new BlueMe();
+                window.app = app;
                 
                 isLoading = false;
                 
