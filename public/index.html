@@ -7252,7 +7252,7 @@
                     // Add current converted audio if available
                     if (this.convertedAudioBlob && this.convertedFileName) {
                         const convertedAudio = {
-                            id: 'current_converted',
+                            id: crypto.randomUUID(), // Generate proper UUID
                             title: this.convertedFileName.textContent.split('.')[0],
                             original_name: 'YouTube Audio',
                             file_size: this.convertedAudioBlob.size,
@@ -7262,8 +7262,11 @@
                             url: 'local_converted'
                         };
                         
-                        // Check if already in library
-                        const existingIndex = this.audioLibrary.findIndex(a => a.id === 'current_converted');
+                        // Check if already in library (look for YouTube Audio with same title)
+                        const existingIndex = this.audioLibrary.findIndex(a => 
+                            a.original_name === 'YouTube Audio' && 
+                            a.title === convertedAudio.title
+                        );
                         if (existingIndex >= 0) {
                             this.audioLibrary[existingIndex] = convertedAudio;
                         } else {
@@ -8018,8 +8021,10 @@
                         // Adding current converted track
                         console.log('Adding newly converted track');
                         const trackData = {
+                            id: crypto.randomUUID(), // Generate proper UUID
                             filename: this.convertedFileName?.textContent || 'converted_audio.mp3',
                             originalName: 'YouTube Audio',
+                            title: this.convertedFileName?.textContent?.split('.')[0] || 'YouTube Audio',
                             url: 'local',
                             size: this.convertedAudioBlob.size,
                             mimeType: this.convertedAudioBlob.type,
