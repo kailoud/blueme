@@ -2939,46 +2939,10 @@
             }
 
             initializeSocketIO() {
-                this.socket = io('https://blueme-production.up.railway.app');
-                
-                this.socket.on('connect', () => {
-                    console.log('🔌 Connected to server:', this.socket.id);
-                    this.syncRoomId = `room-${this.socket.id}`;
-                    this.socket.emit('join-sync-room', this.syncRoomId);
-                });
-
-                this.socket.on('user-joined', (data) => {
-                    console.log('👥 User joined sync room:', data.userId);
-                    this.updateStatus('info', `🎧 Friend joined the sync session!`);
-                });
-
-                this.socket.on('music-play', (data) => {
-                    if (data.userId !== this.socket.id) {
-                        this.syncPlaybackFromRemote(data);
-                    }
-                });
-
-                this.socket.on('music-pause', (data) => {
-                    if (data.userId !== this.socket.id) {
-                        this.syncPauseFromRemote(data);
-                    }
-                });
-
-                this.socket.on('music-seek', (data) => {
-                    if (data.userId !== this.socket.id) {
-                        this.syncSeekFromRemote(data);
-                    }
-                });
-
-                this.socket.on('volume-updated', (data) => {
-                    if (data.userId !== this.socket.id) {
-                        this.syncVolumeFromRemote(data);
-                    }
-                });
-
-                this.socket.on('device-status', (data) => {
-                    this.updateDeviceStatus(data);
-                });
+                // Socket.IO disabled - using Supabase only to avoid CORS issues
+                console.log('🔌 Socket.IO disabled - using Supabase only');
+                this.socket = null;
+                this.syncRoomId = null;
             }
 
             initializeElements() {
@@ -4282,18 +4246,8 @@
                 try {
                     this.updateConversionStatus('info', '📺 Converting YouTube video...');
                     
-                    const response = await fetch('https://blueme-production.up.railway.app/api/convert-youtube', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            url: url,
-                            format: this.formatSelect.value,
-                            quality: this.qualitySelect.value,
-                            userId: null // Guest mode - no user ID needed
-                        })
-                    });
+                    // YouTube conversion disabled - Railway backend has CORS issues
+                    throw new Error('YouTube conversion temporarily disabled due to CORS issues with Railway backend');
 
                     if (!response.ok) {
                         throw new Error(`Server error: ${response.statusText}`);
