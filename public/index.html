@@ -3147,7 +3147,7 @@
                 this.connectedDevices = new Map();
                 this.isScanning = false;
                 this.isPlaying = false;
-                this.isRepeating = false;
+                this.repeatMode = 'off'; // 'off', 'track', 'playlist'
                 this.audioContext = null;
                 this.convertedAudioBlob = null;
                 this.syncRoomId = null;
@@ -3995,24 +3995,41 @@
             }
 
             toggleRepeat() {
-                this.isRepeating = !this.isRepeating;
+                // Cycle through repeat modes: off -> track -> playlist -> off
+                if (this.repeatMode === 'off') {
+                    this.repeatMode = 'track';
+                } else if (this.repeatMode === 'track') {
+                    this.repeatMode = 'playlist';
+                } else {
+                    this.repeatMode = 'off';
+                }
+                
                 const repeatIcon = this.repeatBtn.querySelector('.repeat-icon');
                 
-                if (this.isRepeating) {
-                    // Enable repeat mode
-                    this.repeatBtn.style.background = 'var(--accent-gradient)';
-                    this.repeatBtn.style.color = 'white';
-                    this.repeatBtn.style.transform = 'scale(1.1)';
-                    this.updateStatus('info', '🔄 Repeat mode enabled - track will loop until stopped');
-                } else {
+                if (this.repeatMode === 'off') {
                     // Disable repeat mode
                     this.repeatBtn.style.background = '';
                     this.repeatBtn.style.color = '';
                     this.repeatBtn.style.transform = '';
+                    this.repeatBtn.title = 'Repeat Track';
                     this.updateStatus('info', '🔄 Repeat mode disabled');
+                } else if (this.repeatMode === 'track') {
+                    // Enable track repeat mode
+                    this.repeatBtn.style.background = 'var(--accent-gradient)';
+                    this.repeatBtn.style.color = 'white';
+                    this.repeatBtn.style.transform = 'scale(1.1)';
+                    this.repeatBtn.title = 'Repeat Playlist';
+                    this.updateStatus('info', '🔄 Track repeat enabled - current track will loop');
+                } else if (this.repeatMode === 'playlist') {
+                    // Enable playlist repeat mode
+                    this.repeatBtn.style.background = 'var(--accent-gradient)';
+                    this.repeatBtn.style.color = 'white';
+                    this.repeatBtn.style.transform = 'scale(1.1)';
+                    this.repeatBtn.title = 'Repeat Off';
+                    this.updateStatus('info', '🔄 Playlist repeat enabled - playlist will loop');
                 }
                 
-                console.log('🔄 Repeat mode:', this.isRepeating ? 'ON' : 'OFF');
+                console.log('🔄 Repeat mode:', this.repeatMode);
             }
 
             setVolume(volume) {
@@ -4041,8 +4058,8 @@
                 this.playBtn.innerHTML = '▶';
                 this.albumArt.style.animation = 'none';
                 
-                // Check if repeat mode is enabled
-                if (this.isRepeating) {
+                // Check if track repeat mode is enabled
+                if (this.repeatMode === 'track') {
                     // Repeat mode - restart current track
                     this.audioPlayer.currentTime = 0;
                     this.audioPlayer.play();
@@ -4063,13 +4080,22 @@
                         return;
                     } else {
                         // End of playlist
-                        this.updateStatus('success', `🎊 Playlist "${this.currentPlaylist.name}" finished!`);
-                        this.currentPlaylist = null;
-                        this.currentTrackIndex = 0;
-                        this.audioPlayer.src = '';
-                        this.trackTitle.textContent = 'Choose Your Vibe';
-                        this.trackArtist.textContent = 'No track selected';
-                        return;
+                        if (this.repeatMode === 'playlist') {
+                            // Playlist repeat mode - restart playlist from beginning
+                            this.currentTrackIndex = 0;
+                            this.updateStatus('info', '🔄 Repeating playlist...');
+                            this.playCurrentTrack();
+                            return;
+                        } else {
+                            // No repeat - finish playlist
+                            this.updateStatus('success', `🎊 Playlist "${this.currentPlaylist.name}" finished!`);
+                            this.currentPlaylist = null;
+                            this.currentTrackIndex = 0;
+                            this.audioPlayer.src = '';
+                            this.trackTitle.textContent = 'Choose Your Vibe';
+                            this.trackArtist.textContent = 'No track selected';
+                            return;
+                        }
                     }
                 }
                 
@@ -6897,7 +6923,7 @@
                     stopBtn.setAttribute('data-listener-added', 'true');
                     stopBtn.addEventListener('click', () => {
                 this.isPlaying = false;
-                this.isRepeating = false;
+                this.repeatMode = 'off';
                 this.currentPlaylist = null;
                 this.currentTrackIndex = 0;
                         
