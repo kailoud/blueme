@@ -835,8 +835,8 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-// Start HTTPS server
-const PORT = 3000;
+// Start HTTPS server on a different port to avoid conflicts
+const PORT = 3443;
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🔒 BlueMe HTTPS Server running on port ${PORT}`);
