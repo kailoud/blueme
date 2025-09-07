@@ -5549,8 +5549,8 @@
                     playlist_id: playlistItem.playlist_id,
                     position: playlistItem.position,
                     audio_file_id: playlistItem.audio_file.id,
-                    added_at: playlistItem.added_at,
-                    user_id: null // Guest mode
+                    added_at: playlistItem.added_at
+                    // Note: user_id column doesn't exist in playlist_items table
                 };
                 
                 console.log('💾 Inserting playlist item:', insertData);
