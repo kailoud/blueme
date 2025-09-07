@@ -6201,12 +6201,25 @@
                 console.log('🎵 Showing playlists...');
                 
                 // First, scroll to the playlists section
-                const playlistsSection = document.getElementById('playlistsSection');
+                const playlistsSection = document.getElementById('playlistSection');
                 if (playlistsSection) {
                     playlistsSection.scrollIntoView({ 
                         behavior: 'smooth', 
                         block: 'start' 
                     });
+                    console.log('✅ Scrolled to playlist section');
+                } else {
+                    console.log('❌ Playlist section not found, creating it...');
+                    // Create the playlist section if it doesn't exist
+                    this.createPlaylistSection();
+                    // Try again after creation
+                    const newPlaylistsSection = document.getElementById('playlistSection');
+                    if (newPlaylistsSection) {
+                        newPlaylistsSection.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
                 }
                 
                 // Update playlist UI to show latest playlists
@@ -6223,15 +6236,25 @@
                 console.log('🎧 Showing audio library...');
                 
                 // Scroll to the audio library section
-                const librarySection = document.querySelector('#myAudioLibrarySection') || 
-                                     document.querySelector('.audio-library') ||
-                                     document.querySelector('[id*="library" i]');
-                
+                const librarySection = document.getElementById('audioLibrarySection');
                 if (librarySection) {
                     librarySection.scrollIntoView({ 
                         behavior: 'smooth', 
                         block: 'start' 
                     });
+                    console.log('✅ Scrolled to audio library section');
+                } else {
+                    console.log('❌ Audio library section not found, creating it...');
+                    // Create the audio library section if it doesn't exist
+                    this.createAudioLibrarySection();
+                    // Try again after creation
+                    const newLibrarySection = document.getElementById('audioLibrarySection');
+                    if (newLibrarySection) {
+                        newLibrarySection.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
                 }
                 
                 // Update library UI
