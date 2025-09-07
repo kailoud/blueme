@@ -334,6 +334,9 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// In-memory storage for playlists (in production, this would be a database)
+let playlists = [];
+
 // Playlist API endpoints
 app.get('/api/playlists', async (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -341,11 +344,10 @@ app.get('/api/playlists', async (req, res) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
     try {
-        // For now, return empty array since we're in guest mode
-        // In a real app, this would query the database
+        console.log('📥 Fetching playlists:', playlists.length, 'playlists');
         res.json({
             success: true,
-            playlists: []
+            playlists: playlists
         });
     } catch (error) {
         console.error('Error fetching playlists:', error);
@@ -365,7 +367,7 @@ app.post('/api/playlists', async (req, res) => {
             return res.status(400).json({ error: 'Playlist name is required' });
         }
         
-        // Create playlist object (in guest mode, we don't save to database)
+        // Create playlist object
         const playlist = {
             id: crypto.randomUUID(),
             name,
@@ -378,6 +380,10 @@ app.post('/api/playlists', async (req, res) => {
             updated_at: new Date().toISOString(),
             playlist_items: []
         };
+        
+        // Store playlist in memory
+        playlists.push(playlist);
+        console.log('✅ Playlist created and stored:', playlist.name, 'Total playlists:', playlists.length);
         
         res.json({
             success: true,
@@ -402,14 +408,26 @@ app.post('/api/playlists/:playlistId/items', async (req, res) => {
             return res.status(400).json({ error: 'Audio file ID is required' });
         }
         
-        // Create playlist item object (in guest mode, we don't save to database)
+        // Find the playlist
+        const playlist = playlists.find(p => p.id === playlistId);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+        
+        // Create playlist item object
         const playlistItem = {
             id: crypto.randomUUID(),
             playlist_id: playlistId,
             audio_file_id: audioFileId,
-            position: position || 1,
+            position: position || playlist.playlist_items.length + 1,
             added_at: new Date().toISOString()
         };
+        
+        // Add item to playlist
+        playlist.playlist_items.push(playlistItem);
+        playlist.updated_at = new Date().toISOString();
+        
+        console.log('✅ Track added to playlist:', playlist.name, 'Total tracks:', playlist.playlist_items.length);
         
         res.json({
             success: true,
