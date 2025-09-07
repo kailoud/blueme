@@ -3578,7 +3578,7 @@
                         
                         this.updateStatus('error', 'Play failed: ' + errorMessage);
                     });
-                    } else {
+                } else {
                     console.log('🎵 Audio is playing, pausing...');
                     this.audioPlayer.pause();
                     this.playBtn.innerHTML = '▶';
@@ -4729,9 +4729,9 @@
                         await this.savePlaylistToDatabase(newPlaylist);
                         console.log('✅ Playlist saved to database');
                     } else {
-                        // Fallback to localStorage if database not available
-                        this.saveLocalPlaylists();
-                        console.log('⚠️ Database not available, saved to localStorage');
+                        console.error('❌ Database not configured - cannot create playlist');
+                        this.updateStatus('error', 'Database not configured - cannot create playlist');
+                        return;
                     }
                     
                     // Update UI
@@ -4800,18 +4800,15 @@
                             console.log('🔄 Reloaded playlists from database:', this.playlists);
                             this.updatePlaylistUI();
                         } catch (dbError) {
-                            console.error('❌ Database save failed, falling back to localStorage:', dbError);
-                            // Fallback to localStorage if database save fails
-                            this.saveLocalPlaylists();
-                            this.updatePlaylistUI();
+                            console.error('❌ Database save failed:', dbError);
+                            this.updateStatus('error', `Failed to save to database: ${dbError.message}`);
+                            // Don't fallback to localStorage - database is required
+                            return;
                         }
                     } else {
-                        // Fallback to localStorage if database not available
-                        this.saveLocalPlaylists();
-                        console.log('⚠️ Database not available, saved to localStorage');
-                        
-                        // Update UI
-                        this.updatePlaylistUI();
+                        console.error('❌ Database not configured - cannot save playlist');
+                        this.updateStatus('error', 'Database not configured - cannot save playlist');
+                        return;
                     }
                     
                     this.updateStatus('success', `Track added to "${playlist.name}" (${currentSongs + 1}/${maxSongs})`);
@@ -4891,13 +4888,14 @@
                             this.playlists = dbPlaylists || [];
                             console.log('✅ Loaded playlists from database:', this.playlists.length, 'playlists');
                         } catch (dbError) {
-                            console.error('❌ Database load failed, falling back to localStorage:', dbError);
-                            // Fallback to localStorage
-                            await this.loadPlaylistsFromLocalStorage();
+                            console.error('❌ Database load failed:', dbError);
+                            this.updateStatus('error', `Failed to load playlists from database: ${dbError.message}`);
+                            this.playlists = [];
                         }
                     } else {
-                        console.log('⚠️ Database not configured, loading from localStorage');
-                        await this.loadPlaylistsFromLocalStorage();
+                        console.error('❌ Database not configured - cannot load playlists');
+                        this.updateStatus('error', 'Database not configured - cannot load playlists');
+                        this.playlists = [];
                     }
                     
                     this.updatePlaylistUI();
@@ -6294,8 +6292,7 @@
                         // Remove from local playlists array
                         this.playlists = this.playlists.filter(p => p.id !== playlistId);
                         
-                        // Save to local storage
-                        this.saveLocalPlaylists();
+                        // Database save handled above
                         
                         // Update UI
                         this.updatePlaylistUI();
@@ -6425,13 +6422,9 @@
                         console.log('✅ Audio saved to database:', newAudioFile);
                         this.updateStatus('success', 'Audio saved to database!');
                     } else {
-                        // Fallback to localStorage if database not available
-                        console.log('⚠️ Database not available, saving to localStorage as fallback');
-                        const existingLibrary = JSON.parse(localStorage.getItem('blueme_audio_library') || '[]');
-                        existingLibrary.push(newAudioFile);
-                        localStorage.setItem('blueme_audio_library', JSON.stringify(existingLibrary));
-                        console.log('✅ Audio saved to localStorage as fallback');
-                        this.updateStatus('success', 'Audio saved to local storage (database unavailable)');
+                        console.error('❌ Database not configured - cannot save audio');
+                        this.updateStatus('error', 'Database not configured - cannot save audio');
+                        return null;
                     }
                     
                     // Always update local array for immediate UI updates
@@ -6443,27 +6436,9 @@
                     console.error('❌ Error saving audio to database:', error);
                     this.updateStatus('error', `Failed to save audio: ${error.message}`);
                     
-                    // Fallback to localStorage on error
-                    try {
-                        console.log('🔄 Attempting localStorage fallback...');
-                        const existingLibrary = JSON.parse(localStorage.getItem('blueme_audio_library') || '[]');
-                        const fallbackAudioFile = {
-                            ...newAudioFile,
-                            user_id: 'guest',
-                            file_path: 'local',
-                            public_url: 'local',
-                            album: 'Local Library'
-                        };
-                        existingLibrary.push(fallbackAudioFile);
-                        localStorage.setItem('blueme_audio_library', JSON.stringify(existingLibrary));
-                        this.audioLibrary.push(fallbackAudioFile);
-                        this.updateAudioLibraryUI();
-                        this.updateStatus('warning', 'Audio saved to local storage (database error)');
-                        console.log('✅ Fallback to localStorage successful');
-                    } catch (fallbackError) {
-                        console.error('❌ Fallback save also failed:', fallbackError);
-                        this.updateStatus('error', 'Failed to save audio completely');
-                    }
+                    // No localStorage fallback - database is required
+                    this.updateStatus('error', 'Failed to save audio to database');
+                    return null;
                 }
             }
 
@@ -7600,6 +7575,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 console.log('🚀 Initializing BlueMe app (no authentication)...');
+                
+                // Clear localStorage to prevent QuotaExceededError
+                try {
+                    localStorage.clear();
+                    console.log('✅ Cleared localStorage to prevent quota errors');
+                } catch (clearError) {
+                    console.warn('⚠️ Could not clear localStorage:', clearError);
+                }
                 
                 // Initialize the app
                 app = new BlueMe();
