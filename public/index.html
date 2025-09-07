@@ -2632,6 +2632,13 @@
                     </svg>
                     <span>Debug DB</span>
                 </button>
+                <button class="quick-btn" onclick="app.testAddToPlaylist()" title="Test Add to Playlist Functionality" style="background: linear-gradient(45deg, #9c27b0, #673ab7);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <span>Test Add</span>
+                </button>
                 <button class="quick-btn" onclick="app.pushToDatabase()" title="Push Audio Files to Database" style="background: linear-gradient(45deg, #2196F3, #21CBF3);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -5900,6 +5907,40 @@
                 }
             }
 
+            async testAddToPlaylist() {
+                try {
+                    console.log('🧪 Testing Add to Playlist functionality...');
+                    
+                    // Check if we have any audio files
+                    if (this.audioLibrary.length === 0) {
+                        this.updateStatus('error', 'No audio files available for testing');
+                        return;
+                    }
+                    
+                    // Check if we have any playlists
+                    if (this.playlists.length === 0) {
+                        this.updateStatus('error', 'No playlists available for testing');
+                        return;
+                    }
+                    
+                    // Get first audio file and first playlist
+                    const testAudio = this.audioLibrary[0];
+                    const testPlaylist = this.playlists[0];
+                    
+                    console.log('🧪 Test audio file:', testAudio);
+                    console.log('🧪 Test playlist:', testPlaylist);
+                    
+                    // Test the addToPlaylist function directly
+                    await this.addToPlaylist(testPlaylist.id, testAudio);
+                    
+                    this.updateStatus('success', '✅ Add to Playlist test completed - check console for details');
+                    
+                } catch (error) {
+                    console.error('❌ Test error:', error);
+                    this.updateStatus('error', `Test failed: ${error.message}`);
+                }
+            }
+
             async pushPlaylistsToDatabase() {
                 try {
                     console.log('🚀 Pushing playlists to database...');
@@ -6952,6 +6993,15 @@
             }
 
             showAddToPlaylistModal(audioFile = null) {
+                console.log('🎵 Opening Add to Playlist modal for:', audioFile);
+                console.log('🔍 Audio file details:', {
+                    id: audioFile?.id,
+                    title: audioFile?.title,
+                    originalName: audioFile?.originalName,
+                    hasAudioData: !!audioFile?.audioData,
+                    hasAudioDataBase64: !!audioFile?.audio_data
+                });
+                
                 const modal = document.createElement('div');
                 modal.className = 'add-to-playlist-modal';
                 modal.innerHTML = `
@@ -7396,9 +7446,12 @@
 
             async addToPlaylistFromModal(playlistId, audioFile) {
                 try {
-                    console.log('Adding to playlist from modal:', playlistId, audioFile);
-                    console.log('audioFile object:', audioFile);
-                    console.log('convertedAudioBlob:', this.convertedAudioBlob);
+                    console.log('🎵 Adding to playlist from modal:', playlistId, audioFile);
+                    console.log('🔍 Audio file object:', audioFile);
+                    console.log('🔍 Audio file type:', typeof audioFile);
+                    console.log('🔍 Audio file stringified:', JSON.stringify(audioFile, null, 2));
+                    console.log('🔍 Converted audio blob:', this.convertedAudioBlob);
+                    console.log('🔍 Available playlists:', this.playlists);
                     
                     if (audioFile && audioFile.id) {
                         // Adding existing audio file from library
