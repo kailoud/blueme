@@ -55,10 +55,11 @@
         .app-container {
             max-width: 420px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 16px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            gap: 12px;
         }
 
         .header {
@@ -111,7 +112,7 @@
             border-radius: 24px;
             border: 1px solid var(--glass-border);
             box-shadow: var(--shadow-lg);
-            margin: 20px 0;
+            margin: 0;
             overflow: hidden;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -1306,7 +1307,7 @@
             backdrop-filter: blur(20px);
             border-radius: 24px;
             padding: 28px;
-            margin: 20px 0;
+            margin: 0;
             border: 1px solid var(--glass-border);
             position: relative;
             overflow: hidden;
@@ -1607,9 +1608,13 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            .app-container {
+                gap: 10px;
+            }
+            
             .audio-visualizer {
                 padding: 20px;
-                margin: 20px 0;
+                margin: 0;
             }
             
             .track-info-section {
@@ -1802,7 +1807,7 @@
             display: flex;
             gap: 12px;
             justify-content: flex-start;
-            margin: 20px 0;
+            margin: 0;
             overflow-x: auto;
             overflow-y: hidden;
             padding: 8px 0;
@@ -2030,7 +2035,7 @@
             padding: 16px;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            margin: 20px 0;
+            margin: 0;
         }
 
         .volume-icon {
@@ -2371,12 +2376,12 @@
         @media (max-width: 768px) {
             /* Modern Base Layout */
             .app-container {
-                padding: 16px;
-                gap: 24px;
+                padding: 12px;
+                gap: 10px;
             }
             
             .card {
-                margin: 20px 0;
+                margin: 0;
                 border-radius: 20px;
                 backdrop-filter: blur(20px);
                 background: rgba(255, 255, 255, 0.06);
@@ -2683,8 +2688,8 @@
         @media (max-width: 480px) {
             /* Ultra-Modern Small Mobile */
             .app-container {
-                padding: 12px;
-                gap: 20px;
+                padding: 10px;
+                gap: 8px;
             }
             
             .logo {
