@@ -123,10 +123,41 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
     console.log('⚠️  Supabase not configured - using local storage');
 }
 
+// Enhanced CORS configuration
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Allow all origins for development
+        return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
+
+// Additional CORS headers for all responses
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -345,8 +376,21 @@ app.delete('/api/devices/:deviceId', async (req, res) => {
     }
 });
 
+// Handle preflight requests for file upload
+app.options('/api/upload', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.sendStatus(200);
+});
+
 // Upload audio file
 app.post('/api/upload', upload.single('audio'), async (req, res) => {
+    // Set CORS headers explicitly for this endpoint
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No audio file provided' });
@@ -426,8 +470,21 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
     }
 });
 
+// Handle preflight requests for YouTube conversion
+app.options('/api/convert-youtube', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.sendStatus(200);
+});
+
 // Convert YouTube URL to audio
 app.post('/api/convert-youtube', async (req, res) => {
+    // Set CORS headers explicitly for this endpoint
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
     try {
         const { url, format = 'mp3', quality = '192', userId } = req.body;
 
