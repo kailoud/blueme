@@ -2909,8 +2909,8 @@
                     </button>
                 </div>
                 
-                <!-- Progress Section (Hidden) -->
-                <div class="progress-section" style="display: none;">
+                <!-- Progress Section -->
+                <div class="progress-section" id="progressSection">
                     <div class="time-display">
                         <span class="current-time" id="currentTime">0:00</span>
                         <span class="total-time" id="totalTime">0:00</span>
@@ -3720,6 +3720,24 @@
             updateTrackInfo() {
                 this.duration = this.audioPlayer.duration;
                 this.totalTimeDisplay.textContent = this.formatTime(this.duration);
+                
+                // Show progress section when audio is loaded
+                const progressSection = document.getElementById('progressSection');
+                console.log('🎵 updateTrackInfo called:', {
+                    duration: this.duration,
+                    progressSection: progressSection,
+                    currentDisplay: progressSection ? progressSection.style.display : 'not found'
+                });
+                
+                if (progressSection && this.duration > 0) {
+                    progressSection.style.display = 'flex';
+                    console.log('✅ Progress section shown, new display:', progressSection.style.display);
+                } else {
+                    console.log('❌ Progress section not shown:', {
+                        hasProgressSection: !!progressSection,
+                        duration: this.duration
+                    });
+                }
             }
 
             updateProgress() {
@@ -3742,6 +3760,24 @@
 
             onCanPlay() {
                 this.albumArt.style.animation = 'none';
+                
+                // Ensure progress section is visible when audio can play
+                const progressSection = document.getElementById('progressSection');
+                console.log('🎵 onCanPlay called:', {
+                    duration: this.audioPlayer.duration,
+                    progressSection: progressSection,
+                    currentDisplay: progressSection ? progressSection.style.display : 'not found'
+                });
+                
+                if (progressSection && this.audioPlayer.duration > 0) {
+                    progressSection.style.display = 'flex';
+                    console.log('✅ Progress section shown in onCanPlay, new display:', progressSection.style.display);
+                } else {
+                    console.log('❌ Progress section not shown in onCanPlay:', {
+                        hasProgressSection: !!progressSection,
+                        duration: this.audioPlayer.duration
+                    });
+                }
             }
 
             onAudioPlay() {
