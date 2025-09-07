@@ -14,16 +14,14 @@ const crypto = require('crypto');
 
 const app = express();
 
-// Create both HTTP and HTTPS servers
-const httpServer = http.createServer(app);
+// Create HTTPS server with SSL certificates
 const httpsOptions = {
     key: fs.readFileSync('key.pem'),
     cert: fs.readFileSync('cert.pem')
 };
-const httpsServer = https.createServer(httpsOptions, app);
 
-// Socket.IO on HTTPS server
-const io = socketIo(httpsServer, {
+const server = https.createServer(httpsOptions, app);
+const io = socketIo(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
@@ -837,26 +835,18 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 3000;
+// Start HTTPS server
+const PORT = 3000;
 
-// Start both HTTP and HTTPS servers
-const HTTP_PORT = 3000;
-const HTTPS_PORT = 3443;
-
-httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
-    console.log(`🎵 BlueMe HTTP Server running on port ${HTTP_PORT}`);
-    console.log(`🌐 Open http://localhost:${HTTP_PORT} to start syncing music!`);
-    console.log(`📱 Mobile HTTP access: http://192.168.1.110:${HTTP_PORT}`);
-});
-
-httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
-    console.log(`🔒 BlueMe HTTPS Server running on port ${HTTPS_PORT}`);
-    console.log(`🌐 Open https://localhost:${HTTPS_PORT} to start syncing music!`);
-    console.log(`📱 Mobile HTTPS access: https://192.168.1.110:${HTTPS_PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🔒 BlueMe HTTPS Server running on port ${PORT}`);
+    console.log(`🌐 Open https://localhost:${PORT} to start syncing music!`);
+    console.log(`📱 Mobile HTTPS access: https://192.168.1.110:${PORT}`);
     console.log(`📡 WebSocket server ready for real-time sync`);
     console.log(`🔵 Bluetooth manager initialized`);
     console.log(`📱 API endpoints available at /api/*`);
     console.log(`🔒 HTTPS enabled with self-signed certificate`);
+    console.log(`⚠️  You may need to accept the security certificate in your browser`);
 });
 
 module.exports = app;
