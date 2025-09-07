@@ -4843,32 +4843,46 @@
             }
 
             async loadLocalPlaylists() {
-                console.log('🎵 Loading playlists from local storage...');
+                console.log('🔄 Loading playlists from database...');
                 try {
-                    const storedPlaylists = localStorage.getItem('blueme_playlists');
-                    if (storedPlaylists) {
-                        const allPlaylists = JSON.parse(storedPlaylists);
-                        
-                        // Filter playlists by guest user
-                        this.playlists = allPlaylists.filter(p => p.user_id === 'guest');
-                        console.log(`✅ Loaded ${this.playlists.length} playlists for guest user`);
-                    } else {
-                        this.playlists = [];
-                    }
-                    
-                    // Also load from database if Supabase is configured
+                    // Load from database first (database-first mode)
                     if (isSupabaseConfigured && supabase) {
-                        const dbPlaylists = await this.loadPlaylistsFromDatabase();
-                        // Merge database playlists with local storage (avoid duplicates)
-                        const existingIds = new Set(this.playlists.map(playlist => playlist.id));
-                        const newDbPlaylists = dbPlaylists.filter(playlist => !existingIds.has(playlist.id));
-                        this.playlists = [...this.playlists, ...newDbPlaylists];
-                        console.log(`✅ Loaded ${newDbPlaylists.length} additional playlists from database`);
+                        try {
+                            const dbPlaylists = await this.loadPlaylistsFromDatabase();
+                            this.playlists = dbPlaylists || [];
+                            console.log('✅ Loaded playlists from database:', this.playlists.length, 'playlists');
+                        } catch (dbError) {
+                            console.error('❌ Database load failed, falling back to localStorage:', dbError);
+                            // Fallback to localStorage
+                            await this.loadPlaylistsFromLocalStorage();
+                        }
+                    } else {
+                        console.log('⚠️ Database not configured, loading from localStorage');
+                        await this.loadPlaylistsFromLocalStorage();
                     }
                     
                     this.updatePlaylistUI();
                 } catch (error) {
-                    console.error('❌ Error loading playlists from local storage:', error);
+                    console.error('❌ Error loading playlists:', error);
+                    this.playlists = [];
+                    this.updatePlaylistUI();
+                }
+            }
+
+            async loadPlaylistsFromLocalStorage() {
+                try {
+                    const storedPlaylists = localStorage.getItem('blueme_playlists');
+                    if (storedPlaylists) {
+                        const allPlaylists = JSON.parse(storedPlaylists);
+                        // Filter playlists by guest user
+                        this.playlists = allPlaylists.filter(p => p.user_id === 'guest');
+                        console.log('✅ Loaded playlists from localStorage:', this.playlists.length, 'playlists');
+                    } else {
+                        this.playlists = [];
+                        console.log('📭 No playlists found in localStorage');
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading from localStorage:', error);
                     this.playlists = [];
                 }
             }
@@ -5537,6 +5551,7 @@
                 
                 try {
                     // Load playlists for guest user (user_id = null)
+                    // Use is() instead of eq() for null values to avoid UUID parsing issues
                     const { data, error } = await supabase
                         .from('playlists')
                         .select(`
@@ -5546,7 +5561,7 @@
                                 audio_files (*)
                             )
                         `)
-                        .eq('user_id', null) // Guest mode
+                        .is('user_id', null) // Guest mode - use is() for null values
                         .order('created_at', { ascending: false });
                     
                     if (error) {
