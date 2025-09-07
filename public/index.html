@@ -6496,7 +6496,25 @@
                     }
                     
                     console.log('✅ Audio files loaded from database:', data);
-                    return data || [];
+                    
+                    // Ensure audio data is properly structured for playback
+                    const processedData = data.map(audioFile => {
+                        // Ensure audio_data is available for base64 playback
+                        if (audioFile.audio_data && !audioFile.audioData) {
+                            // Keep the base64 data for playlist playback
+                            audioFile.audio_data = audioFile.audio_data;
+                        }
+                        
+                        // Ensure mime_type is set
+                        if (!audioFile.mime_type) {
+                            audioFile.mime_type = 'audio/mp3'; // Default fallback
+                        }
+                        
+                        return audioFile;
+                    });
+                    
+                    console.log('✅ Processed audio files for playback:', processedData);
+                    return processedData || [];
                     
                 } catch (error) {
                     console.error('❌ Error loading audio files from database:', error);
