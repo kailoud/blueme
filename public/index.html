@@ -1304,55 +1304,365 @@
         .audio-visualizer {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 32px 24px;
+            border-radius: 24px;
+            padding: 28px;
             margin-bottom: 20px;
             border: 1px solid var(--glass-border);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .now-playing {
-            text-align: center;
-            margin-bottom: 32px;
-            padding: 0 16px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-            max-width: 100%;
+        /* Track Info Section */
+        .track-info-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .album-art-container {
             position: relative;
+            flex-shrink: 0;
         }
-
 
         .album-art {
-            width: 160px;
-            height: 160px;
-            border-radius: 20px;
-            background: var(--primary-gradient);
-            margin: 0 auto 20px;
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .album-art-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .music-note {
+            font-size: 32px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .vinyl-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+
+        .vinyl-rings::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+        }
+
+        .vinyl-rings::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .play-indicator {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            background: #00ff88;
+            border-radius: 50%;
+            border: 3px solid var(--glass-bg);
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .play-indicator.active {
+            opacity: 1;
+            transform: scale(1);
+            animation: pulse 2s infinite;
+        }
+
+        .track-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .track-artist {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .track-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.playing {
+            background: #ff6b6b;
+        }
+
+        .status-dot.paused {
+            background: #ffa500;
+        }
+
+
+        /* Controls Section */
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
 
-        .album-art::before {
-            content: '';
+        .control-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn.primary {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn.primary:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5);
+        }
+
+        .control-btn svg {
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .progress-container {
+            position: relative;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .progress-fill {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s ease;
         }
 
-        .album-art:hover::before {
-            transform: translateX(100%);
+        .progress-handle {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .progress-container:hover .progress-handle {
+            opacity: 1;
+        }
+
+        .progress-container:hover .progress-fill {
+            background: linear-gradient(90deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        /* Animations */
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 4px 24px rgba(102, 126, 234, 0.6); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .audio-visualizer {
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+            
+            .track-info-section {
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .album-art {
+                width: 64px;
+                height: 64px;
+                border-radius: 12px;
+            }
+            
+            .music-note {
+                font-size: 24px;
+            }
+            
+            .vinyl-rings {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .vinyl-rings::before {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .vinyl-rings::after {
+                width: 16px;
+                height: 16px;
+            }
+            
+            .track-title {
+                font-size: 1.2rem;
+            }
+            
+            .track-artist {
+                font-size: 0.85rem;
+            }
+            
+            .control-btn.secondary {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .control-btn.primary {
+                width: 56px;
+                height: 56px;
+            }
+            
+            .control-buttons {
+                gap: 12px;
+            }
         }
 
         .track-title {
@@ -2541,25 +2851,74 @@
             <p class="subtitle">Share music with friends wirelessly</p>
         </div>
 
-        <!-- Audio Player Card -->
+        <!-- Modern Audio Player Card -->
         <div class="audio-visualizer">
-            <div class="now-playing">
-                <div class="album-art" id="albumArt">🎵</div>
-                <div class="track-title" id="trackTitle">Choose Your Vibe</div>
-                <div class="track-artist" id="trackArtist">Ready to sync with friends</div>
+            <!-- Track Info Section -->
+            <div class="track-info-section">
+                <div class="album-art-container">
+                    <div class="album-art" id="albumArt">
+                        <div class="album-art-inner">
+                            <div class="music-note">🎵</div>
+                            <div class="vinyl-rings"></div>
+                        </div>
+                    </div>
+                    <div class="play-indicator" id="playIndicator"></div>
+                </div>
                 
-                <!-- Marquee Bar for Converted Track Info -->
-                <div class="marquee-container" id="marqueeContainer" style="display: none;">
-                    <div class="marquee-text" id="marqueeText"></div>
-                    <div class="marquee-placeholder" id="marqueePlaceholder">Converted Track Information</div>
+                <div class="track-details">
+                    <div class="track-title" id="trackTitle">Choose Your Vibe</div>
+                    <div class="track-artist" id="trackArtist">Ready to sync with friends</div>
+                    <div class="track-status" id="trackStatus">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Ready</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="controls">
-                <button class="control-btn" id="prevBtn">⏮</button>
-                <button class="control-btn play-btn" id="playBtn">▶</button>
-                <button class="control-btn" id="nextBtn">⏭</button>
+            <!-- Modern Controls Section -->
+            <div class="controls-section">
+                <div class="control-buttons">
+                    <button class="control-btn secondary" id="prevBtn" title="Previous Track">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                        </svg>
+                    </button>
+                    <button class="control-btn primary play-btn" id="playBtn" title="Play/Pause">
+                        <svg class="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <svg class="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                        </svg>
+                    </button>
+                    <button class="control-btn secondary" id="nextBtn" title="Next Track">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Progress Section -->
+                <div class="progress-section">
+                    <div class="time-display">
+                        <span class="current-time" id="currentTime">0:00</span>
+                        <span class="total-time" id="totalTime">0:00</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                            <div class="progress-handle" id="progressHandle"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Marquee Bar for Converted Track Info -->
+            <div class="marquee-container" id="marqueeContainer" style="display: none;">
+                <div class="marquee-text" id="marqueeText"></div>
+                <div class="marquee-placeholder" id="marqueePlaceholder">Converted Track Information</div>
+            </div>
+        </div>
             
             <!-- Quick Access Buttons -->
             <div class="quick-access-buttons">
@@ -3026,12 +3385,15 @@
                 this.audioPlayer.addEventListener('pause', () => this.onAudioPause());
                 
                 // Progress bar click to seek
-                document.querySelector('.progress-bar').addEventListener('click', (e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const clickX = e.clientX - rect.left;
-                    const percentage = clickX / rect.width;
-                    this.seekTo(percentage);
-                });
+                const progressContainer = document.querySelector('.progress-container');
+                if (progressContainer) {
+                    progressContainer.addEventListener('click', (e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const clickX = e.clientX - rect.left;
+                        const percentage = clickX / rect.width;
+                        this.seekTo(percentage);
+                    });
+                }
             }
 
             checkBluetoothSupport() {
@@ -3492,9 +3854,7 @@
             updateProgress() {
                 if (this.audioPlayer.duration) {
                     this.currentTime = this.audioPlayer.currentTime;
-                    const progress = (this.currentTime / this.audioPlayer.duration) * 100;
-                    this.progressFill.style.width = `${progress}%`;
-                    this.currentTimeDisplay.textContent = this.formatTime(this.currentTime);
+                    this.updateProgressBar();
                 }
             }
 
@@ -3516,15 +3876,17 @@
             onAudioPlay() {
                 console.log('🎵 Audio started playing');
                 this.isPlaying = true;
-                this.playBtn.innerHTML = '⏸';
-                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                this.updatePlayButton();
+                this.updatePlayIndicator();
+                this.updateStatusIndicator();
             }
 
             onAudioPause() {
                 console.log('🎵 Audio paused');
                 this.isPlaying = false;
-                this.playBtn.innerHTML = '▶';
-                this.albumArt.style.animation = 'none';
+                this.updatePlayButton();
+                this.updatePlayIndicator();
+                this.updateStatusIndicator();
             }
 
             togglePlayback() {
@@ -5098,8 +5460,9 @@
                         // Auto-play the track
                         await this.audioPlayer.play();
                         this.isPlaying = true;
-                        this.playBtn.innerHTML = '⏸';
-                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                        this.updatePlayButton();
+                        this.updatePlayIndicator();
+                        this.updateStatusIndicator();
                         
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || audioFile.file_name}`);
                         
@@ -6007,6 +6370,83 @@
                 this.updateStatus('info', `🎧 Found ${this.audioLibrary.length} audio files. Use "Load & Play" to play individual tracks.`);
                 
                 console.log('✅ Audio library section shown:', this.audioLibrary.length, 'files');
+            }
+
+            // Modern Player Helper Functions
+            updatePlayButton() {
+                const playIcon = document.querySelector('.play-icon');
+                const pauseIcon = document.querySelector('.pause-icon');
+                
+                if (this.isPlaying) {
+                    if (playIcon) playIcon.style.display = 'none';
+                    if (pauseIcon) pauseIcon.style.display = 'block';
+                } else {
+                    if (playIcon) playIcon.style.display = 'block';
+                    if (pauseIcon) pauseIcon.style.display = 'none';
+                }
+            }
+
+            updatePlayIndicator() {
+                const playIndicator = document.getElementById('playIndicator');
+                if (playIndicator) {
+                    if (this.isPlaying) {
+                        playIndicator.classList.add('active');
+                    } else {
+                        playIndicator.classList.remove('active');
+                    }
+                }
+            }
+
+            updateStatusIndicator() {
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.querySelector('.status-text');
+                
+                if (statusDot && statusText) {
+                    if (this.isPlaying) {
+                        statusDot.className = 'status-dot playing';
+                        statusText.textContent = 'Playing';
+                    } else if (this.audioPlayer && this.audioPlayer.paused && this.audioPlayer.currentTime > 0) {
+                        statusDot.className = 'status-dot paused';
+                        statusText.textContent = 'Paused';
+                    } else {
+                        statusDot.className = 'status-dot';
+                        statusText.textContent = 'Ready';
+                    }
+                }
+            }
+
+            updateProgressBar() {
+                const progressFill = document.getElementById('progressFill');
+                const progressHandle = document.getElementById('progressHandle');
+                const currentTimeEl = document.getElementById('currentTime');
+                const totalTimeEl = document.getElementById('totalTime');
+                
+                if (this.audioPlayer && this.audioPlayer.duration) {
+                    const progress = (this.audioPlayer.currentTime / this.audioPlayer.duration) * 100;
+                    
+                    if (progressFill) {
+                        progressFill.style.width = `${progress}%`;
+                    }
+                    
+                    if (progressHandle) {
+                        progressHandle.style.left = `${progress}%`;
+                    }
+                    
+                    if (currentTimeEl) {
+                        currentTimeEl.textContent = this.formatTime(this.audioPlayer.currentTime);
+                    }
+                    
+                    if (totalTimeEl) {
+                        totalTimeEl.textContent = this.formatTime(this.audioPlayer.duration);
+                    }
+                }
+            }
+
+            formatTime(seconds) {
+                if (isNaN(seconds)) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
             }
 
             async pushPlaylistsToDatabase() {
