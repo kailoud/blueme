@@ -4791,16 +4791,21 @@
                     // Save directly to database (database-first mode)
                     if (isSupabaseConfigured && supabase) {
                         try {
+                            console.log('💾 About to save playlist item to database...');
+                            console.log('💾 Playlist item to save:', playlistItem);
+                            
                             await this.savePlaylistItemToDatabase(playlistItem);
-                            console.log('✅ Playlist item saved to database');
+                            console.log('✅ Playlist item saved to database successfully!');
                             
                             // Reload playlists from database to ensure UI is in sync
+                            console.log('🔄 Reloading playlists from database...');
                             const dbPlaylists = await this.loadPlaylistsFromDatabase();
                             this.playlists = dbPlaylists;
                             console.log('🔄 Reloaded playlists from database:', this.playlists);
                             this.updatePlaylistUI();
                         } catch (dbError) {
                             console.error('❌ Database save failed:', dbError);
+                            console.error('❌ Database error details:', JSON.stringify(dbError, null, 2));
                             this.updateStatus('error', `Failed to save to database: ${dbError.message}`);
                             // Don't fallback to localStorage - database is required
                             return;
@@ -5601,6 +5606,8 @@
                 
                 console.log('💾 Inserting playlist item:', insertData);
                 
+                console.log('💾 Attempting to insert playlist item with data:', insertData);
+                
                 const { data, error } = await supabase
                     .from('playlist_items')
                     .insert([insertData])
@@ -5609,11 +5616,13 @@
                 if (error) {
                     console.error('❌ Error saving playlist item to database:', error);
                     console.error('❌ Error details:', JSON.stringify(error, null, 2));
+                    console.error('❌ Insert data that failed:', JSON.stringify(insertData, null, 2));
                     throw error;
                 }
                 
-                console.log('✅ Playlist item saved to database:', data[0]);
+                console.log('✅ Playlist item saved to database successfully!');
                 console.log('✅ Insert result:', data);
+                console.log('✅ Saved data:', data[0]);
                 return data[0];
             }
 
