@@ -5183,7 +5183,6 @@
                         <div class="playlist-controls">
                             <button id="createPlaylistBtn" class="btn btn-primary">➕ Create Playlist</button>
                             <button id="refreshPlaylistsBtn" class="btn btn-secondary">🔄 Refresh</button>
-                            <button id="loadFromDatabaseBtn" class="btn btn-secondary">📥 Load from Database</button>
                         </div>
                         <div id="playlistsList" class="playlists-list"></div>
                         <div id="playlistPlayer" class="playlist-player" style="display: none;">
@@ -5304,16 +5303,6 @@
                                         <h4>${playlist.name}</h4>
                                         <p>${playlist.description || 'No description'}</p>
                                         <small>${currentSongs} tracks</small>
-                                        ${currentSongs > 0 ? `
-                                            <div class="playlist-tracks" style="margin-top: 8px; max-height: 120px; overflow-y: auto;">
-                                                ${playlist.playlist_items.map(item => `
-                                                    <div class="track-item" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 2px 0;">
-                                                        <span class="track-title" style="font-size: 0.9rem; color: var(--text-primary);">${item.audio_file?.title || item.audio_file?.originalName || 'Unknown Track'}</span>
-                                                        <button onclick="app.removeFromPlaylist('${playlist.id}', '${item.id}')" class="btn-remove" style="background: none; border: none; color: #ff6b6b; cursor: pointer; font-size: 1.2rem; padding: 0 4px;" title="Remove from playlist">×</button>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        ` : ''}
                                     </div>
                                     <div class="playlist-actions">
                                         <button onclick="app.showAddTrackModal('${playlist.id}')" 
@@ -5383,30 +5372,6 @@
                 }
             }
 
-            async removeFromPlaylist(playlistId, itemId) {
-                try {
-                    console.log('🗑️ Removing track from playlist:', playlistId, itemId);
-                    
-                    const playlist = this.playlists.find(p => p.id === playlistId);
-                    if (!playlist) {
-                        this.updateStatus('error', 'Playlist not found');
-                        return;
-                    }
-                    
-                    // Remove the item from the playlist
-                    playlist.playlist_items = playlist.playlist_items.filter(item => item.id !== itemId);
-                    playlist.updated_at = new Date().toISOString();
-                    
-                    // Update the UI
-                    this.updatePlaylistUI();
-                    
-                    this.updateStatus('success', 'Track removed from playlist');
-                    console.log('✅ Track removed from playlist');
-                } catch (error) {
-                    console.error('❌ Error removing track from playlist:', error);
-                    this.updateStatus('error', 'Failed to remove track from playlist');
-                }
-            }
 
             async playPlaylist(playlistId) {
                 const playlist = this.playlists.find(p => p.id === playlistId);
@@ -6024,7 +5989,8 @@
                 }
                 
                 try {
-                    // Load all playlists (including guest and user playlists)
+                    // Load playlists for guest user (user_id = null)
+                    // Use is() instead of eq() for null values to avoid UUID parsing issues
                     const { data, error } = await supabase
                         .from('playlists')
                         .select(`
@@ -6034,7 +6000,7 @@
                                 audio_files (*)
                             )
                         `)
-                        .order('created_at', { ascending: false });
+                        .is('user_id', null) // Guest mode - use is() for null values
                     
                     if (error) {
                         console.error('❌ Error loading playlists from database:', error);
@@ -6837,15 +6803,14 @@
                     player.style.display = 'block';
                     playlistName.textContent = playlist.name;
                     
-                    // Display all tracks in the playlist
-                    tracksContainer.innerHTML = playlist.playlist_items.map((item, index) => `
-                        <div class="track-item ${index === this.currentTrackIndex ? 'current-track' : ''}" data-index="${index}">
-                            <span class="track-number">${index + 1}</span>
-                            <span class="track-title">${item.audio_file?.title || item.audio_file?.originalName || item.audio_file?.filename || 'Unknown Track'}</span>
-                            <span class="track-artist">${item.audio_file?.artist || 'Unknown Artist'}</span>
-                            <button onclick="app.playTrackFromPlaylist(${index})" class="btn btn-tiny">▶️</button>
+                    // Simple track count display instead of detailed list
+                    const trackCount = playlist.playlist_items?.length || 0;
+                    tracksContainer.innerHTML = `
+                        <div class="playlist-summary">
+                            <p>${trackCount} tracks in this playlist</p>
+                            <p>Click "▶️ Play in Main Player" to start playing</p>
                         </div>
-                    `).join('');
+                    `;
                 }
             }
 
@@ -6934,15 +6899,6 @@
                     refreshBtn.addEventListener('click', () => {
                         this.loadLocalPlaylists();
                         this.updateStatus('success', 'Playlists refreshed');
-                    });
-                }
-
-                // Load from database event listener
-                const loadFromDbBtn = document.getElementById('loadFromDatabaseBtn');
-                if (loadFromDbBtn && !loadFromDbBtn.hasAttribute('data-listener-added')) {
-                    loadFromDbBtn.setAttribute('data-listener-added', 'true');
-                    loadFromDbBtn.addEventListener('click', () => {
-                        this.loadPlaylistsFromDatabaseButton();
                     });
                 }
             }
@@ -7377,8 +7333,8 @@
                                     <small>${this.formatFileSize(audio.file_size)} • ${audio.mime_type}</small>
                                 </div>
                                 <div class="audio-actions">
-                                    <button onclick="app.loadAudioFromLibrary('${audio.id}')" class="btn btn-small btn-primary">🎵 Load</button>
-                                    <button onclick="app.showAddToPlaylistModal('${audio.id}')" class="btn btn-small">📋 Playlist</button>
+                                    <button onclick="app.loadAudioFromLibrary('${audio.id}')" class="btn btn-small btn-primary">🎵 Load & Play</button>
+                                    <button onclick="app.showAddToPlaylistModal('${audio.id}')" class="btn btn-small">➕ Add to Playlist</button>
                                     <button onclick="app.deleteAudioFromLibrary('${audio.id}')" class="btn btn-small btn-danger" title="Delete Audio File">🗑️ Delete</button>
                                 </div>
                             </div>
