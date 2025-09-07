@@ -7,12 +7,20 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
+const https = require('https');
 const socketIo = require('socket.io');
 const ytdl = require('@distube/ytdl-core');
 const crypto = require('crypto');
 
 const app = express();
-const server = http.createServer(app);
+
+// Create HTTPS server with SSL certificates
+const httpsOptions = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem')
+};
+
+const server = https.createServer(httpsOptions, app);
 const io = socketIo(server, {
     cors: {
         origin: "*",
@@ -832,11 +840,12 @@ const PORT = process.env.PORT || 3000;
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🎵 BlueMe Server running on port ${PORT}`);
-    console.log(`🌐 Open http://localhost:${PORT} to start syncing music!`);
-    console.log(`📱 Mobile access: http://192.168.1.110:${PORT}`);
+    console.log(`🌐 Open https://localhost:${PORT} to start syncing music!`);
+    console.log(`📱 Mobile access: https://192.168.1.110:${PORT}`);
     console.log(`📡 WebSocket server ready for real-time sync`);
     console.log(`🔵 Bluetooth manager initialized`);
     console.log(`📱 API endpoints available at /api/*`);
+    console.log(`🔒 HTTPS enabled with self-signed certificate`);
 });
 
 module.exports = app;
