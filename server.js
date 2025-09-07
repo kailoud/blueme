@@ -830,9 +830,10 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 
 // Start server
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🎵 BlueMe Server running on port ${PORT}`);
     console.log(`🌐 Open http://localhost:${PORT} to start syncing music!`);
+    console.log(`📱 Mobile access: http://192.168.1.110:${PORT}`);
     console.log(`📡 WebSocket server ready for real-time sync`);
     console.log(`🔵 Bluetooth manager initialized`);
     console.log(`📱 API endpoints available at /api/*`);
