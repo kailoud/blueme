@@ -2779,14 +2779,6 @@
                     </svg>
                     <span>Test</span>
                 </button>
-                <button class="quick-btn" onclick="app.loadFirstPlaylist()" title="Load First Playlist" style="background: linear-gradient(45deg, #6f42c1, #e83e8c);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                    <span>Load</span>
-                </button>
                 <button class="quick-btn" onclick="app.loadSampleAudio()" title="Play Sample Audio" style="background: linear-gradient(45deg, #fd7e14, #ffc107);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="5,3 19,12 5,21"></polygon>
@@ -6531,10 +6523,11 @@
                 
                 try {
                     // Load audio files for guest user (user_id = null)
+                    // Use is() instead of eq() for null values to avoid UUID parsing issues
                     const { data, error } = await supabase
                         .from('audio_files')
                         .select('*')
-                        .eq('user_id', null) // Guest mode
+                        .is('user_id', null) // Guest mode - use is() for null values
                         .order('uploaded_at', { ascending: false });
                     
                     if (error) {
