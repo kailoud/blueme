@@ -14,14 +14,16 @@ const crypto = require('crypto');
 
 const app = express();
 
-// Create HTTPS server with SSL certificates
+// Create both HTTP and HTTPS servers
+const httpServer = http.createServer(app);
 const httpsOptions = {
     key: fs.readFileSync('key.pem'),
     cert: fs.readFileSync('cert.pem')
 };
+const httpsServer = https.createServer(httpsOptions, app);
 
-const server = https.createServer(httpsOptions, app);
-const io = socketIo(server, {
+// Socket.IO on HTTPS server
+const io = socketIo(httpsServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
@@ -837,11 +839,20 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-// Start server
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🎵 BlueMe Server running on port ${PORT}`);
-    console.log(`🌐 Open https://localhost:${PORT} to start syncing music!`);
-    console.log(`📱 Mobile access: https://192.168.1.110:${PORT}`);
+// Start both HTTP and HTTPS servers
+const HTTP_PORT = 3000;
+const HTTPS_PORT = 3443;
+
+httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
+    console.log(`🎵 BlueMe HTTP Server running on port ${HTTP_PORT}`);
+    console.log(`🌐 Open http://localhost:${HTTP_PORT} to start syncing music!`);
+    console.log(`📱 Mobile HTTP access: http://192.168.1.110:${HTTP_PORT}`);
+});
+
+httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
+    console.log(`🔒 BlueMe HTTPS Server running on port ${HTTPS_PORT}`);
+    console.log(`🌐 Open https://localhost:${HTTPS_PORT} to start syncing music!`);
+    console.log(`📱 Mobile HTTPS access: https://192.168.1.110:${HTTPS_PORT}`);
     console.log(`📡 WebSocket server ready for real-time sync`);
     console.log(`🔵 Bluetooth manager initialized`);
     console.log(`📱 API endpoints available at /api/*`);
