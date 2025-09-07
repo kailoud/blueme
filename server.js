@@ -375,7 +375,7 @@ app.post('/api/playlists', async (req, res) => {
             user_id: 'guest',
             is_public: isPublic,
             is_premium: false,
-            max_songs: 5, // Guest users get 5 songs per playlist
+            max_songs: 8, // Set to 8 tracks per playlist
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             playlist_items: []

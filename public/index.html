@@ -5049,7 +5049,7 @@
                         user_username: 'Guest User',
                         is_public: false,
                         is_premium: false, // Guest users are not premium
-                        max_songs: 5, // Guest users get 5 songs per playlist
+                        max_songs: 8, // Set to 8 tracks per playlist
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         playlist_items: []
@@ -5126,7 +5126,7 @@
 
                     // Check playlist limits (guest mode)
                     const currentSongs = playlist.playlist_items.length;
-                    const maxSongs = playlist.max_songs || 5; // Guest users get 5 songs per playlist
+                    const maxSongs = playlist.max_songs || 8; // Set to 8 tracks per playlist
                     
                     if (currentSongs >= maxSongs) {
                         this.updateStatus('error', `Playlist limit reached (${maxSongs} songs). Create a new playlist for more songs.`);
