@@ -2902,6 +2902,11 @@
                             <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
                         </svg>
                     </button>
+                    <button class="control-btn secondary" id="repeatBtn" title="Repeat Track">
+                        <svg class="repeat-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                        </svg>
+                    </button>
                 </div>
                 
                 <!-- Progress Section (Hidden) -->
@@ -3142,6 +3147,7 @@
                 this.connectedDevices = new Map();
                 this.isScanning = false;
                 this.isPlaying = false;
+                this.isRepeating = false;
                 this.audioContext = null;
                 this.convertedAudioBlob = null;
                 this.syncRoomId = null;
@@ -3181,6 +3187,7 @@
                 this.playBtn = document.getElementById('playBtn');
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
+                this.repeatBtn = document.getElementById('repeatBtn');
                 this.volumeSlider = document.getElementById('volumeSlider');
                 this.trackTitle = document.getElementById('trackTitle');
                 this.trackArtist = document.getElementById('trackArtist');
@@ -3225,6 +3232,7 @@
                 this.playBtn.addEventListener('click', () => this.togglePlayback());
                 this.prevBtn.addEventListener('click', () => this.previousTrack());
                 this.nextBtn.addEventListener('click', () => this.nextTrack());
+                this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
                 this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
                 this.audioFile.addEventListener('change', (e) => this.loadAudioFile(e));
                 
@@ -3950,6 +3958,27 @@
                 }
             }
 
+            toggleRepeat() {
+                this.isRepeating = !this.isRepeating;
+                const repeatIcon = this.repeatBtn.querySelector('.repeat-icon');
+                
+                if (this.isRepeating) {
+                    // Enable repeat mode
+                    this.repeatBtn.style.background = 'var(--accent-gradient)';
+                    this.repeatBtn.style.color = 'white';
+                    this.repeatBtn.style.transform = 'scale(1.1)';
+                    this.updateStatus('info', '🔄 Repeat mode enabled - track will loop until stopped');
+                } else {
+                    // Disable repeat mode
+                    this.repeatBtn.style.background = '';
+                    this.repeatBtn.style.color = '';
+                    this.repeatBtn.style.transform = '';
+                    this.updateStatus('info', '🔄 Repeat mode disabled');
+                }
+                
+                console.log('🔄 Repeat mode:', this.isRepeating ? 'ON' : 'OFF');
+            }
+
             setVolume(volume) {
                 this.audioPlayer.volume = volume / 100;
                 
@@ -3975,6 +4004,18 @@
                 this.isPlaying = false;
                 this.playBtn.innerHTML = '▶';
                 this.albumArt.style.animation = 'none';
+                
+                // Check if repeat mode is enabled
+                if (this.isRepeating) {
+                    // Repeat mode - restart current track
+                    this.audioPlayer.currentTime = 0;
+                    this.audioPlayer.play();
+                    this.isPlaying = true;
+                    this.playBtn.innerHTML = '⏸';
+                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                    this.updateStatus('info', '🔄 Repeating track...');
+                    return;
+                }
                 
                 // If we have an active playlist, play the next track
                 if (this.currentPlaylist && this.currentPlaylist.playlist_items && this.currentPlaylist.playlist_items.length > 0) {
@@ -6819,9 +6860,10 @@
                 if (stopBtn && !stopBtn.hasAttribute('data-listener-added')) {
                     stopBtn.setAttribute('data-listener-added', 'true');
                     stopBtn.addEventListener('click', () => {
-                        this.isPlaying = false;
-                        this.currentPlaylist = null;
-                        this.currentTrackIndex = 0;
+                this.isPlaying = false;
+                this.isRepeating = false;
+                this.currentPlaylist = null;
+                this.currentTrackIndex = 0;
                         
                         const player = document.getElementById('playlistPlayer');
                         if (player) {
