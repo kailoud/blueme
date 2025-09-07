@@ -6811,19 +6811,26 @@
                 this.currentTrackIndex = 0;
                 
                 try {
-                    if (audio.audio_data && audio.audio_data instanceof Blob) {
-                        // Load from blob data into main player
-                        const url = URL.createObjectURL(audio.audio_data);
+                    console.log('🔍 Audio data structure:', {
+                        hasAudioData: !!audio.audioData,
+                        hasAudioDataBlob: audio.audioData instanceof Blob,
+                        hasAudioDataBase64: !!audio.audio_data,
+                        mimeType: audio.mime_type,
+                        title: audio.title,
+                        originalName: audio.original_name
+                    });
+                    
+                    if (audio.audioData && audio.audioData instanceof Blob) {
+                        // Handle blob data directly
+                        const url = URL.createObjectURL(audio.audioData);
                         this.audioPlayer.src = url;
-                        this.audioPlayer.load(); // Force reload
+                        this.audioPlayer.load();
                         
                         // Update track info in main player
                         const filename = (audio.title || audio.original_name || 'Unknown Track').split('.')[0];
                         this.trackTitle.textContent = filename;
                         this.trackArtist.textContent = 'Audio Library';
                         this.albumArt.textContent = '🎵';
-                        
-                        this.updateStatus('success', '🎵 Track loaded from library! Click play to start listening');
                         
                         // Auto-play the loaded audio
                         setTimeout(() => {
@@ -6842,8 +6849,46 @@
                             }
                         }, 500);
                         
+                    } else if (audio.audio_data) {
+                        // Handle base64 audio data
+                        try {
+                            const audioBlob = await this.base64ToBlob(audio.audio_data, audio.mime_type || 'audio/mp3');
+                            const url = URL.createObjectURL(audioBlob);
+                            this.audioPlayer.src = url;
+                            this.audioPlayer.load();
+                            
+                            // Update track info in main player
+                            const filename = (audio.title || audio.original_name || 'Unknown Track').split('.')[0];
+                            this.trackTitle.textContent = filename;
+                            this.trackArtist.textContent = 'Audio Library';
+                            this.albumArt.textContent = '🎵';
+                            
+                            // Auto-play the loaded audio
+                            setTimeout(() => {
+                                if (this.audioPlayer.readyState >= 2) {
+                                    this.audioPlayer.play().then(() => {
+                                        this.isPlaying = true;
+                                        this.playBtn.innerHTML = '⏸';
+                                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                        this.updateStatus('success', `🎵 Now playing: ${filename}`);
+                                    }).catch(error => {
+                                        console.error('Auto-play failed:', error);
+                                        this.updateStatus('info', 'Track loaded! Click play to start listening');
+                                    });
+                                } else {
+                                    this.updateStatus('info', 'Track loaded! Click play to start listening');
+                                }
+                            }, 500);
+                            
+                        } catch (base64Error) {
+                            console.error('❌ Base64 decoding failed for track:', audio.title || audio.original_name);
+                            console.error('❌ Base64 error:', base64Error);
+                            this.updateStatus('error', 'Failed to load audio data');
+                        }
+                        
                     } else {
-                        this.updateStatus('error', 'Audio data not available');
+                        console.log('❌ No audio data found for track:', audio.title || audio.original_name);
+                        this.updateStatus('error', 'Audio data not available for this track');
                     }
                 } catch (error) {
                     console.error('Error loading audio from library:', error);
