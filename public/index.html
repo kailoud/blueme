@@ -4290,9 +4290,9 @@
                             this.convertedAudioBlob = await this.fetchAudioBlob(result.file.url);
                         }
                         
-                        // Save to local storage (guest mode)
-                        console.log('Saving converted audio to local storage (guest mode)');
-                        await this.saveConvertedAudioToLocalStorage(result.file);
+                        // Save directly to database (database-first mode)
+                        console.log('Saving converted audio directly to database');
+                        await this.saveConvertedAudioToDatabase(result.file);
                         
                         this.showDownloadSection(result.file.filename, this.formatSelect.value, result.file.size);
                         
@@ -4336,8 +4336,8 @@
                 const filename = this.extractFilenameFromUrl(url) || 'converted_audio';
                 this.showDownloadSection(filename, format, convertedBlob.size);
                 
-                // Save to local storage (guest mode)
-                await this.saveConvertedAudioToLocalStorage({
+                // Save directly to database (database-first mode)
+                await this.saveConvertedAudioToDatabase({
                     filename: filename,
                     url: URL.createObjectURL(convertedBlob),
                     size: convertedBlob.size,
@@ -4698,12 +4698,14 @@
                     // Add to playlists array
                     this.playlists.push(newPlaylist);
                     
-                    // Save to local storage
-                    this.saveLocalPlaylists();
-                    
-                    // Save to database if Supabase is configured
+                    // Save directly to database (database-first mode)
                     if (isSupabaseConfigured && supabase) {
                         await this.savePlaylistToDatabase(newPlaylist);
+                        console.log('✅ Playlist saved to database');
+                    } else {
+                        // Fallback to localStorage if database not available
+                        this.saveLocalPlaylists();
+                        console.log('⚠️ Database not available, saved to localStorage');
                     }
                     
                     // Update UI
@@ -4760,12 +4762,14 @@
                     playlist.playlist_items.push(playlistItem);
                     playlist.updated_at = new Date().toISOString();
                     
-                    // Save to local storage
-                    this.saveLocalPlaylists();
-                    
-                    // Save to database if Supabase is configured
+                    // Save directly to database (database-first mode)
                     if (isSupabaseConfigured && supabase) {
                         await this.savePlaylistItemToDatabase(playlistItem);
+                        console.log('✅ Playlist item saved to database');
+                    } else {
+                        // Fallback to localStorage if database not available
+                        this.saveLocalPlaylists();
+                        console.log('⚠️ Database not available, saved to localStorage');
                     }
                     
                     // Update UI
@@ -6250,49 +6254,73 @@
                 }
             }
 
-            async saveConvertedAudioToLocalStorage(fileData) {
+            async saveConvertedAudioToDatabase(fileData) {
                 try {
-                    console.log('Saving converted audio to local storage:', fileData);
-                    
-                    // Get existing audio library from localStorage
-                    const existingLibrary = JSON.parse(localStorage.getItem('blueme_audio_library') || '[]');
+                    console.log('💾 Saving converted audio directly to database:', fileData);
                     
                     // Create new audio file entry
                     const newAudioFile = {
                         id: crypto.randomUUID(),
                         file_name: fileData.filename || 'converted_audio.mp3',
                         original_name: fileData.originalName || fileData.filename || 'Converted Audio',
-                        file_path: fileData.url || 'local',
+                        file_path: fileData.url || 'database',
                         file_size: fileData.size || 0,
                         mime_type: fileData.mimeType || 'audio/mpeg',
-                        public_url: fileData.url || 'local',
-                        user_id: 'guest', // Guest mode
+                        public_url: fileData.url || 'database',
+                        user_id: null, // Guest mode - null for database
                         duration: fileData.duration || 0,
                         title: fileData.originalName || fileData.filename || 'Converted Audio',
                         artist: 'Converted Audio',
-                        album: 'Local Library',
+                        album: 'Database Library',
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     };
                     
-                    // Add to library
-                    existingLibrary.push(newAudioFile);
-                    
-                    // Save back to localStorage
-                    localStorage.setItem('blueme_audio_library', JSON.stringify(existingLibrary));
-                    
-                    // Also save to database if Supabase is configured
+                    // Save directly to database
                     if (isSupabaseConfigured && supabase) {
                         await this.saveAudioToDatabase(newAudioFile, fileData);
+                        console.log('✅ Audio saved to database:', newAudioFile);
+                        this.updateStatus('success', 'Audio saved to database!');
+                    } else {
+                        // Fallback to localStorage if database not available
+                        console.log('⚠️ Database not available, saving to localStorage as fallback');
+                        const existingLibrary = JSON.parse(localStorage.getItem('blueme_audio_library') || '[]');
+                        existingLibrary.push(newAudioFile);
+                        localStorage.setItem('blueme_audio_library', JSON.stringify(existingLibrary));
+                        console.log('✅ Audio saved to localStorage as fallback');
+                        this.updateStatus('success', 'Audio saved to local storage (database unavailable)');
                     }
                     
-                    console.log('✅ Audio saved to local storage:', newAudioFile);
-                    this.updateStatus('success', 'Audio saved to your library!');
+                    // Always update local array for immediate UI updates
+                    this.audioLibrary.push(newAudioFile);
+                    this.updateAudioLibraryUI();
                     
                     return newAudioFile;
                 } catch (error) {
-                    console.error('Error saving audio to local storage:', error);
-                    this.updateStatus('error', `Failed to save audio to library: ${error.message}`);
+                    console.error('❌ Error saving audio to database:', error);
+                    this.updateStatus('error', `Failed to save audio: ${error.message}`);
+                    
+                    // Fallback to localStorage on error
+                    try {
+                        console.log('🔄 Attempting localStorage fallback...');
+                        const existingLibrary = JSON.parse(localStorage.getItem('blueme_audio_library') || '[]');
+                        const fallbackAudioFile = {
+                            ...newAudioFile,
+                            user_id: 'guest',
+                            file_path: 'local',
+                            public_url: 'local',
+                            album: 'Local Library'
+                        };
+                        existingLibrary.push(fallbackAudioFile);
+                        localStorage.setItem('blueme_audio_library', JSON.stringify(existingLibrary));
+                        this.audioLibrary.push(fallbackAudioFile);
+                        this.updateAudioLibraryUI();
+                        this.updateStatus('warning', 'Audio saved to local storage (database error)');
+                        console.log('✅ Fallback to localStorage successful');
+                    } catch (fallbackError) {
+                        console.error('❌ Fallback save also failed:', fallbackError);
+                        this.updateStatus('error', 'Failed to save audio completely');
+                    }
                 }
             }
 
@@ -6435,20 +6463,27 @@
             }
 
             async loadUserAudioLibrary() {
-                console.log('Loading audio library from local storage...');
+                console.log('🔄 Loading audio library from database...');
 
                 try {
-                    // Load from local storage
-                    const storedLibrary = localStorage.getItem('blueme_audio_library');
-                    this.audioLibrary = storedLibrary ? JSON.parse(storedLibrary) : [];
-                    
-                    // Also load from database if Supabase is configured
+                    // Load from database first (database-first mode)
                     if (isSupabaseConfigured && supabase) {
-                        const dbAudioFiles = await this.loadAudioFilesFromDatabase();
-                        // Merge database files with local storage (avoid duplicates)
-                        const existingIds = new Set(this.audioLibrary.map(file => file.id));
-                        const newDbFiles = dbAudioFiles.filter(file => !existingIds.has(file.id));
-                        this.audioLibrary = [...this.audioLibrary, ...newDbFiles];
+                        try {
+                            const dbAudioFiles = await this.loadAudioFilesFromDatabase();
+                            this.audioLibrary = dbAudioFiles || [];
+                            console.log('✅ Loaded audio library from database:', this.audioLibrary.length, 'files');
+                        } catch (dbError) {
+                            console.error('❌ Database load failed, falling back to localStorage:', dbError);
+                            // Fallback to localStorage
+                            const storedLibrary = localStorage.getItem('blueme_audio_library');
+                            this.audioLibrary = storedLibrary ? JSON.parse(storedLibrary) : [];
+                            console.log('⚠️ Loaded from localStorage fallback:', this.audioLibrary.length, 'files');
+                        }
+                    } else {
+                        console.log('⚠️ Database not configured, loading from localStorage');
+                        const storedLibrary = localStorage.getItem('blueme_audio_library');
+                        this.audioLibrary = storedLibrary ? JSON.parse(storedLibrary) : [];
+                        console.log('📁 Loaded from localStorage:', this.audioLibrary.length, 'files');
                     }
                     
                     // Add current converted audio if available
