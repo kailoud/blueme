@@ -2639,6 +2639,14 @@
                     </svg>
                     <span>Test Add</span>
                 </button>
+                <button class="quick-btn" onclick="app.debugAddToPlaylistFlow()" title="Debug Add to Playlist Flow" style="background: linear-gradient(45deg, #ff5722, #ff9800);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"></path>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <span>Debug Flow</span>
+                </button>
                 <button class="quick-btn" onclick="app.pushToDatabase()" title="Push Audio Files to Database" style="background: linear-gradient(45deg, #2196F3, #21CBF3);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -5909,6 +5917,26 @@
                     console.error('❌ Test error:', error);
                     this.updateStatus('error', `Test failed: ${error.message}`);
                 }
+            }
+
+            // Debug function to check the complete flow
+            debugAddToPlaylistFlow() {
+                console.log('🔍 === ADD TO PLAYLIST FLOW DEBUG ===');
+                console.log('1. Audio Library:', this.audioLibrary.length, 'files');
+                console.log('2. Available Playlists:', this.playlists.length, 'playlists');
+                console.log('3. Supabase Configured:', isSupabaseConfigured);
+                console.log('4. Supabase Client:', !!supabase);
+                
+                if (this.audioLibrary.length > 0) {
+                    console.log('5. First Audio File:', this.audioLibrary[0]);
+                }
+                
+                if (this.playlists.length > 0) {
+                    console.log('6. First Playlist:', this.playlists[0]);
+                    console.log('7. Playlist Items:', this.playlists[0].playlist_items?.length || 0);
+                }
+                
+                console.log('🔍 === END DEBUG ===');
             }
 
             async pushPlaylistsToDatabase() {
