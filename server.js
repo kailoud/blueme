@@ -14,19 +14,35 @@ const crypto = require('crypto');
 
 const app = express();
 
-// Create HTTPS server with SSL certificates
-const httpsOptions = {
-    key: fs.readFileSync('key.pem'),
-    cert: fs.readFileSync('cert.pem')
-};
+// Create server - use HTTPS for local development, HTTP for production
+let server;
+let io;
 
-const server = https.createServer(httpsOptions, app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+    // Production: Use HTTP (Railway/cloud platforms handle SSL termination)
+    server = http.createServer(app);
+    io = socketIo(server, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
+    });
+    console.log('🌐 Production mode: Using HTTP server');
+} else {
+    // Development: Use HTTPS with self-signed certificates
+    const httpsOptions = {
+        key: fs.readFileSync('key.pem'),
+        cert: fs.readFileSync('cert.pem')
+    };
+    server = https.createServer(httpsOptions, app);
+    io = socketIo(server, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
+    });
+    console.log('🔒 Development mode: Using HTTPS server');
+}
 
 // Enhanced Bluetooth device management
 class BluetoothManager {
@@ -835,18 +851,26 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-// Start HTTPS server on a different port to avoid conflicts
-const PORT = 3443;
+// Start server
+const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🔒 BlueMe HTTPS Server running on port ${PORT}`);
-    console.log(`🌐 Open https://localhost:${PORT} to start syncing music!`);
-    console.log(`📱 Mobile HTTPS access: https://192.168.1.110:${PORT}`);
-    console.log(`📡 WebSocket server ready for real-time sync`);
-    console.log(`🔵 Bluetooth manager initialized`);
-    console.log(`📱 API endpoints available at /api/*`);
-    console.log(`🔒 HTTPS enabled with self-signed certificate`);
-    console.log(`⚠️  You may need to accept the security certificate in your browser`);
+    if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+        console.log(`🌐 BlueMe Server running on port ${PORT}`);
+        console.log(`🚀 Production deployment ready!`);
+        console.log(`📡 WebSocket server ready for real-time sync`);
+        console.log(`🔵 Bluetooth manager initialized`);
+        console.log(`📱 API endpoints available at /api/*`);
+    } else {
+        console.log(`🔒 BlueMe HTTPS Server running on port ${PORT}`);
+        console.log(`🌐 Open https://localhost:${PORT} to start syncing music!`);
+        console.log(`📱 Mobile HTTPS access: https://192.168.1.110:${PORT}`);
+        console.log(`📡 WebSocket server ready for real-time sync`);
+        console.log(`🔵 Bluetooth manager initialized`);
+        console.log(`📱 API endpoints available at /api/*`);
+        console.log(`🔒 HTTPS enabled with self-signed certificate`);
+        console.log(`⚠️  You may need to accept the security certificate in your browser`);
+    }
 });
 
 module.exports = app;
