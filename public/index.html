@@ -5953,6 +5953,53 @@
                 console.log('🔍 === END DEBUG ===');
             }
 
+            // Show playlists section for quick access
+            showPlaylists() {
+                console.log('🎵 Showing playlists...');
+                
+                // First, scroll to the playlists section
+                const playlistsSection = document.getElementById('playlistsSection');
+                if (playlistsSection) {
+                    playlistsSection.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }
+                
+                // Update playlist UI to show latest playlists
+                this.updatePlaylistUI();
+                
+                // Show status message
+                this.updateStatus('info', `📋 Found ${this.playlists.length} playlists. Use "▶️ Play in Main Player" to load a playlist.`);
+                
+                console.log('✅ Playlists section shown:', this.playlists.length, 'playlists');
+            }
+
+            // Show audio library section
+            showAudioLibrary() {
+                console.log('🎧 Showing audio library...');
+                
+                // Scroll to the audio library section
+                const librarySection = document.querySelector('#myAudioLibrarySection') || 
+                                     document.querySelector('.audio-library') ||
+                                     document.querySelector('[id*="library" i]');
+                
+                if (librarySection) {
+                    librarySection.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }
+                
+                // Update library UI
+                this.updateAudioLibraryUI();
+                
+                // Show status message
+                this.updateStatus('info', `🎧 Found ${this.audioLibrary.length} audio files. Use "Load & Play" to play individual tracks.`);
+                
+                console.log('✅ Audio library section shown:', this.audioLibrary.length, 'files');
+            }
+
             async pushPlaylistsToDatabase() {
                 try {
                     console.log('🚀 Pushing playlists to database...');
