@@ -3745,6 +3745,7 @@
                 this.updatePlayButton();
                 this.updatePlayIndicator();
                 this.updateStatusIndicator();
+                this.showMarqueeDuringPlayback();
             }
 
             onAudioPause() {
@@ -3753,6 +3754,7 @@
                 this.updatePlayButton();
                 this.updatePlayIndicator();
                 this.updateStatusIndicator();
+                this.hideMarqueeDuringPlayback();
             }
 
             togglePlayback() {
@@ -5329,6 +5331,7 @@
                         this.updatePlayButton();
                         this.updatePlayIndicator();
                         this.updateStatusIndicator();
+                        this.showMarqueeDuringPlayback();
                         
                         this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || audioFile.file_name}`);
                         
@@ -5349,8 +5352,10 @@
                             // Auto-play the track
                             await this.audioPlayer.play();
                             this.isPlaying = true;
-                            this.playBtn.innerHTML = '⏸';
-                            this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                            this.updatePlayButton();
+                            this.updatePlayIndicator();
+                            this.updateStatusIndicator();
+                            this.showMarqueeDuringPlayback();
                             
                             this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || audioFile.file_name}`);
                         } catch (base64Error) {
@@ -6326,6 +6331,33 @@
                 console.log('✅ Profile section shown');
             }
 
+            // Marquee functions for playback
+            showMarqueeDuringPlayback() {
+                if (!this.marqueeContainer || !this.marqueeText) return;
+                
+                // Get current track info
+                const trackTitle = this.trackTitle ? this.trackTitle.textContent : 'Unknown Track';
+                const trackArtist = this.trackArtist ? this.trackArtist.textContent : 'Unknown Artist';
+                
+                // Create marquee content
+                const marqueeContent = `🎵 Now Playing: ${trackTitle} - ${trackArtist}`;
+                
+                console.log('🎬 Showing marquee during playback:', marqueeContent);
+                
+                this.marqueeText.textContent = marqueeContent;
+                this.marqueeText.setAttribute('data-text', marqueeContent);
+                this.marqueeContainer.style.display = 'block';
+                this.marqueePlaceholder.style.display = 'none';
+            }
+
+            hideMarqueeDuringPlayback() {
+                if (!this.marqueeContainer) return;
+                
+                console.log('🎬 Hiding marquee during pause');
+                this.marqueeContainer.style.display = 'none';
+                this.marqueePlaceholder.style.display = 'block';
+            }
+
             async pushPlaylistsToDatabase() {
                 try {
                     console.log('🚀 Pushing playlists to database...');
@@ -7220,8 +7252,10 @@
                             if (this.audioPlayer.readyState >= 2) {
                                 this.audioPlayer.play().then(() => {
                                     this.isPlaying = true;
-                                    this.playBtn.innerHTML = '⏸';
-                                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                    this.updatePlayButton();
+                                    this.updatePlayIndicator();
+                                    this.updateStatusIndicator();
+                                    this.showMarqueeDuringPlayback();
                                     this.updateStatus('success', `🎵 Now playing: ${filename}`);
                                 }).catch(error => {
                                     console.error('Auto-play failed:', error);
@@ -7251,8 +7285,10 @@
                                 if (this.audioPlayer.readyState >= 2) {
                                     this.audioPlayer.play().then(() => {
                                         this.isPlaying = true;
-                                        this.playBtn.innerHTML = '⏸';
-                                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                        this.updatePlayButton();
+                                        this.updatePlayIndicator();
+                                        this.updateStatusIndicator();
+                                        this.showMarqueeDuringPlayback();
                                         this.updateStatus('success', `🎵 Now playing: ${filename}`);
                                     }).catch(error => {
                                         console.error('Auto-play failed:', error);
