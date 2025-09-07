@@ -2755,6 +2755,22 @@
                     </svg>
                     <span>Push Playlists</span>
                 </button>
+                <button class="quick-btn" onclick="app.loadTracksFromDatabase()" title="Load Tracks from Database" style="background: linear-gradient(45deg, #4caf50, #8bc34a);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7,10 12,15 17,10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Load DB Tracks</span>
+                </button>
+                <button class="quick-btn" onclick="app.loadPlaylistsFromDatabaseButton()" title="Load Playlists from Database" style="background: linear-gradient(45deg, #ff9800, #ffc107);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    <span>Load DB Playlists</span>
+                </button>
                 <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
@@ -6532,6 +6548,72 @@
                 } catch (error) {
                     console.error('❌ Error loading audio files from database:', error);
                     return [];
+                }
+            }
+
+            async loadTracksFromDatabase() {
+                try {
+                    console.log('🔄 Loading tracks from database...');
+                    
+                    if (!isSupabaseConfigured || !supabase) {
+                        this.updateStatus('error', '❌ Supabase not configured. Cannot load tracks from database.');
+                        return;
+                    }
+                    
+                    // Load audio files from database
+                    const dbAudioFiles = await this.loadAudioFilesFromDatabase();
+                    
+                    if (dbAudioFiles.length === 0) {
+                        this.updateStatus('info', '📭 No tracks found in database.');
+                        return;
+                    }
+                    
+                    // Replace current audio library with database tracks
+                    this.audioLibrary = dbAudioFiles;
+                    
+                    // Update UI
+                    this.updateAudioLibraryUI();
+                    
+                    // Update status
+                    this.updateStatus('success', `✅ Loaded ${dbAudioFiles.length} tracks from database`);
+                    console.log(`✅ Loaded ${dbAudioFiles.length} tracks from database:`, dbAudioFiles.map(f => f.title || f.original_name));
+                    
+                } catch (error) {
+                    console.error('❌ Error loading tracks from database:', error);
+                    this.updateStatus('error', `Failed to load tracks: ${error.message}`);
+                }
+            }
+
+            async loadPlaylistsFromDatabaseButton() {
+                try {
+                    console.log('🔄 Loading playlists from database...');
+                    
+                    if (!isSupabaseConfigured || !supabase) {
+                        this.updateStatus('error', '❌ Supabase not configured. Cannot load playlists from database.');
+                        return;
+                    }
+                    
+                    // Load playlists from database using existing function
+                    const dbPlaylists = await this.loadPlaylistsFromDatabase();
+                    
+                    if (dbPlaylists.length === 0) {
+                        this.updateStatus('info', '📭 No playlists found in database.');
+                        return;
+                    }
+                    
+                    // Replace current playlists with database playlists
+                    this.playlists = dbPlaylists;
+                    
+                    // Update UI
+                    this.updatePlaylistUI();
+                    
+                    // Update status
+                    this.updateStatus('success', `✅ Loaded ${dbPlaylists.length} playlists from database`);
+                    console.log(`✅ Loaded ${dbPlaylists.length} playlists from database:`, dbPlaylists.map(p => p.name));
+                    
+                } catch (error) {
+                    console.error('❌ Error loading playlists from database:', error);
+                    this.updateStatus('error', `Failed to load playlists: ${error.message}`);
                 }
             }
 
