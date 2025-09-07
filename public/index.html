@@ -4791,23 +4791,34 @@
                     // Save directly to database (database-first mode)
                     if (isSupabaseConfigured && supabase) {
                         try {
-                            console.log('💾 About to save playlist item to database...');
-                            console.log('💾 Playlist item to save:', playlistItem);
+                            // Direct database insert - simple approach
+                            const { data, error } = await supabase
+                                .from('playlist_items')
+                                .insert([{
+                                    id: playlistItem.id,
+                                    playlist_id: playlistItem.playlist_id,
+                                    position: playlistItem.position,
+                                    audio_file_id: playlistItem.audio_file.id,
+                                    added_at: playlistItem.added_at
+                                }])
+                                .select();
                             
-                            await this.savePlaylistItemToDatabase(playlistItem);
-                            console.log('✅ Playlist item saved to database successfully!');
+                            if (error) {
+                                console.error('❌ Database insert failed:', error);
+                                this.updateStatus('error', `Failed to add track: ${error.message}`);
+                                return;
+                            }
                             
-                            // Reload playlists from database to ensure UI is in sync
-                            console.log('🔄 Reloading playlists from database...');
+                            console.log('✅ Track added to database:', data[0]);
+                            
+                            // Reload playlists from database
                             const dbPlaylists = await this.loadPlaylistsFromDatabase();
                             this.playlists = dbPlaylists;
-                            console.log('🔄 Reloaded playlists from database:', this.playlists);
                             this.updatePlaylistUI();
+                            
                         } catch (dbError) {
                             console.error('❌ Database save failed:', dbError);
-                            console.error('❌ Database error details:', JSON.stringify(dbError, null, 2));
                             this.updateStatus('error', `Failed to save to database: ${dbError.message}`);
-                            // Don't fallback to localStorage - database is required
                             return;
                         }
                     } else {
