@@ -334,9 +334,6 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// In-memory storage for playlists (in production, this would be a database)
-let playlists = [];
-
 // Playlist API endpoints
 app.get('/api/playlists', async (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -344,11 +341,27 @@ app.get('/api/playlists', async (req, res) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
     try {
-        console.log('📥 Fetching playlists:', playlists.length, 'playlists');
-        res.json({
-            success: true,
-            playlists: playlists
-        });
+        // Use Supabase if configured, otherwise fallback to empty array
+        if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+            const { playlistManager } = require('./config/supabase');
+            const result = await playlistManager.getPlaylists(null); // Get all playlists
+            
+            if (result.success) {
+                console.log('📥 Fetched playlists from Supabase:', result.playlists.length, 'playlists');
+                res.json({
+                    success: true,
+                    playlists: result.playlists
+                });
+            } else {
+                throw new Error(result.error);
+            }
+        } else {
+            console.log('⚠️ Supabase not configured, returning empty playlists');
+            res.json({
+                success: true,
+                playlists: []
+            });
+        }
     } catch (error) {
         console.error('Error fetching playlists:', error);
         res.status(500).json({ error: 'Failed to fetch playlists' });
@@ -361,34 +374,54 @@ app.post('/api/playlists', async (req, res) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
     try {
-        const { name, description, isPublic = false } = req.body;
+        const { name, description, isPublic = false, userId = 'guest' } = req.body;
         
         if (!name) {
             return res.status(400).json({ error: 'Playlist name is required' });
         }
         
-        // Create playlist object
-        const playlist = {
-            id: crypto.randomUUID(),
-            name,
-            description: description || '',
-            user_id: 'guest',
-            is_public: isPublic,
-            is_premium: false,
-            max_songs: 8, // Set to 8 tracks per playlist
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            playlist_items: []
-        };
-        
-        // Store playlist in memory
-        playlists.push(playlist);
-        console.log('✅ Playlist created and stored:', playlist.name, 'Total playlists:', playlists.length);
-        
-        res.json({
-            success: true,
-            playlist
-        });
+        // Use Supabase if configured, otherwise fallback to in-memory
+        if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+            const { playlistManager } = require('./config/supabase');
+            const result = await playlistManager.createPlaylist({
+                name,
+                description: description || '',
+                user_id: userId,
+                is_public: isPublic,
+                is_premium: false,
+                max_songs: 8
+            });
+            
+            if (result.success) {
+                console.log('✅ Playlist created in Supabase:', result.playlist.name);
+                res.json({
+                    success: true,
+                    playlist: result.playlist
+                });
+            } else {
+                throw new Error(result.error);
+            }
+        } else {
+            // Fallback to in-memory storage
+            const playlist = {
+                id: crypto.randomUUID(),
+                name,
+                description: description || '',
+                user_id: userId,
+                is_public: isPublic,
+                is_premium: false,
+                max_songs: 8,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                playlist_items: []
+            };
+            
+            console.log('⚠️ Supabase not configured, playlist created in memory only:', playlist.name);
+            res.json({
+                success: true,
+                playlist
+            });
+        }
     } catch (error) {
         console.error('Error creating playlist:', error);
         res.status(500).json({ error: 'Failed to create playlist' });
@@ -402,37 +435,31 @@ app.post('/api/playlists/:playlistId/items', async (req, res) => {
     
     try {
         const { playlistId } = req.params;
-        const { audioFileId, position } = req.body;
+        const { audioFileId, position, audioFile } = req.body;
         
         if (!audioFileId) {
             return res.status(400).json({ error: 'Audio file ID is required' });
         }
         
-        // Find the playlist
-        const playlist = playlists.find(p => p.id === playlistId);
-        if (!playlist) {
-            return res.status(404).json({ error: 'Playlist not found' });
+        // Use Supabase if configured, otherwise fallback to in-memory
+        if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+            const { playlistManager } = require('./config/supabase');
+            const result = await playlistManager.addTrackToPlaylist(playlistId, audioFileId, position);
+            
+            if (result.success) {
+                console.log('✅ Track added to playlist in Supabase:', audioFile?.title || 'Unknown Track');
+                res.json({
+                    success: true,
+                    playlistItem: result.playlistItem
+                });
+            } else {
+                throw new Error(result.error);
+            }
+        } else {
+            // Fallback to in-memory storage (this won't work without the playlists array)
+            console.log('⚠️ Supabase not configured, cannot add tracks to playlists');
+            res.status(500).json({ error: 'Database not configured - cannot add tracks to playlists' });
         }
-        
-        // Create playlist item object
-        const playlistItem = {
-            id: crypto.randomUUID(),
-            playlist_id: playlistId,
-            audio_file_id: audioFileId,
-            position: position || playlist.playlist_items.length + 1,
-            added_at: new Date().toISOString()
-        };
-        
-        // Add item to playlist
-        playlist.playlist_items.push(playlistItem);
-        playlist.updated_at = new Date().toISOString();
-        
-        console.log('✅ Track added to playlist:', playlist.name, 'Total tracks:', playlist.playlist_items.length);
-        
-        res.json({
-            success: true,
-            playlistItem
-        });
     } catch (error) {
         console.error('Error adding to playlist:', error);
         res.status(500).json({ error: 'Failed to add to playlist' });
@@ -447,11 +474,24 @@ app.delete('/api/playlists/:playlistId/items/:itemId', async (req, res) => {
     try {
         const { playlistId, itemId } = req.params;
         
-        // In guest mode, we just return success
-        res.json({
-            success: true,
-            message: 'Item removed from playlist'
-        });
+        // Use Supabase if configured, otherwise fallback
+        if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+            const { playlistManager } = require('./config/supabase');
+            const result = await playlistManager.removeTrackFromPlaylist(playlistId, itemId);
+            
+            if (result.success) {
+                console.log('✅ Track removed from playlist in Supabase');
+                res.json({
+                    success: true,
+                    message: result.message
+                });
+            } else {
+                throw new Error(result.error);
+            }
+        } else {
+            console.log('⚠️ Supabase not configured, cannot remove tracks from playlists');
+            res.status(500).json({ error: 'Database not configured - cannot remove tracks from playlists' });
+        }
     } catch (error) {
         console.error('Error removing from playlist:', error);
         res.status(500).json({ error: 'Failed to remove from playlist' });

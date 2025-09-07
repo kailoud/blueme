@@ -285,10 +285,190 @@ const audioManager = {
     }
 };
 
+// Playlist management functions
+const playlistManager = {
+    // Create a new playlist
+    async createPlaylist(playlistData) {
+        try {
+            if (!supabaseUrl || !supabaseKey) {
+                throw new Error('Supabase not configured');
+            }
+
+            const { data, error } = await supabase
+                .from(TABLES.PLAYLISTS)
+                .insert({
+                    name: playlistData.name,
+                    description: playlistData.description || '',
+                    user_id: playlistData.user_id || null,
+                    is_public: playlistData.is_public || false,
+                    is_premium: playlistData.is_premium || false,
+                    max_songs: playlistData.max_songs || 8,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                playlist: {
+                    ...data,
+                    playlist_items: []
+                }
+            };
+
+        } catch (error) {
+            console.error('❌ Error creating playlist:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    },
+
+    // Get all playlists
+    async getPlaylists(userId = null) {
+        try {
+            if (!supabaseUrl || !supabaseKey) {
+                throw new Error('Supabase not configured');
+            }
+
+            let query = supabase
+                .from(TABLES.PLAYLISTS)
+                .select(`
+                    *,
+                    playlist_items (
+                        *,
+                        audio_files (*)
+                    )
+                `)
+                .order('created_at', { ascending: false });
+
+            // If userId is provided, filter by user_id, otherwise get all
+            if (userId !== null) {
+                query = query.eq('user_id', userId);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                playlists: data || []
+            };
+
+        } catch (error) {
+            console.error('❌ Error fetching playlists:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    },
+
+    // Add track to playlist
+    async addTrackToPlaylist(playlistId, audioFileId, position = null) {
+        try {
+            if (!supabaseUrl || !supabaseKey) {
+                throw new Error('Supabase not configured');
+            }
+
+            // Get current playlist to determine position
+            const { data: playlist, error: playlistError } = await supabase
+                .from(TABLES.PLAYLISTS)
+                .select('*')
+                .eq('id', playlistId)
+                .single();
+
+            if (playlistError || !playlist) {
+                throw new Error('Playlist not found');
+            }
+
+            // Get current track count for position
+            const { count } = await supabase
+                .from('playlist_items')
+                .select('*', { count: 'exact', head: true })
+                .eq('playlist_id', playlistId);
+
+            const trackPosition = position || (count || 0) + 1;
+
+            const { data, error } = await supabase
+                .from('playlist_items')
+                .insert({
+                    playlist_id: playlistId,
+                    audio_file_id: audioFileId,
+                    position: trackPosition,
+                    added_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Update playlist updated_at
+            await supabase
+                .from(TABLES.PLAYLISTS)
+                .update({ updated_at: new Date().toISOString() })
+                .eq('id', playlistId);
+
+            return {
+                success: true,
+                playlistItem: data
+            };
+
+        } catch (error) {
+            console.error('❌ Error adding track to playlist:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    },
+
+    // Remove track from playlist
+    async removeTrackFromPlaylist(playlistId, itemId) {
+        try {
+            if (!supabaseUrl || !supabaseKey) {
+                throw new Error('Supabase not configured');
+            }
+
+            const { error } = await supabase
+                .from('playlist_items')
+                .delete()
+                .eq('id', itemId)
+                .eq('playlist_id', playlistId);
+
+            if (error) throw error;
+
+            // Update playlist updated_at
+            await supabase
+                .from(TABLES.PLAYLISTS)
+                .update({ updated_at: new Date().toISOString() })
+                .eq('id', playlistId);
+
+            return {
+                success: true,
+                message: 'Track removed from playlist'
+            };
+
+        } catch (error) {
+            console.error('❌ Error removing track from playlist:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+};
+
 module.exports = {
     supabase,
     TABLES,
     STORAGE_BUCKETS,
     initializeStorage,
-    audioManager
+    audioManager,
+    playlistManager
 };

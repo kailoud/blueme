@@ -5163,7 +5163,8 @@
                             },
                             body: JSON.stringify({
                                 audioFileId: audioFile.id,
-                                position: playlistItem.position
+                                position: playlistItem.position,
+                                audioFile: audioFile // Send full audio file data
                             })
                         });
                         
@@ -5451,29 +5452,43 @@
                     return;
                 }
                 
+                // Try to find the full audio data in the audio library
+                let fullAudioData = audioFile;
+                if (!audioFile.audioData && !audioFile.audio_data) {
+                    const libraryTrack = this.audioLibrary.find(audio => 
+                        audio.id === audioFile.id || 
+                        audio.title === audioFile.title ||
+                        audio.original_name === audioFile.original_name
+                    );
+                    if (libraryTrack) {
+                        fullAudioData = libraryTrack;
+                        console.log('✅ Found full audio data in library for:', audioFile.title || audioFile.original_name);
+                    }
+                }
+                
                 try {
-                    console.log('🎵 Playing track from playlist:', audioFile);
+                    console.log('🎵 Playing track from playlist:', fullAudioData);
                     console.log('🔍 Audio file structure:', {
-                        hasAudioData: !!audioFile.audioData,
-                        hasAudioDataBlob: audioFile.audioData instanceof Blob,
-                        hasAudioDataBase64: !!audioFile.audio_data,
-                        mimeType: audioFile.mime_type,
-                        title: audioFile.title,
-                        originalName: audioFile.original_name,
-                        filename: audioFile.file_name,
-                        id: audioFile.id
+                        hasAudioData: !!fullAudioData.audioData,
+                        hasAudioDataBlob: fullAudioData.audioData instanceof Blob,
+                        hasAudioDataBase64: !!fullAudioData.audio_data,
+                        mimeType: fullAudioData.mime_type,
+                        title: fullAudioData.title,
+                        originalName: fullAudioData.original_name,
+                        filename: fullAudioData.file_name,
+                        id: fullAudioData.id
                     });
                     
                     // Load the audio file into the main player
-                    if (audioFile.audioData && audioFile.audioData instanceof Blob) {
+                    if (fullAudioData.audioData && fullAudioData.audioData instanceof Blob) {
                         // Handle blob data directly
-                        const url = URL.createObjectURL(audioFile.audioData);
+                        const url = URL.createObjectURL(fullAudioData.audioData);
                         this.audioPlayer.src = url;
                         this.audioPlayer.load();
                         
                         // Update track info
-                        this.trackTitle.textContent = audioFile.title || audioFile.original_name || audioFile.file_name || 'Playlist Track';
-                        this.trackArtist.textContent = 'Playlist Track';
+                        this.trackTitle.textContent = fullAudioData.title || fullAudioData.original_name || fullAudioData.file_name || 'Playlist Track';
+                        this.trackArtist.textContent = fullAudioData.artist || 'Playlist Track';
                         
                         // Auto-play the track
                         await this.audioPlayer.play();
@@ -5483,14 +5498,14 @@
                         this.updateStatusIndicator();
                         this.showMarqueeDuringPlayback();
                         
-                        this.updateStatus('success', `🎵 Now playing: ${audioFile.title || audioFile.original_name || audioFile.file_name}`);
+                        this.updateStatus('success', `🎵 Now playing: ${fullAudioData.title || fullAudioData.original_name || fullAudioData.file_name}`);
                         
                         // Show marquee with track information
-                        this.showMarquee(audioFile);
-                    } else if (audioFile.audio_data) {
+                        this.showMarquee(fullAudioData);
+                    } else if (fullAudioData.audio_data) {
                         // Handle base64 audio data
                         try {
-                            const audioBlob = await this.base64ToBlob(audioFile.audio_data, audioFile.mime_type);
+                            const audioBlob = await this.base64ToBlob(fullAudioData.audio_data, fullAudioData.mime_type);
                             const url = URL.createObjectURL(audioBlob);
                             this.audioPlayer.src = url;
                             this.audioPlayer.load();
