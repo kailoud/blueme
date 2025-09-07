@@ -2922,7 +2922,7 @@
             
             <!-- Quick Access Buttons -->
             <div class="quick-access-buttons">
-                <button class="quick-btn" onclick="app.showPlaylists()" title="View & Play Playlists in Main Player">
+                <button class="quick-btn" onclick="app.showPlaylists()" title="View & Play Playlists">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18V5l12-2v13"></path>
                         <circle cx="6" cy="18" r="3"></circle>
@@ -2940,146 +2940,12 @@
                     </svg>
                     <span>Library</span>
                 </button>
-                <button class="quick-btn" onclick="app.loadSampleAudio()" title="Try Sample Audio">
+                <button class="quick-btn" onclick="app.showProfile()" title="User Profile">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    <span>Demo</span>
-                </button>
-                <button class="quick-btn" onclick="app.debugPlaylists()" title="Debug Playlists & Tracks" style="background: linear-gradient(45deg, #ff6b6b, #ffa500);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-                    </svg>
-                    <span>Debug</span>
-                </button>
-                <button class="quick-btn" onclick="app.testPlaylistPlayback()" title="Test Playlist Playback" style="background: linear-gradient(45deg, #28a745, #20c997);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5,3 19,12 5,21"></polygon>
-                    </svg>
-                    <span>Test</span>
-                </button>
-                <button class="quick-btn" onclick="app.debugPlayButton()" title="Debug Play Button" style="background: linear-gradient(45deg, #ff0000, #ff6666);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-                    </svg>
-                    <span>Play Debug</span>
-                </button>
-                <button class="quick-btn" onclick="app.testMarquee()" title="Test Marquee Effect" style="background: linear-gradient(45deg, #9c27b0, #e91e63);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 12h18m-9-9l9 9-9 9"></path>
-                    </svg>
-                    <span>Marquee</span>
-                </button>
-                <button class="quick-btn" onclick="app.fixCorruptedAudio()" title="Fix Corrupted Audio Files" style="background: linear-gradient(45deg, #4caf50, #8bc34a);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 12l2 2 4-4"></path>
-                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
-                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
-                        <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"></path>
-                        <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"></path>
-                    </svg>
-                    <span>Fix Audio</span>
-                </button>
-                <button class="quick-btn" onclick="app.debugDatabaseConnection()" title="Debug Database Connection" style="background: linear-gradient(45deg, #ff9800, #ff5722);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-                    </svg>
-                    <span>Debug DB</span>
-                </button>
-                <button class="quick-btn" onclick="app.testAddToPlaylist()" title="Test Add to Playlist Functionality" style="background: linear-gradient(45deg, #9c27b0, #673ab7);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 6v6l4 2"></path>
-                    </svg>
-                    <span>Test Add</span>
-                </button>
-                <button class="quick-btn" onclick="app.debugAddToPlaylistFlow()" title="Debug Add to Playlist Flow" style="background: linear-gradient(45deg, #ff5722, #ff9800);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"></path>
-                        <path d="M12 6v6l4 2"></path>
-                    </svg>
-                    <span>Debug Flow</span>
-                </button>
-                <button class="quick-btn" onclick="app.pushToDatabase()" title="Push Audio Files to Database" style="background: linear-gradient(45deg, #2196F3, #21CBF3);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7,10 12,15 17,10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span>Push DB</span>
-                </button>
-                <button class="quick-btn" onclick="app.pushPlaylistsToDatabase()" title="Push Playlists to Database" style="background: linear-gradient(45deg, #9c27b0, #e91e63);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                    <span>Push Playlists</span>
-                </button>
-                <button class="quick-btn" onclick="app.loadTracksFromDatabase()" title="Load Tracks from Database" style="background: linear-gradient(45deg, #4caf50, #8bc34a);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7,10 12,15 17,10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span>Load DB Tracks</span>
-                </button>
-                <button class="quick-btn" onclick="app.loadPlaylistsFromDatabaseButton()" title="Load Playlists from Database" style="background: linear-gradient(45deg, #ff9800, #ffc107);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                    <span>Load DB Playlists</span>
-                </button>
-                <button class="quick-btn" onclick="app.testPlaylistItemInsert()" title="Test Playlist Item Insert" style="background: linear-gradient(45deg, #e91e63, #f06292);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 12l2 2 4-4"></path>
-                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
-                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
-                        <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"></path>
-                        <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"></path>
-                    </svg>
-                    <span>Test Insert</span>
-                </button>
-                <button class="quick-btn" onclick="app.loadTestAudio()" title="Test with Real Audio">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                    <span>Test</span>
-                </button>
-                <button class="quick-btn" onclick="app.loadSampleAudio()" title="Play Sample Audio" style="background: linear-gradient(45deg, #fd7e14, #ffc107);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5,3 19,12 5,21"></polygon>
-                    </svg>
-                    <span>Sample</span>
-                </button>
-                <button class="quick-btn" onclick="app.checkPlaylistHealth()" title="Check Playlist Health" style="background: linear-gradient(45deg, #17a2b8, #6f42c1);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 12l2 2 4-4"></path>
-                        <circle cx="12" cy="12" r="10"></circle>
-                    </svg>
-                    <span>Check</span>
-                </button>
-                <button class="quick-btn" onclick="app.fixMissingAudioFiles()" title="Fix Missing Audio Files" style="background: linear-gradient(45deg, #28a745, #20c997);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                    </svg>
-                    <span>Fix</span>
-                </button>
-                <button class="quick-btn" onclick="app.createTestPlaylist()" title="Create Test Playlist with Working Audio" style="background: linear-gradient(45deg, #6f42c1, #e83e8c);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14.828 14.828a4 4 0 0 1-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
-                    </svg>
-                    <span>Test</span>
+                    <span>Profile</span>
                 </button>
             </div>
 
@@ -6447,6 +6313,17 @@
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            // Show profile section
+            showProfile() {
+                console.log('👤 Showing profile...');
+                
+                // For now, just show a simple profile message
+                // In the future, this could show user settings, preferences, etc.
+                this.updateStatus('info', '👤 Profile section - Coming soon! This will show user settings and preferences.');
+                
+                console.log('✅ Profile section shown');
             }
 
             async pushPlaylistsToDatabase() {
