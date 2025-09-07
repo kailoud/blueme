@@ -9,6 +9,7 @@ const fs = require('fs');
 const http = require('http');
 const socketIo = require('socket.io');
 const ytdl = require('@distube/ytdl-core');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -307,6 +308,112 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         version: '2.0.0'
     });
+});
+
+// Playlist API endpoints
+app.get('/api/playlists', async (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
+    try {
+        // For now, return empty array since we're in guest mode
+        // In a real app, this would query the database
+        res.json({
+            success: true,
+            playlists: []
+        });
+    } catch (error) {
+        console.error('Error fetching playlists:', error);
+        res.status(500).json({ error: 'Failed to fetch playlists' });
+    }
+});
+
+app.post('/api/playlists', async (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
+    try {
+        const { name, description, isPublic = false } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ error: 'Playlist name is required' });
+        }
+        
+        // Create playlist object (in guest mode, we don't save to database)
+        const playlist = {
+            id: crypto.randomUUID(),
+            name,
+            description: description || '',
+            user_id: 'guest',
+            is_public: isPublic,
+            is_premium: false,
+            max_songs: 5, // Guest users get 5 songs per playlist
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            playlist_items: []
+        };
+        
+        res.json({
+            success: true,
+            playlist
+        });
+    } catch (error) {
+        console.error('Error creating playlist:', error);
+        res.status(500).json({ error: 'Failed to create playlist' });
+    }
+});
+
+app.post('/api/playlists/:playlistId/items', async (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
+    try {
+        const { playlistId } = req.params;
+        const { audioFileId, position } = req.body;
+        
+        if (!audioFileId) {
+            return res.status(400).json({ error: 'Audio file ID is required' });
+        }
+        
+        // Create playlist item object (in guest mode, we don't save to database)
+        const playlistItem = {
+            id: crypto.randomUUID(),
+            playlist_id: playlistId,
+            audio_file_id: audioFileId,
+            position: position || 1,
+            added_at: new Date().toISOString()
+        };
+        
+        res.json({
+            success: true,
+            playlistItem
+        });
+    } catch (error) {
+        console.error('Error adding to playlist:', error);
+        res.status(500).json({ error: 'Failed to add to playlist' });
+    }
+});
+
+app.delete('/api/playlists/:playlistId/items/:itemId', async (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
+    try {
+        const { playlistId, itemId } = req.params;
+        
+        // In guest mode, we just return success
+        res.json({
+            success: true,
+            message: 'Item removed from playlist'
+        });
+    } catch (error) {
+        console.error('Error removing from playlist:', error);
+        res.status(500).json({ error: 'Failed to remove from playlist' });
+    }
 });
 
 // Bluetooth device management endpoints

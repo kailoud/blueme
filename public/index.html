@@ -5097,56 +5097,32 @@
                     playlist.playlist_items.push(playlistItem);
                     playlist.updated_at = new Date().toISOString();
                     
-                    // Save directly to database (database-first mode)
-                    if (isSupabaseConfigured && supabase) {
-                        try {
-                            console.log('💾 About to insert playlist item to database...');
-                            console.log('💾 Insert data:', {
-                                id: playlistItem.id,
-                                playlist_id: playlistItem.playlist_id,
-                                position: playlistItem.position,
-                                audio_file_id: playlistItem.audio_file.id,
-                                added_at: playlistItem.added_at
-                            });
-                            
-                            // Direct database insert - simple approach
-                            const { data, error } = await supabase
-                                .from('playlist_items')
-                                .insert([{
-                                    id: playlistItem.id,
-                                    playlist_id: playlistItem.playlist_id,
-                                    position: playlistItem.position,
-                                    audio_file_id: playlistItem.audio_file.id,
-                                    added_at: playlistItem.added_at
-                                }])
-                                .select();
-                            
-                            if (error) {
-                                console.error('❌ Database insert failed:', error);
-                                console.error('❌ Error details:', JSON.stringify(error, null, 2));
-                                this.updateStatus('error', `Failed to add track: ${error.message}`);
-                                return;
-                            }
-                            
-                            console.log('✅ Track added to database successfully!');
-                            console.log('✅ Insert result:', data);
-                            console.log('✅ Inserted data:', data[0]);
-                            
-                            // Reload playlists from database
-                            console.log('🔄 Reloading playlists from database...');
-                            const dbPlaylists = await this.loadPlaylistsFromDatabase();
-                            this.playlists = dbPlaylists;
-                            this.updatePlaylistUI();
-                            
-                        } catch (dbError) {
-                            console.error('❌ Database save failed:', dbError);
-                            console.error('❌ Database error details:', JSON.stringify(dbError, null, 2));
-                            this.updateStatus('error', `Failed to save to database: ${dbError.message}`);
-                            return;
+                    // Save to local server API
+                    try {
+                        console.log('💾 Adding track to playlist via local server...');
+                        
+                        const response = await fetch(`http://localhost:3000/api/playlists/${playlistId}/items`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                audioFileId: audioFile.id,
+                                position: playlistItem.position
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Failed to add to playlist');
                         }
-                    } else {
-                        console.error('❌ Database not configured - cannot save playlist');
-                        this.updateStatus('error', 'Database not configured - cannot save playlist');
+                        
+                        const result = await response.json();
+                        console.log('✅ Track added to playlist successfully!', result);
+                        
+                    } catch (apiError) {
+                        console.error('❌ API call failed:', apiError);
+                        this.updateStatus('error', `Failed to add track: ${apiError.message}`);
                         return;
                     }
                     
