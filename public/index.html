@@ -5058,13 +5058,38 @@
                     // Add to playlists array
                     this.playlists.push(newPlaylist);
                     
-                    // Save directly to database (database-first mode)
-                    if (isSupabaseConfigured && supabase) {
-                        await this.savePlaylistToDatabase(newPlaylist);
-                        console.log('✅ Playlist saved to database');
-                    } else {
-                        console.error('❌ Database not configured - cannot create playlist');
-                        this.updateStatus('error', 'Database not configured - cannot create playlist');
+                    // Save to server API (works for both local and production)
+                    try {
+                        console.log('💾 Creating playlist via server API...');
+                        
+                        // Use production URL if deployed, otherwise use local development URL
+                        const apiBaseUrl = window.location.hostname === 'blueme.app' 
+                            ? 'https://blueme-production.up.railway.app' 
+                            : 'https://192.168.1.110:3443';
+                        
+                        const response = await fetch(`${apiBaseUrl}/api/playlists`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                name: newPlaylist.name,
+                                description: newPlaylist.description,
+                                userId: newPlaylist.user_id
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Failed to create playlist');
+                        }
+                        
+                        const result = await response.json();
+                        console.log('✅ Playlist created successfully!', result);
+                        
+                    } catch (apiError) {
+                        console.error('❌ API call failed:', apiError);
+                        this.updateStatus('error', `Failed to create playlist: ${apiError.message}`);
                         return;
                     }
                     
@@ -5224,24 +5249,25 @@
             }
 
             async loadLocalPlaylists() {
-                console.log('🔄 Loading playlists from database...');
+                console.log('🔄 Loading playlists...');
                 try {
-                    // Load from database first (database-first mode)
-                    if (isSupabaseConfigured && supabase) {
-                        try {
-                            const dbPlaylists = await this.loadPlaylistsFromDatabase();
-                            this.playlists = dbPlaylists || [];
-                            console.log('✅ Loaded playlists from database:', this.playlists.length, 'playlists');
-                        } catch (dbError) {
-                            console.error('❌ Database load failed:', dbError);
-                            this.updateStatus('error', `Failed to load playlists from database: ${dbError.message}`);
-                            this.playlists = [];
-                        }
-                    } else {
-                        console.error('❌ Database not configured - cannot load playlists');
-                        this.updateStatus('error', 'Database not configured - cannot load playlists');
-                        this.playlists = [];
+                    // Use server API for both local and production
+                    console.log('💾 Loading playlists via server API...');
+                    
+                    // Use production URL if deployed, otherwise use local development URL
+                    const apiBaseUrl = window.location.hostname === 'blueme.app' 
+                        ? 'https://blueme-production.up.railway.app' 
+                        : 'https://192.168.1.110:3443';
+                    
+                    const response = await fetch(`${apiBaseUrl}/api/playlists`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load playlists from server');
                     }
+                    
+                    const result = await response.json();
+                    this.playlists = result.playlists || [];
+                    console.log('✅ Loaded playlists from server:', this.playlists.length, 'playlists');
                     
                     this.updatePlaylistUI();
                 } catch (error) {
