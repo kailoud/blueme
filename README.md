@@ -224,3 +224,4 @@ MIT License - see LICENSE file for details
 
 # Deployment trigger Sun Sep  7 15:31:04 BST 2025
 # EMERGENCY FIX - YouTube conversion broken - Sun Sep  7 15:36:20 BST 2025
+# EMERGENCY: Railway app not found - Sun Sep  7 15:45:20 BST 2025
