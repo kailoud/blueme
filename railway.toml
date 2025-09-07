@@ -1,4 +1,4 @@
 [deploy]
-startCommand = "node start-railway.js"
+startCommand = "node test-server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 30
