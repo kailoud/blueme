@@ -4773,14 +4773,21 @@
                     
                     // Save directly to database (database-first mode)
                     if (isSupabaseConfigured && supabase) {
-                        await this.savePlaylistItemToDatabase(playlistItem);
-                        console.log('✅ Playlist item saved to database');
-                        
-                        // Reload playlists from database to ensure UI is in sync
-                        const dbPlaylists = await this.loadPlaylistsFromDatabase();
-                        this.playlists = dbPlaylists;
-                        console.log('🔄 Reloaded playlists from database:', this.playlists);
-                        this.updatePlaylistUI();
+                        try {
+                            await this.savePlaylistItemToDatabase(playlistItem);
+                            console.log('✅ Playlist item saved to database');
+                            
+                            // Reload playlists from database to ensure UI is in sync
+                            const dbPlaylists = await this.loadPlaylistsFromDatabase();
+                            this.playlists = dbPlaylists;
+                            console.log('🔄 Reloaded playlists from database:', this.playlists);
+                            this.updatePlaylistUI();
+                        } catch (dbError) {
+                            console.error('❌ Database save failed, falling back to localStorage:', dbError);
+                            // Fallback to localStorage if database save fails
+                            this.saveLocalPlaylists();
+                            this.updatePlaylistUI();
+                        }
                     } else {
                         // Fallback to localStorage if database not available
                         this.saveLocalPlaylists();
