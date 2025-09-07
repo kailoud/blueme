@@ -4587,7 +4587,7 @@
                     // Make API call to convert YouTube URL
                     // Use production URL if deployed, otherwise use local development URL
                     const apiBaseUrl = window.location.hostname === 'blueme.app' 
-                        ? 'https://blueme-backend.onrender.com' 
+                        ? 'https://blueme-production.up.railway.app' 
                         : 'https://192.168.1.110:3443';
                     
                     const response = await fetch(`${apiBaseUrl}/api/convert-youtube`, {
@@ -5108,7 +5108,7 @@
                         
                         // Use production URL if deployed, otherwise use local development URL
                         const apiBaseUrl = window.location.hostname === 'blueme.app' 
-                            ? 'https://blueme-backend.onrender.com' 
+                            ? 'https://blueme-production.up.railway.app' 
                             : 'https://192.168.1.110:3443';
                         
                         const response = await fetch(`${apiBaseUrl}/api/playlists/${playlistId}/items`, {
