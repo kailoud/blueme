@@ -5,28 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlueMe - Shared Music Experience</title>
     
-    <!-- Simple favicon meta tag -->
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    
-    <!-- Favicon with cache busting -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=3">
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3">
+    <!-- Data URI favicon (works without external files) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
     <meta name="msapplication-TileColor" content="#000000">
     <meta name="theme-color" content="#000000">
     
-    <!-- Fallback favicon for immediate display -->
-    <script>
-        // Force favicon reload
-        document.addEventListener('DOMContentLoaded', function() {
-            const favicon = document.querySelector('link[rel="icon"]');
-            if (favicon) {
-                favicon.href = '/favicon.ico?v=' + Date.now();
-            }
-        });
-    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
