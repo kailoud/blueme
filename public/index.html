@@ -2873,7 +2873,7 @@
                 <div class="album-art-container">
                     <div class="album-art" id="albumArt">
                         <div class="album-art-inner">
-                            <div class="music-note">🎵</div>
+                            <div class="music-note" style="border: 3px solid red; background: yellow; padding: 2px;">🎵</div>
                             <div class="vinyl-rings"></div>
                         </div>
                     </div>
@@ -3026,7 +3026,7 @@
                 </div>
 
                 <button class="btn btn-primary" id="convertBtn" style="width: 100%;">
-                    <span id="convertText">🎵 Convert Audio</span>
+                    <span id="convertText" style="border: 3px solid red; background: yellow; padding: 2px;">🎵 Convert Audio</span>
                     <span id="convertLoader" class="loading-spinner hidden"></span>
                 </button>
 
@@ -3044,7 +3044,7 @@
                             📥 Download
                         </button>
                         <button class="btn btn-primary" id="useConvertedBtn">
-                            🎵 Load
+                            <span style="border: 3px solid red; background: yellow; padding: 2px;">🎵</span> Load
                         </button>
                         <button class="btn btn-accent" id="addToPlaylistBtn">
                             +Playlist
@@ -4119,7 +4119,7 @@
                 overlay.innerHTML = `
                     <div class="load-audio-modal">
                         <div class="modal-header">
-                            <h3>🎵 Load Audio</h3>
+                            <h3><span style="border: 3px solid red; background: yellow; padding: 2px;">🎵</span> Load Audio</h3>
                             <button class="close-btn" onclick="this.closest('.load-audio-overlay').remove()">×</button>
                         </div>
                         <div class="modal-body">
@@ -4129,7 +4129,7 @@
                                     📁 Upload File
                                 </button>
                                 <button class="btn btn-secondary" onclick="app.loadSampleAudio(); this.closest('.load-audio-overlay').remove();">
-                                    🎵 Try Sample Audio
+                                    <span style="border: 3px solid red; background: yellow; padding: 2px;">🎵</span> Try Sample Audio
                                 </button>
                                 <button class="btn btn-secondary" onclick="app.showYouTubeConverter(); this.closest('.load-audio-overlay').remove();">
                                     🎬 Convert YouTube
@@ -4967,7 +4967,7 @@
                         </div>
                         <div class="profile-menu">
                             <button class="menu-item" onclick="app.showPlaylists()">
-                                <span class="menu-icon">🎵</span>
+                                <span class="menu-icon" style="border: 3px solid red; background: yellow; padding: 2px;">🎵</span>
                                 <span class="menu-text">My Playlists</span>
                             </button>
                             <button class="menu-item" onclick="app.showAudioLibrary()">
