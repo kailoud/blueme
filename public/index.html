@@ -6445,6 +6445,44 @@
                 console.log('✅ Audio library section shown:', this.audioLibrary.length, 'files');
             }
 
+            // Create audio library section
+            createAudioLibrarySection() {
+                console.log('🎧 Creating audio library section...');
+                
+                // Create the audio library section
+                const librarySection = document.createElement('div');
+                librarySection.id = 'audioLibrarySection';
+                librarySection.className = 'audio-library-section';
+                librarySection.innerHTML = `
+                    <h3>🎧 Audio Library</h3>
+                    <div class="library-controls">
+                        <button class="btn btn-secondary" onclick="app.refreshAudioLibrary()">
+                            🔄 Refresh
+                        </button>
+                        <button class="btn btn-accent" onclick="app.showAddTrackModal()">
+                            ➕ Add Tracks
+                        </button>
+                    </div>
+                    <div class="library-tracks" id="libraryTracks">
+                        <div class="empty-state">
+                            <div class="empty-icon">🎵</div>
+                            <p>No audio files yet</p>
+                            <small>Upload files or convert YouTube videos to get started</small>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert after the converter section
+                const converterSection = document.querySelector('.converter-section');
+                if (converterSection) {
+                    converterSection.parentNode.insertBefore(librarySection, converterSection.nextSibling);
+                } else {
+                    document.body.appendChild(librarySection);
+                }
+                
+                console.log('✅ Audio library section created');
+            }
+
             // Modern Player Helper Functions
             updatePlayButton() {
                 const playIcon = document.querySelector('.play-icon');

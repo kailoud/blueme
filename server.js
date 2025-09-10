@@ -690,13 +690,26 @@ app.post('/api/convert-youtube', async (req, res) => {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
             
-            // Get video info
-            info = await ytdl.getInfo(url);
+            // Get video info with timeout
+            info = await Promise.race([
+                ytdl.getInfo(url),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Video info timeout')), 10000)
+                )
+            ]);
         } catch (infoError) {
             console.error('Failed to get video info:', infoError);
-            return res.status(500).json({ 
-                error: 'Unable to access this YouTube video. It may be private, restricted, or unavailable.' 
-            });
+            let errorMessage = 'Unable to access this YouTube video.';
+            
+            if (infoError.message.includes('timeout')) {
+                errorMessage = 'YouTube video info request timed out. Please try again.';
+            } else if (infoError.message.includes('private') || infoError.message.includes('restricted')) {
+                errorMessage = 'This YouTube video is private or restricted.';
+            } else if (infoError.message.includes('unavailable')) {
+                errorMessage = 'This YouTube video is unavailable.';
+            }
+            
+            return res.status(500).json({ error: errorMessage });
         }
         const videoTitle = info.videoDetails.title;
         const sanitizedTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
