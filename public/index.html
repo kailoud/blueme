@@ -5103,11 +5103,8 @@
                         return;
                     }
 
-                    // Check if user owns this playlist (guest mode)
-                    if (playlist.user_id !== null && playlist.user_id !== 'guest') {
-                        this.updateStatus('error', 'You can only add tracks to your own playlists');
-                        return;
-                    }
+                    // Allow adding to any playlist in guest mode
+                    // No ownership restrictions for guest users
 
                     // Check playlist limits (guest mode)
                     const currentSongs = playlist.playlist_items.length;
