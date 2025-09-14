@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<headhney>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlueMe - Shared Audio Experience</title>
@@ -3085,14 +3085,6 @@
                     </svg>
                     <span>Profile</span>
                 </button>
-                <button class="quick-btn" onclick="window.authManager?.showAuthModal()" title="Authentication">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <circle cx="12" cy="16" r="1"></circle>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <span>Auth</span>
-                </button>
             </div>
 
 
@@ -3876,20 +3868,12 @@
                 
                 // Show progress section when audio is loaded
                 const progressSection = document.getElementById('progressSection');
-                console.log('🎵 updateTrackInfo called:', {
-                    duration: this.duration,
-                    progressSection: progressSection,
-                    currentDisplay: progressSection ? progressSection.style.display : 'not found'
-                });
                 
                 if (progressSection && this.duration > 0) {
                     progressSection.style.display = 'flex';
-                    console.log('✅ Progress section shown, new display:', progressSection.style.display);
+                    // Progress section shown
                 } else {
-                    console.log('❌ Progress section not shown:', {
-                        hasProgressSection: !!progressSection,
-                        duration: this.duration
-                    });
+                    // Progress section not shown
                 }
             }
 
@@ -3934,7 +3918,6 @@
             }
 
             onAudioPlay() {
-                console.log('🎵 Audio started playing');
                 this.isPlaying = true;
                 this.updatePlayButton();
                 this.updatePlayIndicator();
@@ -3943,7 +3926,6 @@
             }
 
             onAudioPause() {
-                console.log('🎵 Audio paused');
                 this.isPlaying = false;
                 this.updatePlayButton();
                 this.updatePlayIndicator();
@@ -3952,13 +3934,10 @@
             }
 
             togglePlayback() {
-                console.log('🎵 Simple togglePlayback called');
                 
                 // SIMPLE: Just check if audio is paused and toggle
                 if (this.audioPlayer.paused) {
-                    console.log('🎵 Audio is paused, trying to play...');
                     this.audioPlayer.play().then(() => {
-                        console.log('✅ Audio started playing');
                         this.playBtn.innerHTML = '⏸';
                         this.isPlaying = true;
                     }).catch(error => {
@@ -3975,7 +3954,6 @@
                         this.updateStatus('error', 'Play failed: ' + errorMessage);
                     });
                 } else {
-                    console.log('🎵 Audio is playing, pausing...');
                     this.audioPlayer.pause();
                     this.playBtn.innerHTML = '▶';
                     this.isPlaying = false;
@@ -8406,21 +8384,11 @@
         // Make app globally accessible
         window.app = app;
         
-        // Global test function for authentication
-        window.testAuth = function() {
-            console.log('🧪 Testing authentication system...');
-            if (window.authManager) {
-                console.log('✅ AuthManager found, showing modal...');
-                window.authManager.showAuthModal();
-            } else {
-                console.log('❌ AuthManager not found');
-            }
-        };
         
         
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                console.log('🚀 Initializing BlueMe app with authentication...');
+                console.log('🚀 Initializing BlueMe app...');
                 
                 // Initialize the app
                 app = new BlueMe();
@@ -8445,14 +8413,12 @@
                 setTimeout(() => {
                     if (window.authManager) {
                         console.log('✅ Authentication manager is available');
-                        console.log('🔐 Auth button should be visible in top-right corner');
-                        console.log('💡 You can test the auth modal by clicking the "Auth" button or running: window.authManager.showAuthModal()');
                     } else {
                         console.log('❌ Authentication manager not found');
                     }
                 }, 1000);
                 
-                console.log('🎵 App ready with authentication support');
+                console.log('🎵 App ready');
                 
             } catch (error) {
                 console.error('❌ Error initializing app:', error);
