@@ -4124,13 +4124,25 @@
             }
 
             setupEventListeners() {
-                // Player controls
-                this.playBtn.addEventListener('click', () => this.togglePlayback());
-                this.prevBtn.addEventListener('click', () => this.previousTrack());
-                this.nextBtn.addEventListener('click', () => this.nextTrack());
-                this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
-                this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
-                this.audioFile.addEventListener('change', (e) => this.loadAudioFile(e));
+                // Player controls - with null checks
+                if (this.playBtn) {
+                    this.playBtn.addEventListener('click', () => this.togglePlayback());
+                }
+                if (this.prevBtn) {
+                    this.prevBtn.addEventListener('click', () => this.previousTrack());
+                }
+                if (this.nextBtn) {
+                    this.nextBtn.addEventListener('click', () => this.nextTrack());
+                }
+                if (this.repeatBtn) {
+                    this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
+                }
+                if (this.volumeSlider) {
+                    this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+                }
+                if (this.audioFile) {
+                    this.audioFile.addEventListener('change', (e) => this.loadAudioFile(e));
+                }
                 
                 // Mobile file upload
                 const mobileAudioFile = document.getElementById('mobileAudioFile');
@@ -4139,23 +4151,35 @@
                 }
                 
                 // Bluetooth controls
-                this.scanBtn.addEventListener('click', () => this.scanForDevices());
+                if (this.scanBtn) {
+                    this.scanBtn.addEventListener('click', () => this.scanForDevices());
+                }
                 
                 // Audio converter controls
-                this.convertBtn.addEventListener('click', () => this.convertAudio());
-                this.downloadBtn.addEventListener('click', () => this.downloadConvertedFile());
-                this.useConvertedBtn.addEventListener('click', () => this.useConvertedInPlayer());
-                this.addToPlaylistBtn.addEventListener('click', () => this.showAddToPlaylistModal());
+                if (this.convertBtn) {
+                    this.convertBtn.addEventListener('click', () => this.convertAudio());
+                }
+                if (this.downloadBtn) {
+                    this.downloadBtn.addEventListener('click', () => this.downloadConvertedFile());
+                }
+                if (this.useConvertedBtn) {
+                    this.useConvertedBtn.addEventListener('click', () => this.useConvertedInPlayer());
+                }
+                if (this.addToPlaylistBtn) {
+                    this.addToPlaylistBtn.addEventListener('click', () => this.showAddToPlaylistModal());
+                }
 
                 
                 // Audio player events
-                this.audioPlayer.addEventListener('loadedmetadata', () => this.updateTrackInfo());
-                this.audioPlayer.addEventListener('ended', () => this.onTrackEnded());
-                this.audioPlayer.addEventListener('timeupdate', () => this.updateProgress());
-                this.audioPlayer.addEventListener('loadstart', () => this.onLoadStart());
-                this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
-                this.audioPlayer.addEventListener('play', () => this.onAudioPlay());
-                this.audioPlayer.addEventListener('pause', () => this.onAudioPause());
+                if (this.audioPlayer) {
+                    this.audioPlayer.addEventListener('loadedmetadata', () => this.updateTrackInfo());
+                    this.audioPlayer.addEventListener('ended', () => this.onTrackEnded());
+                    this.audioPlayer.addEventListener('timeupdate', () => this.updateProgress());
+                    this.audioPlayer.addEventListener('loadstart', () => this.onLoadStart());
+                    this.audioPlayer.addEventListener('canplay', () => this.onCanPlay());
+                    this.audioPlayer.addEventListener('play', () => this.onAudioPlay());
+                    this.audioPlayer.addEventListener('pause', () => this.onAudioPause());
+                }
                 
                 // Progress bar click to seek
                 const progressContainer = document.querySelector('.progress-container');
