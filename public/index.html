@@ -5090,9 +5090,6 @@
                                 <button class="btn btn-primary" onclick="document.getElementById('audioFile').click(); this.closest('.load-audio-overlay').remove();">
                                     📁 Upload File
                                 </button>
-                                <button class="btn btn-secondary" onclick="app.loadSampleAudio(); this.closest('.load-audio-overlay').remove();">
-                                    🎵 Try Sample Audio
-                                </button>
                                 <button class="btn btn-secondary" onclick="app.showYouTubeConverter(); this.closest('.load-audio-overlay').remove();">
                                     🎬 Convert YouTube
                                 </button>
@@ -5111,130 +5108,11 @@
                 }, 10000);
             }
 
-            loadSampleAudio() {
-                try {
-                    // Use a simple data URL for a short audio tone
-                    // This creates a 10-second audio file as a WAV file
-                    const sampleRate = 44100;
-                    const duration = 10; // 10 seconds
-                    const length = sampleRate * duration;
-                    const arrayBuffer = new ArrayBuffer(44 + length * 2);
-                    const view = new DataView(arrayBuffer);
-                    
-                    // WAV header
-                    const writeString = (offset, string) => {
-                        for (let i = 0; i < string.length; i++) {
-                            view.setUint8(offset + i, string.charCodeAt(i));
-                        }
-                    };
-                    
-                    writeString(0, 'RIFF');
-                    view.setUint32(4, 36 + length * 2, true);
-                    writeString(8, 'WAVE');
-                    writeString(12, 'fmt ');
-                    view.setUint32(16, 16, true);
-                    view.setUint16(20, 1, true);
-                    view.setUint16(22, 1, true);
-                    view.setUint32(24, sampleRate, true);
-                    view.setUint32(28, sampleRate * 2, true);
-                    view.setUint16(32, 2, true);
-                    view.setUint16(34, 16, true);
-                    writeString(36, 'data');
-                    view.setUint32(40, length * 2, true);
-                    
-                    // Generate more musical audio data
-                    let offset = 44;
-                    for (let i = 0; i < length; i++) {
-                        const t = i / sampleRate;
-                        // Create a more musical pattern with multiple frequencies
-                        const sample = (
-                            Math.sin(2 * Math.PI * 220 * t) * 0.1 + // A3
-                            Math.sin(2 * Math.PI * 330 * t) * 0.1 + // E4
-                            Math.sin(2 * Math.PI * 440 * t) * 0.1   // A4
-                        ) * Math.exp(-t * 0.1); // Gradual fade out
-                        view.setInt16(offset, sample * 0x7FFF, true);
-                        offset += 2;
-                    }
-                    
-                    // Create blob and URL
-                    const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Load into audio player
-                    this.audioPlayer.src = url;
-                    this.audioPlayer.load(); // Force reload
-                    
-                    this.trackTitle.textContent = "Sample Audio";
-                    this.trackArtist.textContent = "Test Track";
-                    this.albumArt.textContent = '🎵';
-                    
-                    this.updateStatus('success', '🎵 Sample audio loaded! Click play to hear it');
-                    
-                    // Auto-play after a short delay to ensure it's loaded
-                    setTimeout(() => {
-                        if (this.audioPlayer.readyState >= 2) { // HAVE_CURRENT_DATA
-                            this.audioPlayer.play().then(() => {
-                                this.isPlaying = true;
-                                this.playBtn.innerHTML = '⏸';
-                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                                this.updateStatus('success', '🎵 Playing sample audio!');
-                            }).catch(error => {
-                                console.error('Auto-play failed:', error);
-                                this.updateStatus('info', '🎵 Sample loaded! Click play to start');
-                            });
-                        }
-                    }, 500);
-                    
-                } catch (error) {
-                    console.error('Error creating sample audio:', error);
-                    this.updateStatus('error', '❌ Failed to create sample audio. Trying fallback...');
-                    this.loadFallbackSampleAudio();
-                }
-            }
-
-            loadFallbackSampleAudio() {
-                // Fallback: Use a simple online audio file
-                const fallbackUrl = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
-                
-                this.audioPlayer.src = fallbackUrl;
-                this.audioPlayer.load();
-                
-                if (this.trackTitle) {
-                    this.trackTitle.textContent = "Sample Audio";
-                }
-                if (this.trackArtist) {
-                    this.trackArtist.textContent = "Test Track";
-                }
-                if (this.albumArt) {
-                    this.albumArt.textContent = '🎵';
-                }
-                
-                // Update enhanced mini player
-                if (this.trackTitleMini) {
-                    this.trackTitleMini.textContent = "Sample Audio";
-                }
-                if (this.trackArtistMini) {
-                    this.trackArtistMini.textContent = "Test Track";
-                }
-                
-                this.updateStatus('success', '🎵 Fallback sample loaded! Click play to test');
-                
-                // Try to auto-play
-                setTimeout(() => {
-                    this.audioPlayer.play().then(() => {
-                        this.isPlaying = true;
-                        this.playBtn.innerHTML = '⏸';
-                        this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                        this.updateStatus('success', '🎵 Playing sample audio!');
-                    }).catch(error => {
-                        console.error('Fallback auto-play failed:', error);
-                        this.updateStatus('info', '🎵 Sample loaded! Click play to start');
-                    });
-                }, 500);
-            }
 
             loadTestAudio() {
-                // Use a local data URI to avoid CORS issues
+                // Demo audio function removed - no more sample audio
+                this.updateStatus('info', 'Demo audio function has been removed');
+                return;
                 const testUrl = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
                 
                 this.audioPlayer.src = testUrl;
@@ -5672,24 +5550,8 @@
                             throw new Error('Could not extract audio from YouTube video');
                         }
                     } catch (extractionError) {
-                        console.warn('YouTube extraction failed, using fallback:', extractionError);
-                        
-                        // Fallback: Create a placeholder audio file
-                        this.updateConversionStatus('info', '📱 Creating audio placeholder...');
-                        
-                        const placeholderAudio = await this.createPlaceholderAudio(`YouTube Video ${videoId}`);
-                        const title = `YouTube Video ${videoId}`;
-                        
-                        // Create converted blob for download
-                        this.convertedAudioBlob = await this.fetchAudioBlob(placeholderAudio);
-                        
-                        // Show download section
-                        const filename = `youtube_${videoId}.mp3`;
-                        const format = this.formatSelect ? this.formatSelect.value : 'mp3';
-                        const size = this.convertedAudioBlob ? this.convertedAudioBlob.size : 0;
-                        this.showDownloadSection(filename, format, size);
-                        
-                        this.updateConversionStatus('success', '🎉 YouTube video processed! (Note: This is a placeholder - full conversion requires server-side processing)');
+                        console.warn('YouTube extraction failed:', extractionError);
+                        throw new Error('YouTube audio extraction is not available in browser mode. Please use a server-side conversion service.');
                     }
                     
                 } catch (error) {
@@ -5713,29 +5575,7 @@
                 return null;
             }
 
-            async createPlaceholderAudio(title) {
-                // Create a more realistic audio placeholder using Web Audio API
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const sampleRate = audioContext.sampleRate;
-                const duration = 30; // 30 seconds - more realistic length
-                const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
-                const data = buffer.getChannelData(0);
-                
-                // Generate a more complex audio pattern
-                for (let i = 0; i < data.length; i++) {
-                    const t = i / sampleRate;
-                    // Create a more musical pattern with multiple frequencies
-                    data[i] = (
-                        Math.sin(2 * Math.PI * 220 * t) * 0.1 + // A3
-                        Math.sin(2 * Math.PI * 330 * t) * 0.1 + // E4
-                        Math.sin(2 * Math.PI * 440 * t) * 0.1   // A4
-                    ) * Math.exp(-t * 0.1); // Gradual fade out
-                }
-                
-                // Convert to WAV
-                const wavBlob = this.bufferToWav(buffer);
-                return URL.createObjectURL(wavBlob);
-            }
+            // createPlaceholderAudio function removed - no more fallback audio generation
 
             // Helper function to update track info in both main and mini players
             updateTrackInfo(title, artist, albumArt = '🎵') {
@@ -5787,26 +5627,7 @@
                     
                 } catch (error) {
                     console.error('Generic URL conversion failed:', error);
-                    
-                    // Try fallback approach
-                    try {
-                        this.updateConversionStatus('info', '🔄 Trying alternative method...');
-                        
-                        // Create a placeholder for the URL
-                        const placeholderAudio = await this.createUrlPlaceholder(url);
-                        
-                        this.convertedAudioBlob = await this.fetchAudioBlob(placeholderAudio);
-                        
-                        const filename = this.extractFilenameFromUrl(url) || 'converted_audio.mp3';
-                        const format = this.formatSelect ? this.formatSelect.value : 'mp3';
-                        const size = this.convertedAudioBlob ? this.convertedAudioBlob.size : 0;
-                        this.showDownloadSection(filename, format, size);
-                        
-                        this.updateConversionStatus('success', '🎉 Audio processed! (Note: Direct conversion failed due to CORS restrictions)');
-                        
-                    } catch (fallbackError) {
-                        throw new Error(`Failed to load audio: ${error.message}. Fallback also failed: ${fallbackError.message}`);
-                    }
+                    throw new Error(`Failed to load audio: ${error.message}. URL may be blocked by CORS policy or inaccessible.`);
                 }
             }
 
@@ -5843,29 +5664,7 @@
                 }
             }
 
-            async createUrlPlaceholder(url) {
-                // Create a placeholder audio file for URLs that can't be directly accessed
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const sampleRate = audioContext.sampleRate;
-                const duration = 30; // 30 seconds - more realistic length
-                const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
-                const data = buffer.getChannelData(0);
-                
-                // Generate a more complex audio pattern
-                for (let i = 0; i < data.length; i++) {
-                    const t = i / sampleRate;
-                    // Create a chord progression
-                    data[i] = (
-                        Math.sin(2 * Math.PI * 440 * t) * 0.1 + // A4
-                        Math.sin(2 * Math.PI * 554.37 * t) * 0.1 + // C#5
-                        Math.sin(2 * Math.PI * 659.25 * t) * 0.1 // E5
-                    ) * Math.exp(-t * 0.1); // Gradual fade out
-                }
-                
-                // Convert to WAV
-                const wavBlob = this.bufferToWav(buffer);
-                return URL.createObjectURL(wavBlob);
-            }
+            // createUrlPlaceholder function removed - no more fallback audio generation
 
             async fetchAudioBlob(path) {
                 // Handle data URIs without fetch to avoid CORS issues
@@ -6837,26 +6636,8 @@
                             // Try to use a simple test tone as fallback
                             console.log('🔄 Attempting fallback audio source...');
                             
-                            try {
-                                // Create a simple fallback audio using the existing createPlaceholderAudio function
-                                const fallbackUrl = await this.createPlaceholderAudio(audioFile.title || audioFile.originalName || audioFile.filename);
-                                
-                                this.audioPlayer.src = fallbackUrl;
-                                this.audioPlayer.load();
-                                await this.audioPlayer.play();
-                                this.isPlaying = true;
-                                if (this.playBtn) {
-                                    this.playBtn.innerHTML = '⏸';
-                                }
-                                if (this.albumArt) {
-                                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                                }
-                                
-                                this.updateStatus('warning', `⚠️ Using fallback audio for: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
-                                return;
-                            } catch (fallbackError) {
-                                console.error('❌ Fallback audio also failed:', fallbackError);
-                            }
+                            // Skip to next track if audio is corrupted
+                            console.log('❌ Audio data is corrupted, skipping track');
                             
                             // If fallback also fails, skip to next track
                             if (this.currentTrackIndex < this.currentPlaylist.playlist_items.length - 1) {
