@@ -27,13 +27,14 @@
             --success-color: #00d4aa;
             --warning-color: #feca57;
             --error-color: #ff6b6b;
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
             --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-secondary: rgba(255, 255, 255, 0.8);
             --text-muted: rgba(255, 255, 255, 0.5);
-            --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.25);
-            --shadow-xl: 0 35px 70px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 30px 60px rgba(0, 0, 0, 0.25);
+            --neon-glow: 0 0 30px rgba(240, 147, 251, 0.4);
         }
 
         body {
@@ -2972,89 +2973,607 @@
             }
         }
 
+        /* Enhanced Profile Header Styles */
+        .profile-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-gradient);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: scaleX(0); opacity: 0.5; }
+            50% { transform: scaleX(1); opacity: 1; }
+        }
+
+        .profile-main {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: var(--neon-glow);
+        }
+
+        .profile-avatar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .profile-avatar:hover::after {
+            transform: translateX(100%);
+        }
+
+        .avatar-status {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #00ff88;
+            border: 4px solid rgba(15, 12, 41, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .profile-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .profile-username {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .profile-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Enhanced Mini Player Styles */
+        .mini-player {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-player::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(102, 126, 234, 0.1) 0%, 
+                rgba(240, 147, 251, 0.1) 50%, 
+                rgba(102, 126, 234, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mini-player.playing::before {
+            opacity: 1;
+            animation: playingGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes playingGlow {
+            from { opacity: 0.3; }
+            to { opacity: 0.7; }
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .player-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .player-mode {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .track-display {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .album-art-mini {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .vinyl-spin {
+            position: absolute;
+            inset: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: spin 10s linear infinite;
+        }
+
+        .vinyl-spin::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .track-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-title-mini {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist-mini {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .controls-mini {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn-mini {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn-mini:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn-mini.primary {
+            width: 64px;
+            height: 64px;
+            background: var(--accent-gradient);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        .control-btn-mini.primary:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(245, 87, 108, 0.5);
+        }
+
+        .progress-section-mini {
+            margin-bottom: 16px;
+        }
+
+        .progress-bar-mini {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill-mini {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 3px;
+            width: 30%;
+            position: relative;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill-mini::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 2px;
+        }
+
+        .progress-time-mini {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Enhanced Converter Section Styles */
+        .converter-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .converter-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .converter-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .converter-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .converter-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: rgba(240, 147, 251, 0.6);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: var(--neon-glow);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .settings-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .select-field {
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .select-field:focus {
+            border-color: rgba(240, 147, 251, 0.6);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Interactive Elements */
+        .interactive {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .interactive:active {
+            transform: scale(0.98);
+        }
+
+        /* Notification Toast */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .notification-toast.show {
+            transform: translateX(0);
+        }
+
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div class="header">
-            <h1 class="logo">BlueMe</h1>
-            <div class="pro-badge">
-                ✨ BLUETOOTH
+        <!-- Enhanced Profile Header -->
+        <div class="profile-header">
+            <div class="profile-main">
+                <div class="profile-avatar interactive" id="profileAvatar" onclick="toggleProfileMenu()">
+                    <span id="avatarInitial">BM</span>
+                    <div class="avatar-status">🎵</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name" id="profileName">BlueMe User</div>
+                    <div class="profile-username" id="profileUsername">@blueme_user</div>
+                    <div class="profile-status-badge">
+                        <span>✨</span>
+                        <span id="statusText">Premium Active</span>
+                    </div>
+                </div>
             </div>
-            <p class="subtitle">Share music with friends wirelessly</p>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="tracksCount">42</span>
+                    <span class="stat-label">Tracks</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="playlistsCount">8</span>
+                    <span class="stat-label">Playlists</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="devicesCount">2</span>
+                    <span class="stat-label">Devices</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Modern Audio Player Card -->
-        <div class="audio-visualizer">
-            <!-- Track Info Section -->
-            <div class="track-info-section">
-                <div class="album-art-container">
-                    <div class="album-art" id="albumArt">
-                        <div class="album-art-inner">
-                            <div class="music-note">🎵</div>
-                            <div class="vinyl-rings"></div>
-                        </div>
-                    </div>
-                    <div class="play-indicator" id="playIndicator"></div>
-                </div>
-                
-                <div class="track-details">
-                    <div class="track-title" id="trackTitle">Choose Your Vibe</div>
-                    <div class="track-artist" id="trackArtist">Ready to sync with friends</div>
-                    <div class="track-status" id="trackStatus">
-                        <span class="status-dot"></span>
-                        <span class="status-text">Ready</span>
-                    </div>
+        <!-- Enhanced Mini Player -->
+        <div class="mini-player" id="miniPlayer">
+            <div class="player-header">
+                <div class="player-title">🎵 Now Playing</div>
+                <div class="player-mode">
+                    <span>🔀</span>
+                    <span>Shuffle</span>
                 </div>
             </div>
 
-            <!-- Modern Controls Section -->
-            <div class="controls-section">
-                <div class="control-buttons">
-                    <button class="control-btn secondary" id="prevBtn" title="Previous Track">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
-                        </svg>
-                    </button>
-                    <button class="control-btn primary play-btn" id="playBtn" title="Play/Pause">
-                        <svg class="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M8 5v14l11-7z"/>
-                        </svg>
-                        <svg class="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                        </svg>
-                    </button>
-                    <button class="control-btn secondary" id="nextBtn" title="Next Track">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
-                        </svg>
-                    </button>
-                    <button class="control-btn secondary" id="repeatBtn" title="Repeat Track">
-                        <svg class="repeat-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-                        </svg>
-                    </button>
+            <div class="track-display">
+                <div class="album-art-mini">
+                    <span id="albumArtIcon">🎵</span>
+                    <div class="vinyl-spin"></div>
                 </div>
-                
-                <!-- Progress Section -->
-                <div class="progress-section" id="progressSection">
-                    <div class="time-display">
-                        <span class="current-time" id="currentTime">0:00</span>
-                        <span class="total-time" id="totalTime">0:00</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="progressBar">
-                            <div class="progress-fill" id="progressFill"></div>
-                            <div class="progress-handle" id="progressHandle"></div>
-                        </div>
-                    </div>
+                <div class="track-info">
+                    <div class="track-title-mini" id="trackTitleMini">Choose Your Vibe</div>
+                    <div class="track-artist-mini" id="trackArtistMini">Ready to sync with friends</div>
                 </div>
             </div>
 
-            <!-- Marquee Bar for Converted Track Info -->
-            <div class="marquee-container" id="marqueeContainer" style="display: none;">
-                <div class="marquee-text" id="marqueeText"></div>
-                <div class="marquee-placeholder" id="marqueePlaceholder">Converted Track Information</div>
+            <div class="controls-mini">
+                <button class="control-btn-mini interactive" id="prevBtnMini" title="Previous">
+                    ⏮️
+                </button>
+                <button class="control-btn-mini primary interactive" id="playBtnMini" title="Play/Pause">
+                    ▶️
+                </button>
+                <button class="control-btn-mini interactive" id="nextBtnMini" title="Next">
+                    ⏭️
+                </button>
+                <button class="control-btn-mini interactive" id="shuffleBtnMini" title="Shuffle">
+                    🔀
+                </button>
+            </div>
+
+            <div class="progress-section-mini">
+                <div class="progress-bar-mini interactive" id="progressBarMini">
+                    <div class="progress-fill-mini" id="progressFillMini"></div>
+                </div>
+                <div class="progress-time-mini">
+                    <span id="currentTimeMini">0:00</span>
+                    <span id="totalTimeMini">0:00</span>
+                </div>
             </div>
         </div>
             
@@ -3105,78 +3624,72 @@
             <input type="file" id="audioFile" accept="audio/*" style="display: none;">
         </div>
 
-        <!-- Audio Converter Card -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">
-                    <span>🎛</span>
-                    Audio Converter
+        <!-- Enhanced Audio Converter Section -->
+        <div class="converter-section">
+            <div class="converter-header">
+                <div class="converter-icon">🎛️</div>
+                <div>
+                    <div class="converter-title">Audio Converter Pro</div>
+                    <div class="converter-subtitle">Transform any URL into high-quality audio</div>
                 </div>
-                <div class="card-subtitle">Convert any URL to high-quality audio</div>
             </div>
-            <div class="card-content">
-                <!-- Mobile File Upload Option -->
-                <div class="file-input-wrapper" style="margin-bottom: 16px;">
-                    <input type="file" id="mobileAudioFile" accept="audio/*" style="display: none;">
-                    <label for="mobileAudioFile" class="file-input-label">
-                        📱 Upload Audio File
-                        <small style="display: block; margin-top: 4px; opacity: 0.7;">Tap to select from device</small>
-                    </label>
-                </div>
-                
-                <div class="input-group">
-                    <input type="url" 
-                           class="input-field"
-                           id="audioUrl" 
-                           placeholder="Paste YouTube, SoundCloud, or any audio URL">
-                </div>
 
-                <div class="settings-row">
-                    <div class="select-group">
-                        <label class="select-label">Format</label>
-                        <select class="select-field" id="formatSelect">
-                            <option value="mp3">MP3</option>
-                            <option value="wav">WAV</option>
-                            <option value="ogg">OGG</option>
-                            <option value="aac">AAC</option>
-                        </select>
-                    </div>
-                    <div class="select-group">
-                        <label class="select-label">Quality</label>
-                        <select class="select-field" id="qualitySelect">
-                            <option value="128">128 kbps</option>
-                            <option value="192" selected>192 kbps</option>
-                            <option value="256">256 kbps</option>
-                            <option value="320">320 kbps</option>
-                        </select>
-                    </div>
-                </div>
+            <div class="input-group">
+                <input type="url" 
+                       class="input-field"
+                       id="audioUrl" 
+                       placeholder="🔗 Paste YouTube, SoundCloud, or any audio URL">
+            </div>
 
-                <button class="btn btn-primary" id="convertBtn" style="width: 100%;">
-                    <span id="convertText">🎵 Convert Audio</span>
-                    <span id="convertLoader" class="loading-spinner hidden"></span>
+            <div class="settings-row">
+                <select class="select-field" id="formatSelect">
+                    <option value="mp3">🎵 MP3</option>
+                    <option value="wav">🎼 WAV</option>
+                    <option value="ogg">🎧 OGG</option>
+                    <option value="aac">📻 AAC</option>
+                </select>
+                <select class="select-field" id="qualitySelect">
+                    <option value="128">128 kbps</option>
+                    <option value="192" selected>192 kbps</option>
+                    <option value="256">256 kbps</option>
+                    <option value="320">320 kbps</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary interactive" id="convertBtn" style="width: 100%;">
+                <span>✨</span>
+                <span>Convert to Audio</span>
+            </button>
+
+            <div style="margin-top: 12px;">
+                <button class="btn btn-secondary interactive" style="width: 100%;" onclick="uploadFile()">
+                    <span>📁</span>
+                    <span>Upload Local File</span>
                 </button>
+            </div>
 
-                <div id="conversionStatus" class="hidden"></div>
+            <!-- Hidden file input -->
+            <input type="file" id="audioFileInput" accept="audio/*" style="display: none;">
 
-                <div id="downloadSection" class="download-card hidden">
-                    <div class="download-header">
-                        <div class="file-info">
-                            <div class="file-name" id="convertedFileName"></div>
-                            <div class="file-details" id="convertedFileInfo"></div>
-                        </div>
+            <div id="conversionStatus" class="hidden"></div>
+
+            <div id="downloadSection" class="download-card hidden">
+                <div class="download-header">
+                    <div class="file-info">
+                        <div class="file-name" id="convertedFileName"></div>
+                        <div class="file-details" id="convertedFileInfo"></div>
                     </div>
-                    <div class="download-actions">
-                        <button class="btn btn-secondary" id="downloadBtn">
-                            📥 Download
-                        </button>
-                        <button class="btn btn-primary" id="useConvertedBtn">
-                            🎵 Load
-                        </button>
-                        <button class="btn btn-accent" id="addToPlaylistBtn">
-                            +Playlist
-                        </button>
-                    </div>
+                </div>
+                <div class="download-actions">
+                    <button class="btn btn-secondary" id="downloadBtn">
+                        📥 Download
+                    </button>
+                    <button class="btn btn-primary" id="useConvertedBtn">
+                        🎵 Load
+                    </button>
+                    <button class="btn btn-accent" id="addToPlaylistBtn">
+                        +Playlist
+                    </button>
                 </div>
             </div>
         </div>
@@ -3231,6 +3744,11 @@
     </div>
 
     <audio id="audioPlayer" preload="auto"></audio>
+
+    <!-- Notification Toast -->
+    <div class="notification-toast" id="notificationToast">
+        <div id="toastMessage">Welcome to BlueMe!</div>
+    </div>
 
     <!-- Socket.IO Client -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -3292,11 +3810,13 @@
                 this.syncRoomId = null;
                 this.socket = null;
                 this.convertedAudioBlob = null;
-                this.currentTime = 0;
                 
-                this.duration = 0;
+                // Enhanced UI properties
+                this.currentTime = 0;
+                this.duration = 180; // 3 minutes demo
                 this.progressInterval = null;
-                this.socket = null;
+                
+                this.initializeEnhancedUI();
                 this.syncRoomId = null;
                 this.audioStream = null;
                 this.playlists = [];
@@ -3364,6 +3884,243 @@
                 this.addToPlaylistBtn = document.getElementById('addToPlaylistBtn');
                 this.convertedFileName = document.getElementById('convertedFileName');
                 this.convertedFileInfo = document.getElementById('convertedFileInfo');
+            }
+
+            initializeEnhancedUI() {
+                // Enhanced profile elements
+                this.profileAvatar = document.getElementById('profileAvatar');
+                this.profileName = document.getElementById('profileName');
+                this.avatarInitial = document.getElementById('avatarInitial');
+                
+                // Enhanced mini player elements
+                this.miniPlayer = document.getElementById('miniPlayer');
+                this.playBtnMini = document.getElementById('playBtnMini');
+                this.trackTitleMini = document.getElementById('trackTitleMini');
+                this.trackArtistMini = document.getElementById('trackArtistMini');
+                this.progressFillMini = document.getElementById('progressFillMini');
+                this.currentTimeMini = document.getElementById('currentTimeMini');
+                this.totalTimeMini = document.getElementById('totalTimeMini');
+                
+                // Enhanced converter elements
+                this.audioFileInput = document.getElementById('audioFileInput');
+                
+                // Setup enhanced UI event listeners
+                this.setupEnhancedEventListeners();
+                
+                // Start demo
+                this.startEnhancedDemo();
+            }
+
+            setupEnhancedEventListeners() {
+                // Enhanced play button
+                if (this.playBtnMini) {
+                    this.playBtnMini.addEventListener('click', () => this.toggleEnhancedPlayback());
+                }
+                
+                // Profile avatar animation
+                if (this.profileAvatar) {
+                    this.profileAvatar.addEventListener('mouseenter', () => {
+                        if (this.avatarInitial) {
+                            this.avatarInitial.textContent = '🎵';
+                        }
+                    });
+                    
+                    this.profileAvatar.addEventListener('mouseleave', () => {
+                        if (this.avatarInitial) {
+                            this.avatarInitial.textContent = 'BM';
+                        }
+                    });
+                }
+                
+                // Progress bar interaction
+                const progressBar = document.getElementById('progressBarMini');
+                if (progressBar) {
+                    progressBar.addEventListener('click', (e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const clickX = e.clientX - rect.left;
+                        const percentage = clickX / rect.width;
+                        this.seekTo(percentage);
+                    });
+                }
+
+                // File upload handler
+                if (this.audioFileInput) {
+                    this.audioFileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+                }
+            }
+
+            toggleEnhancedPlayback() {
+                this.isPlaying = !this.isPlaying;
+                
+                if (this.isPlaying) {
+                    if (this.playBtnMini) {
+                        this.playBtnMini.textContent = '⏸️';
+                    }
+                    if (this.miniPlayer) {
+                        this.miniPlayer.classList.add('playing');
+                    }
+                    this.startProgress();
+                    this.showNotification('🎵 Now playing your track!');
+                } else {
+                    if (this.playBtnMini) {
+                        this.playBtnMini.textContent = '▶️';
+                    }
+                    if (this.miniPlayer) {
+                        this.miniPlayer.classList.remove('playing');
+                    }
+                    this.stopProgress();
+                    this.showNotification('⏸️ Playback paused');
+                }
+            }
+
+            startProgress() {
+                if (this.progressInterval) return;
+                
+                this.progressInterval = setInterval(() => {
+                    if (this.isPlaying && this.currentTime < this.duration) {
+                        this.currentTime += 0.5;
+                        this.updateProgress();
+                    } else if (this.currentTime >= this.duration) {
+                        this.onTrackEnd();
+                    }
+                }, 500);
+            }
+
+            stopProgress() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
+            }
+
+            updateProgress() {
+                const percentage = (this.currentTime / this.duration) * 100;
+                if (this.progressFillMini) {
+                    this.progressFillMini.style.width = `${percentage}%`;
+                }
+                
+                if (this.currentTimeMini) {
+                    this.currentTimeMini.textContent = this.formatTime(this.currentTime);
+                }
+                if (this.totalTimeMini) {
+                    this.totalTimeMini.textContent = this.formatTime(this.duration);
+                }
+            }
+
+            seekTo(percentage) {
+                this.currentTime = this.duration * percentage;
+                this.updateProgress();
+                this.showNotification(`⏩ Seeked to ${this.formatTime(this.currentTime)}`);
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            onTrackEnd() {
+                this.isPlaying = false;
+                this.currentTime = 0;
+                if (this.playBtnMini) {
+                    this.playBtnMini.textContent = '▶️';
+                }
+                if (this.miniPlayer) {
+                    this.miniPlayer.classList.remove('playing');
+                }
+                this.stopProgress();
+                this.updateProgress();
+                this.showNotification('🎊 Track finished!');
+            }
+
+            showNotification(message) {
+                const toast = document.getElementById('notificationToast');
+                const messageEl = document.getElementById('toastMessage');
+                
+                if (toast && messageEl) {
+                    messageEl.textContent = message;
+                    toast.classList.add('show');
+                    
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
+                }
+            }
+
+            handleFileUpload(e) {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('audio/')) {
+                    this.showNotification(`📁 Loaded: ${file.name}`);
+                    if (this.trackTitleMini) {
+                        this.trackTitleMini.textContent = file.name.replace(/\.[^/.]+$/, "");
+                    }
+                    if (this.trackArtistMini) {
+                        this.trackArtistMini.textContent = 'Local File';
+                    }
+                    this.updateStats();
+                } else {
+                    this.showNotification('❌ Please select a valid audio file');
+                }
+            }
+
+            updateStats() {
+                // Animate stat updates
+                const tracksCount = document.getElementById('tracksCount');
+                const playlistsCount = document.getElementById('playlistsCount');
+                const devicesCount = document.getElementById('devicesCount');
+                
+                if (tracksCount) {
+                    this.animateNumber(tracksCount, parseInt(tracksCount.textContent), 
+                                     parseInt(tracksCount.textContent) + Math.floor(Math.random() * 3) + 1);
+                }
+                if (playlistsCount) {
+                    this.animateNumber(playlistsCount, parseInt(playlistsCount.textContent), 
+                                     parseInt(playlistsCount.textContent) + Math.floor(Math.random() * 2));
+                }
+            }
+
+            animateNumber(element, start, end) {
+                const duration = 1000;
+                const startTime = Date.now();
+                
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                    const current = Math.round(start + (end - start) * easeOutQuart);
+                    
+                    element.textContent = current;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+
+            startEnhancedDemo() {
+                // Initial notification
+                setTimeout(() => {
+                    this.showNotification('🚀 Welcome to BlueMe Pro!');
+                }, 1000);
+                
+                // Demo track loading
+                setTimeout(() => {
+                    if (this.trackTitleMini) {
+                        this.trackTitleMini.textContent = 'Lofi Hip Hop Beat';
+                    }
+                    if (this.trackArtistMini) {
+                        this.trackArtistMini.textContent = 'ChillVibes Studio';
+                    }
+                    this.showNotification('🎵 Demo track loaded');
+                }, 3000);
+                
+                // Stats update demo
+                setTimeout(() => {
+                    this.updateStats();
+                }, 5000);
             }
 
             setupEventListeners() {
@@ -8375,6 +9132,30 @@
                     console.error('❌ Error creating playlist from modal:', error);
                     this.updateStatus('error', `Failed to create playlist: ${error.message}`);
                 }
+            }
+        }
+
+        // Global functions for enhanced UI
+        function toggleProfileMenu() {
+            const avatar = document.getElementById('profileAvatar');
+            if (avatar) {
+                avatar.style.transform = 'scale(0.95) rotate(15deg)';
+                
+                setTimeout(() => {
+                    avatar.style.transform = '';
+                }, 150);
+                
+                // Show profile options (would open a modal in real app)
+                if (window.app) {
+                    window.app.showNotification('👤 Profile menu - Coming soon!');
+                }
+            }
+        }
+        
+        function uploadFile() {
+            const fileInput = document.getElementById('audioFileInput');
+            if (fileInput) {
+                fileInput.click();
             }
         }
 
