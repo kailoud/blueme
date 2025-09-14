@@ -4590,10 +4590,8 @@
                     this.updateConversionStatus('info', '📺 Converting YouTube video...');
                     
                     // Make API call to convert YouTube URL
-                    // Use production URL if deployed, otherwise use local development URL
-                    const apiBaseUrl = window.location.hostname === 'blueme.app' 
-                        ? 'https://blueme-production.up.railway.app' 
-                        : 'https://192.168.1.110:3000';
+                    // Use local development URL for now
+                    const apiBaseUrl = 'https://localhost:3000';
                     
                     const response = await fetch(`${apiBaseUrl}/api/convert-youtube`, {
                         method: 'POST',
@@ -5047,10 +5045,8 @@
                     try {
                         console.log('💾 Creating playlist via server API...');
                         
-                        // Use production URL if deployed, otherwise use local development URL
-                        const apiBaseUrl = window.location.hostname === 'blueme.app' 
-                            ? 'https://blueme-production.up.railway.app' 
-                            : 'https://192.168.1.110:3000';
+                        // Use local development URL for now
+                        const apiBaseUrl = 'https://localhost:3000';
                         
                         const response = await fetch(`${apiBaseUrl}/api/playlists`, {
                             method: 'POST',
@@ -5133,10 +5129,8 @@
                     try {
                         console.log('💾 Adding track to playlist via local server...');
                         
-                        // Use production URL if deployed, otherwise use local development URL
-                        const apiBaseUrl = window.location.hostname === 'blueme.app' 
-                            ? 'https://blueme-production.up.railway.app' 
-                            : 'https://192.168.1.110:3000';
+                        // Use local development URL for now
+                        const apiBaseUrl = 'https://localhost:3000';
                         
                         const response = await fetch(`${apiBaseUrl}/api/playlists/${playlistId}/items`, {
                             method: 'POST',
@@ -5240,10 +5234,8 @@
                     // Use server API for both local and production
                     console.log('💾 Loading playlists via server API...');
                     
-                    // Use production URL if deployed, otherwise use local development URL
-                    const apiBaseUrl = window.location.hostname === 'blueme.app' 
-                        ? 'https://blueme-production.up.railway.app' 
-                        : 'https://192.168.1.110:3000';
+                    // Use local development URL for now
+                    const apiBaseUrl = 'https://localhost:3000';
                     
                     const response = await fetch(`${apiBaseUrl}/api/playlists`);
                     
