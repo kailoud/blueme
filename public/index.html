@@ -5428,7 +5428,6 @@
                     // Reload playlists after fixing
                     if (fixedCount > 0) {
                         await this.loadUserPlaylists();
-                        await this.autoLoadFirstPlaylist();
                     }
                 } catch (error) {
                     console.error('❌ Error fixing missing audio files:', error);
@@ -5444,21 +5443,18 @@
                         return;
                     }
 
-                    // Generate sample audio data
-                    const sampleAudioData = this.generateSampleAudioData();
-                    
-                    // Create test audio file record
+                    // Create test audio file record with placeholder data
                     const testAudioFile = {
                         id: crypto.randomUUID(),
                         user_id: currentUser.id,
                         title: 'Test Track - Working Audio',
-                        artist: 'BlueMe Test',
+                        artist: 'Sample Artist',
                         album: 'Test Album',
                         duration: 10,
-                        file_size: sampleAudioData.length,
+                        file_size: 1000,
                         file_path: `test-${Date.now()}.wav`,
                         mime_type: 'audio/wav',
-                        audio_data: sampleAudioData,
+                        audio_data: 'placeholder',
                         created_at: new Date().toISOString()
                     };
 
@@ -5520,9 +5516,8 @@
                     this.updateStatus('success', '✅ Test playlist created with working audio!');
                     console.log('✅ Test playlist created successfully');
                     
-                    // Reload playlists and auto-load the test playlist
+                    // Reload playlists
                     await this.loadUserPlaylists();
-                    await this.autoLoadFirstPlaylist();
                     
                 } catch (error) {
                     console.error('❌ Error creating test playlist:', error);
@@ -5657,11 +5652,7 @@
                         if (audioUrl) {
                             this.updateConversionStatus('info', '🎵 Processing audio...');
                             
-                            // Load the actual audio
-                            const title = `YouTube Video ${videoId}`;
-                            await this.loadAudioFromUrl(audioUrl, title);
-                            
-                            // Create converted blob
+                            // Create converted blob for download
                             this.convertedAudioBlob = await this.fetchAudioBlob(audioUrl);
                             
                             // Show download section
@@ -5683,10 +5674,7 @@
                         const placeholderAudio = await this.createPlaceholderAudio(`YouTube Video ${videoId}`);
                         const title = `YouTube Video ${videoId}`;
                         
-                        // Load the placeholder audio
-                        await this.loadAudioFromUrl(placeholderAudio, title);
-                        
-                        // Create converted blob
+                        // Create converted blob for download
                         this.convertedAudioBlob = await this.fetchAudioBlob(placeholderAudio);
                         
                         // Show download section
@@ -5774,10 +5762,7 @@
                         throw new Error('URL is not accessible or blocked by CORS policy');
                     }
                     
-                    // Try to load the URL directly as audio
-                    await this.loadAudioFromUrl(url, 'Converted Audio');
-                    
-                    // Create converted blob
+                    // Create converted blob for download
                     this.convertedAudioBlob = await this.fetchAudioBlob(url);
                     
                     // Show download section
@@ -5797,7 +5782,6 @@
                         
                         // Create a placeholder for the URL
                         const placeholderAudio = await this.createUrlPlaceholder(url);
-                        await this.loadAudioFromUrl(placeholderAudio, 'Converted Audio');
                         
                         this.convertedAudioBlob = await this.fetchAudioBlob(placeholderAudio);
                         
@@ -6842,16 +6826,19 @@
                             console.log('🔄 Attempting fallback audio source...');
                             
                             try {
-                                const fallbackAudioData = this.generateSampleAudioData();
-                                const fallbackBlob = await this.base64ToBlob(fallbackAudioData, 'audio/wav');
-                                const fallbackUrl = URL.createObjectURL(fallbackBlob);
+                                // Create a simple fallback audio using the existing createPlaceholderAudio function
+                                const fallbackUrl = await this.createPlaceholderAudio(audioFile.title || audioFile.originalName || audioFile.filename);
                                 
                                 this.audioPlayer.src = fallbackUrl;
                                 this.audioPlayer.load();
                                 await this.audioPlayer.play();
                                 this.isPlaying = true;
-                                this.playBtn.innerHTML = '⏸';
-                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                if (this.playBtn) {
+                                    this.playBtn.innerHTML = '⏸';
+                                }
+                                if (this.albumArt) {
+                                    this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                                }
                                 
                                 this.updateStatus('warning', `⚠️ Using fallback audio for: ${audioFile.title || audioFile.originalName || audioFile.filename}`);
                                 return;
