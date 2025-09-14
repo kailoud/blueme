@@ -4682,9 +4682,23 @@
                     const url = URL.createObjectURL(file);
                     this.audioPlayer.src = url;
                     
-                    this.trackTitle.textContent = file.name.replace(/\.[^/.]+$/, "");
-                    this.trackArtist.textContent = "Local Track";
-                    this.albumArt.textContent = '🎵';
+                    if (this.trackTitle) {
+                        this.trackTitle.textContent = file.name.replace(/\.[^/.]+$/, "");
+                    }
+                    if (this.trackArtist) {
+                        this.trackArtist.textContent = "Local Track";
+                    }
+                    if (this.albumArt) {
+                        this.albumArt.textContent = '🎵';
+                    }
+                    
+                    // Update enhanced mini player
+                    if (this.trackTitleMini) {
+                        this.trackTitleMini.textContent = file.name.replace(/\.[^/.]+$/, "");
+                    }
+                    if (this.trackArtistMini) {
+                        this.trackArtistMini.textContent = "Local Track";
+                    }
                     
                     this.updateStatus('success', '🎵 Track loaded! Ready to sync with friends');
                 } else {
@@ -5053,8 +5067,21 @@
                             this.currentPlaylist = null;
                             this.currentTrackIndex = 0;
                             this.audioPlayer.src = '';
-                            this.trackTitle.textContent = 'Choose Your Vibe';
-                            this.trackArtist.textContent = 'No track selected';
+                            
+                            if (this.trackTitle) {
+                                this.trackTitle.textContent = 'Choose Your Vibe';
+                            }
+                            if (this.trackArtist) {
+                                this.trackArtist.textContent = 'No track selected';
+                            }
+                            
+                            // Update enhanced mini player
+                            if (this.trackTitleMini) {
+                                this.trackTitleMini.textContent = 'Choose Your Vibe';
+                            }
+                            if (this.trackArtistMini) {
+                                this.trackArtistMini.textContent = 'No track selected';
+                            }
                             return;
                         }
                     }
@@ -5183,9 +5210,23 @@
                 this.audioPlayer.src = fallbackUrl;
                 this.audioPlayer.load();
                 
-                this.trackTitle.textContent = "Sample Audio";
-                this.trackArtist.textContent = "BlueMe Demo";
-                this.albumArt.textContent = '🎵';
+                if (this.trackTitle) {
+                    this.trackTitle.textContent = "Sample Audio";
+                }
+                if (this.trackArtist) {
+                    this.trackArtist.textContent = "BlueMe Demo";
+                }
+                if (this.albumArt) {
+                    this.albumArt.textContent = '🎵';
+                }
+                
+                // Update enhanced mini player
+                if (this.trackTitleMini) {
+                    this.trackTitleMini.textContent = "Sample Audio";
+                }
+                if (this.trackArtistMini) {
+                    this.trackArtistMini.textContent = "BlueMe Demo";
+                }
                 
                 this.updateStatus('success', '🎵 Fallback sample loaded! Click play to test');
                 
@@ -5646,6 +5687,28 @@
                 return (match && match[2].length === 11) ? match[2] : null;
             }
 
+            // Helper function to update track info in both main and mini players
+            updateTrackInfo(title, artist, albumArt = '🎵') {
+                // Update main player
+                if (this.trackTitle) {
+                    this.trackTitle.textContent = title;
+                }
+                if (this.trackArtist) {
+                    this.trackArtist.textContent = artist;
+                }
+                if (this.albumArt) {
+                    this.albumArt.textContent = albumArt;
+                }
+                
+                // Update enhanced mini player
+                if (this.trackTitleMini) {
+                    this.trackTitleMini.textContent = title;
+                }
+                if (this.trackArtistMini) {
+                    this.trackArtistMini.textContent = artist;
+                }
+            }
+
             async convertGenericUrl(url) {
                 try {
                     this.updateConversionStatus('info', '📡 Fetching audio from URL...');
@@ -5832,10 +5895,24 @@
                 this.audioPlayer.src = url;
                 this.audioPlayer.load(); // Force reload
                 
-                const filename = this.convertedFileName.textContent.split('.')[0];
-                this.trackTitle.textContent = filename;
-                this.trackArtist.textContent = 'Converted Track';
-                this.albumArt.textContent = '🎵';
+                const filename = this.convertedFileName ? this.convertedFileName.textContent.split('.')[0] : 'Converted Track';
+                if (this.trackTitle) {
+                    this.trackTitle.textContent = filename;
+                }
+                if (this.trackArtist) {
+                    this.trackArtist.textContent = 'Converted Track';
+                }
+                if (this.albumArt) {
+                    this.albumArt.textContent = '🎵';
+                }
+                
+                // Update enhanced mini player
+                if (this.trackTitleMini) {
+                    this.trackTitleMini.textContent = filename;
+                }
+                if (this.trackArtistMini) {
+                    this.trackArtistMini.textContent = 'Converted Track';
+                }
                 
                 this.updateStatus('success', '🎵 Converted track loaded as individual file! Use "▶️ Play in Main Player" on playlists to play multiple tracks');
                 this.updateConversionStatus('success', '🎉 Track loaded into player!');
@@ -7747,9 +7824,9 @@
                         testAudio.onloadeddata = () => {
                             // Update the main player with the new track
                             this.currentAudio = testAudio;
-                            this.trackTitle.textContent = title;
-                            this.trackArtist.textContent = "From Playlist";
-                            this.albumArt.textContent = '🎵';
+                            
+                            // Update track info using helper function
+                            this.updateTrackInfo(title, "From Playlist");
                             
                             // Update the main player UI
                             this.updateUI();
@@ -7933,8 +8010,21 @@
                             this.currentPlaylist = null;
                             this.currentTrackIndex = 0;
                             this.audioPlayer.src = '';
-                            this.trackTitle.textContent = 'Choose Your Vibe';
-                            this.trackArtist.textContent = 'No track selected';
+                            
+                            if (this.trackTitle) {
+                                this.trackTitle.textContent = 'Choose Your Vibe';
+                            }
+                            if (this.trackArtist) {
+                                this.trackArtist.textContent = 'No track selected';
+                            }
+                            
+                            // Update enhanced mini player
+                            if (this.trackTitleMini) {
+                                this.trackTitleMini.textContent = 'Choose Your Vibe';
+                            }
+                            if (this.trackArtistMini) {
+                                this.trackArtistMini.textContent = 'No track selected';
+                            }
                         }
                         
                         this.updateStatus('success', `Playlist "${playlist.name}" deleted successfully`);
