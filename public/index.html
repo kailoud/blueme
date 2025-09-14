@@ -3891,14 +3891,14 @@
 
             initializeElements() {
                 // Player elements
-                this.albumArt = document.getElementById('albumArt');
-                this.playBtn = document.getElementById('playBtn');
-                this.prevBtn = document.getElementById('prevBtn');
-                this.nextBtn = document.getElementById('nextBtn');
-                this.repeatBtn = document.getElementById('repeatBtn');
+                this.albumArt = document.getElementById('albumArtIcon');
+                this.playBtn = document.getElementById('playBtnMini');
+                this.prevBtn = document.getElementById('prevBtnMini');
+                this.nextBtn = document.getElementById('nextBtnMini');
+                this.repeatBtn = document.getElementById('shuffleBtnMini');
                 this.volumeSlider = document.getElementById('volumeSlider');
-                this.trackTitle = document.getElementById('trackTitle');
-                this.trackArtist = document.getElementById('trackArtist');
+                this.trackTitle = document.getElementById('trackTitleMini');
+                this.trackArtist = document.getElementById('trackArtistMini');
                 this.audioPlayer = document.getElementById('audioPlayer');
                 this.marqueeContainer = document.getElementById('marqueeContainer');
                 this.marqueeText = document.getElementById('marqueeText');
@@ -4711,11 +4711,15 @@
             }
 
             onLoadStart() {
-                this.albumArt.style.animation = 'spin 2s linear infinite';
+                if (this.albumArt) {
+                    this.albumArt.style.animation = 'spin 2s linear infinite';
+                }
             }
 
             onCanPlay() {
-                this.albumArt.style.animation = 'none';
+                if (this.albumArt) {
+                    this.albumArt.style.animation = 'none';
+                }
                 
                 // Ensure progress section is visible when audio can play
                 const progressSection = document.getElementById('progressSection');
@@ -5005,8 +5009,12 @@
 
             onTrackEnded() {
                 this.isPlaying = false;
-                this.playBtn.innerHTML = '▶';
-                this.albumArt.style.animation = 'none';
+                if (this.playBtn) {
+                    this.playBtn.innerHTML = '▶';
+                }
+                if (this.albumArt) {
+                    this.albumArt.style.animation = 'none';
+                }
                 
                 // Check if track repeat mode is enabled
                 if (this.repeatMode === 'track') {
@@ -6117,8 +6125,12 @@
                     if (this.audioPlayer.readyState >= 2) {
                         this.audioPlayer.play().then(() => {
                             this.isPlaying = true;
-                            this.playBtn.innerHTML = '⏸';
-                            this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                            if (this.playBtn) {
+                                this.playBtn.innerHTML = '⏸';
+                            }
+                            if (this.albumArt) {
+                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
+                            }
                             this.updateStatus('success', '🎵 Playing converted audio!');
                         }).catch(error => {
                             console.error('Auto-play failed:', error);
