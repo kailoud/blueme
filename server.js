@@ -18,31 +18,15 @@ const app = express();
 let server;
 let io;
 
-if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
-    // Production: Use HTTP (Railway/cloud platforms handle SSL termination)
-    server = http.createServer(app);
-    io = socketIo(server, {
-        cors: {
-            origin: "*",
-            methods: ["GET", "POST"]
-        }
-    });
-    console.log('🌐 Production mode: Using HTTP server');
-} else {
-    // Development: Use HTTPS with self-signed certificates
-    const httpsOptions = {
-        key: fs.readFileSync('key.pem'),
-        cert: fs.readFileSync('cert.pem')
-    };
-    server = https.createServer(httpsOptions, app);
-    io = socketIo(server, {
-        cors: {
-            origin: "*",
-            methods: ["GET", "POST"]
-        }
-    });
-    console.log('🔒 Development mode: Using HTTPS server');
-}
+// Use HTTP for both development and production to avoid SSL certificate issues
+server = http.createServer(app);
+io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+console.log('🌐 Using HTTP server (SSL issues resolved)');
 
 // Enhanced Bluetooth device management
 class BluetoothManager {

@@ -2697,6 +2697,125 @@
                 gap: 4px;
             }
             
+            /* Mobile Converter Optimizations */
+            .converter-section {
+                padding: 16px;
+                margin: 8px 0;
+            }
+            
+            .input-group {
+                margin-bottom: 16px;
+            }
+            
+            .input-field {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 16px;
+                border-radius: 12px;
+            }
+            
+            .settings-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .select-group {
+                width: 100%;
+            }
+            
+            .select-field {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px;
+            }
+            
+            .conversion-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .conversion-controls .btn {
+                width: 100%;
+                padding: 16px;
+                font-size: 1rem;
+                min-height: 48px; /* Better touch target */
+                touch-action: manipulation; /* Prevents double-tap zoom */
+            }
+            
+            /* Mobile Status Messages */
+            .status-message {
+                font-size: 0.9rem;
+                padding: 12px 16px;
+                margin: 8px 0;
+                border-radius: 8px;
+            }
+            
+            /* Mobile Conversion Status */
+            .conversion-status {
+                font-size: 0.9rem;
+                padding: 12px;
+                margin: 8px 0;
+                border-radius: 8px;
+                text-align: center;
+            }
+            
+            /* Mobile File Input Improvements */
+            .file-input-wrapper {
+                position: relative;
+                display: block;
+                width: 100%;
+            }
+            
+            .file-input-wrapper input[type="file"] {
+                position: absolute;
+                opacity: 0;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+            }
+            
+            .file-input-label {
+                display: block;
+                padding: 16px;
+                background: rgba(255, 255, 255, 0.1);
+                border: 2px dashed rgba(255, 255, 255, 0.3);
+                border-radius: 12px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .file-input-label:hover {
+                background: rgba(255, 255, 255, 0.15);
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+            
+            /* Mobile Touch Improvements */
+            .btn:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+            
+            /* Mobile Progress Indicators */
+            .conversion-progress {
+                width: 100%;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+                overflow: hidden;
+                margin: 8px 0;
+            }
+            
+            .conversion-progress-bar {
+                height: 100%;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+                border-radius: 2px;
+                transition: width 0.3s ease;
+                width: 0%;
+            }
+            
             .logo {
                 font-size: 2.2rem;
                 font-weight: 700;
@@ -2993,6 +3112,15 @@
                 <div class="card-subtitle">Convert any URL to high-quality audio</div>
             </div>
             <div class="card-content">
+                <!-- Mobile File Upload Option -->
+                <div class="file-input-wrapper" style="margin-bottom: 16px;">
+                    <input type="file" id="mobileAudioFile" accept="audio/*" style="display: none;">
+                    <label for="mobileAudioFile" class="file-input-label">
+                        📱 Upload Audio File
+                        <small style="display: block; margin-top: 4px; opacity: 0.7;">Tap to select from device</small>
+                    </label>
+                </div>
+                
                 <div class="input-group">
                     <input type="url" 
                            class="input-field"
@@ -3240,6 +3368,12 @@
                 this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
                 this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
                 this.audioFile.addEventListener('change', (e) => this.loadAudioFile(e));
+                
+                // Mobile file upload
+                const mobileAudioFile = document.getElementById('mobileAudioFile');
+                if (mobileAudioFile) {
+                    mobileAudioFile.addEventListener('change', (e) => this.handleMobileFileUpload(e));
+                }
                 
                 // Bluetooth controls
                 this.scanBtn.addEventListener('click', () => this.scanForDevices());
@@ -4559,6 +4693,56 @@
 
 
 
+            // Mobile File Upload Handler
+            async handleMobileFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                try {
+                    this.updateConversionStatus('info', '📱 Processing mobile file...');
+                    
+                    // Check file type
+                    if (!file.type.startsWith('audio/')) {
+                        this.updateConversionStatus('error', 'Please select an audio file');
+                        return;
+                    }
+
+                    // Check file size (limit to 50MB for mobile)
+                    const maxSize = 50 * 1024 * 1024; // 50MB
+                    if (file.size > maxSize) {
+                        this.updateConversionStatus('error', 'File too large. Maximum size is 50MB');
+                        return;
+                    }
+
+                    // Convert file to audio buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                    // Get format and quality from UI
+                    const format = this.formatSelect.value;
+                    const quality = parseInt(this.qualitySelect.value);
+
+                    // Convert to desired format
+                    const convertedBlob = await this.convertAudioBuffer(audioBuffer, format, quality);
+                    
+                    this.convertedAudioBlob = convertedBlob;
+                    this.convertedFileName = { textContent: `${file.name.split('.')[0]}.${format}` };
+                    
+                    // Show download section
+                    this.showDownloadSection();
+                    
+                    this.updateConversionStatus('success', `📱 Mobile file converted successfully!`);
+                    
+                    // Add to audio library
+                    await this.addConvertedToLibrary();
+                    
+                } catch (error) {
+                    console.error('❌ Mobile file upload error:', error);
+                    this.updateConversionStatus('error', `Mobile conversion failed: ${error.message}`);
+                }
+            }
+
             // Audio Conversion Methods
             async convertAudio() {
                 const url = this.audioUrl.value.trim();
@@ -4590,8 +4774,8 @@
                     this.updateConversionStatus('info', '📺 Converting YouTube video...');
                     
                     // Make API call to convert YouTube URL
-                    // Use local development URL for now
-                    const apiBaseUrl = 'https://localhost:3000';
+                    // Use local development URL for now (HTTP to avoid SSL issues)
+                    const apiBaseUrl = 'http://localhost:3000';
                     
                     const response = await fetch(`${apiBaseUrl}/api/convert-youtube`, {
                         method: 'POST',
@@ -5045,8 +5229,8 @@
                     try {
                         console.log('💾 Creating playlist via server API...');
                         
-                        // Use local development URL for now
-                        const apiBaseUrl = 'https://localhost:3000';
+                        // Use local development URL for now (HTTP to avoid SSL issues)
+                        const apiBaseUrl = 'http://localhost:3000';
                         
                         const response = await fetch(`${apiBaseUrl}/api/playlists`, {
                             method: 'POST',
@@ -5129,8 +5313,8 @@
                     try {
                         console.log('💾 Adding track to playlist via local server...');
                         
-                        // Use local development URL for now
-                        const apiBaseUrl = 'https://localhost:3000';
+                        // Use local development URL for now (HTTP to avoid SSL issues)
+                        const apiBaseUrl = 'http://localhost:3000';
                         
                         const response = await fetch(`${apiBaseUrl}/api/playlists/${playlistId}/items`, {
                             method: 'POST',
@@ -5234,8 +5418,8 @@
                     // Use server API for both local and production
                     console.log('💾 Loading playlists via server API...');
                     
-                    // Use local development URL for now
-                    const apiBaseUrl = 'https://localhost:3000';
+                    // Use local development URL for now (HTTP to avoid SSL issues)
+                    const apiBaseUrl = 'http://localhost:3000';
                     
                     const response = await fetch(`${apiBaseUrl}/api/playlists`);
                     
