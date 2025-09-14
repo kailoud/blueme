@@ -3493,6 +3493,55 @@
             transform: translateX(0);
         }
 
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Status Toast Styles */
+        .status-toast {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin: 8px 0;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+
     </style>
 </head>
 <body>
@@ -3657,8 +3706,8 @@
             </div>
 
             <button class="btn btn-primary interactive" id="convertBtn" style="width: 100%;">
-                <span>✨</span>
-                <span>Convert to Audio</span>
+                <span id="convertText">✨ Convert to Audio</span>
+                <span id="convertLoader" class="loading-spinner hidden">⏳ Converting...</span>
             </button>
 
             <div style="margin-top: 12px;">
@@ -3671,7 +3720,7 @@
             <!-- Hidden file input -->
             <input type="file" id="audioFileInput" accept="audio/*" style="display: none;">
 
-            <div id="conversionStatus" class="hidden"></div>
+            <div id="conversionStatus" class="hidden" style="margin-top: 16px; padding: 12px; border-radius: 12px; text-align: center; font-weight: 500;"></div>
 
             <div id="downloadSection" class="download-card hidden">
                 <div class="download-header">
@@ -5518,12 +5567,15 @@
 
             // Audio Conversion Methods
             async convertAudio() {
+                console.log('🎵 Starting audio conversion...');
                 const url = this.audioUrl.value.trim();
                 if (!url) {
+                    console.log('❌ No URL provided');
                     this.updateConversionStatus('error', '📝 Please enter a valid audio URL');
                     return;
                 }
 
+                console.log('✅ URL provided:', url);
                 this.setConvertButtonState(true);
                 this.updateConversionStatus('info', '🚀 Starting conversion...');
 
@@ -5536,8 +5588,10 @@
                     }
                     
                 } catch (error) {
+                    console.error('❌ Conversion failed:', error);
                     this.updateConversionStatus('error', `💥 Conversion failed: ${error.message}`);
                 } finally {
+                    console.log('🔄 Resetting button state');
                     this.setConvertButtonState(false);
                 }
             }
@@ -5726,21 +5780,35 @@
 
             setConvertButtonState(loading) {
                 if (loading) {
-                    this.convertText.classList.add('hidden');
-                    this.convertLoader.classList.remove('hidden');
-                    this.convertBtn.disabled = true;
+                    if (this.convertText) {
+                        this.convertText.classList.add('hidden');
+                    }
+                    if (this.convertLoader) {
+                        this.convertLoader.classList.remove('hidden');
+                    }
+                    if (this.convertBtn) {
+                        this.convertBtn.disabled = true;
+                    }
                 } else {
-                    this.convertText.classList.remove('hidden');
-                    this.convertLoader.classList.add('hidden');
-                    this.convertBtn.disabled = false;
+                    if (this.convertText) {
+                        this.convertText.classList.remove('hidden');
+                    }
+                    if (this.convertLoader) {
+                        this.convertLoader.classList.add('hidden');
+                    }
+                    if (this.convertBtn) {
+                        this.convertBtn.disabled = false;
+                    }
                 }
             }
 
             updateConversionStatus(type, message) {
-                this.conversionStatus.className = `status-toast status-${type}`;
-                this.conversionStatus.innerHTML = this.getStatusIcon(type) + message;
-                this.conversionStatus.classList.remove('hidden');
-                this.conversionStatus.style.animation = 'slideUp 0.3s ease';
+                if (this.conversionStatus) {
+                    this.conversionStatus.className = `status-toast status-${type}`;
+                    this.conversionStatus.innerHTML = this.getStatusIcon(type) + message;
+                    this.conversionStatus.classList.remove('hidden');
+                    this.conversionStatus.style.animation = 'slideUp 0.3s ease';
+                }
             }
 
             showDownloadSection(filename, format, size) {
