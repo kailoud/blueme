@@ -14,6 +14,7 @@ const https = require('https');
 const socketIo = require('socket.io');
 const ytdl = require('@distube/ytdl-core');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -150,11 +151,32 @@ const corsOptions = {
     optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
+// Rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: {
+        error: 'Too many authentication attempts, please try again later'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
+
+// Import authentication middleware and routes
+const { optionalAuth } = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
+
+// Apply optional authentication to all routes
+app.use(optionalAuth);
+
+// Authentication routes with rate limiting
+app.use('/api/auth', authLimiter, authRoutes);
 
 // Additional CORS headers for all responses
 app.use((req, res, next) => {
@@ -363,7 +385,9 @@ app.post('/api/playlists', async (req, res) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
     try {
-        const { name, description, isPublic = false, userId = 'guest' } = req.body;
+        // Use authenticated user ID if available, otherwise use 'guest'
+        const userId = req.isAuthenticated ? req.user.id : 'guest';
+        const { name, description, isPublic = false } = req.body;
         
         if (!name) {
             return res.status(400).json({ error: 'Playlist name is required' });
@@ -612,7 +636,7 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
                 const { audioManager } = require('./config/supabase');
                 
                 const uploadResult = await audioManager.uploadFile(req.file, {
-                    userId: req.body.userId || null
+                    userId: req.isAuthenticated ? req.user.id : null
                 });
 
                 if (uploadResult.success) {
@@ -696,7 +720,8 @@ app.post('/api/convert-youtube', async (req, res) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
     try {
-        const { url, format = 'mp3', quality = '192', userId } = req.body;
+        const { url, format = 'mp3', quality = '192' } = req.body;
+        const userId = req.isAuthenticated ? req.user.id : null;
 
         if (!url) {
             return res.status(400).json({ error: 'YouTube URL is required' });
