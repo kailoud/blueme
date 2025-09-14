@@ -375,7 +375,7 @@ app.post('/api/playlists', async (req, res) => {
             const result = await playlistManager.createPlaylist({
                 name,
                 description: description || '',
-                user_id: userId,
+                user_id: userId === 'guest' ? null : userId, // Use null for guest users
                 is_public: isPublic,
                 is_premium: false,
                 max_songs: 8
@@ -396,7 +396,7 @@ app.post('/api/playlists', async (req, res) => {
                 id: crypto.randomUUID(),
                 name,
                 description: description || '',
-                user_id: userId,
+                user_id: userId === 'guest' ? null : userId, // Use null for guest users
                 is_public: isPublic,
                 is_premium: false,
                 max_songs: 8,
