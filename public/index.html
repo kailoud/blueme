@@ -3085,6 +3085,14 @@
                     </svg>
                     <span>Profile</span>
                 </button>
+                <button class="quick-btn" onclick="window.authManager?.showAuthModal()" title="Authentication">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <circle cx="12" cy="16" r="1"></circle>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Auth</span>
+                </button>
             </div>
 
 
@@ -8398,18 +8406,21 @@
         // Make app globally accessible
         window.app = app;
         
+        // Global test function for authentication
+        window.testAuth = function() {
+            console.log('🧪 Testing authentication system...');
+            if (window.authManager) {
+                console.log('✅ AuthManager found, showing modal...');
+                window.authManager.showAuthModal();
+            } else {
+                console.log('❌ AuthManager not found');
+            }
+        };
+        
         
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                console.log('🚀 Initializing BlueMe app (no authentication)...');
-                
-                // Clear localStorage to prevent QuotaExceededError
-                try {
-                    localStorage.clear();
-                    console.log('✅ Cleared localStorage to prevent quota errors');
-                } catch (clearError) {
-                    console.warn('⚠️ Could not clear localStorage:', clearError);
-                }
+                console.log('🚀 Initializing BlueMe app with authentication...');
                 
                 // Initialize the app
                 app = new BlueMe();
@@ -8426,11 +8437,22 @@
                 
                 console.log('✅ BlueMe app initialized successfully');
                 
-                // Initialize UI without authentication
+                // Initialize UI with authentication support
                 app.updateAuthUI();
                 app.ensurePlaylistSection();
                 
-                console.log('🎵 App ready - no authentication required');
+                // Check if authentication manager is available
+                setTimeout(() => {
+                    if (window.authManager) {
+                        console.log('✅ Authentication manager is available');
+                        console.log('🔐 Auth button should be visible in top-right corner');
+                        console.log('💡 You can test the auth modal by clicking the "Auth" button or running: window.authManager.showAuthModal()');
+                    } else {
+                        console.log('❌ Authentication manager not found');
+                    }
+                }, 1000);
+                
+                console.log('🎵 App ready with authentication support');
                 
             } catch (error) {
                 console.error('❌ Error initializing app:', error);
