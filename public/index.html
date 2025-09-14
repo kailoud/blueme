@@ -3862,7 +3862,7 @@
                 
                 // Enhanced UI properties
                 this.currentTime = 0;
-                this.duration = 180; // 3 minutes demo
+                this.duration = 180; // Default duration
                 this.progressInterval = null;
                 
                 this.initializeEnhancedUI();
@@ -3955,9 +3955,6 @@
                 
                 // Setup enhanced UI event listeners
                 this.setupEnhancedEventListeners();
-                
-                // Start demo
-                this.startEnhancedDemo();
             }
 
             setupEnhancedEventListeners() {
@@ -4149,28 +4146,6 @@
                 animate();
             }
 
-            startEnhancedDemo() {
-                // Initial notification
-                setTimeout(() => {
-                    this.showNotification('🚀 Welcome to BlueMe Pro!');
-                }, 1000);
-                
-                // Demo track loading
-                setTimeout(() => {
-                    if (this.trackTitleMini) {
-                        this.trackTitleMini.textContent = 'Lofi Hip Hop Beat';
-                    }
-                    if (this.trackArtistMini) {
-                        this.trackArtistMini.textContent = 'ChillVibes Studio';
-                    }
-                    this.showNotification('🎵 Demo track loaded');
-                }, 3000);
-                
-                // Stats update demo
-                setTimeout(() => {
-                    this.updateStats();
-                }, 5000);
-            }
 
             setupEventListeners() {
                 // Player controls - with null checks
@@ -5176,7 +5151,7 @@
                     this.audioPlayer.load(); // Force reload
                     
                     this.trackTitle.textContent = "Sample Audio";
-                    this.trackArtist.textContent = "BlueMe Demo";
+                    this.trackArtist.textContent = "Test Track";
                     this.albumArt.textContent = '🎵';
                     
                     this.updateStatus('success', '🎵 Sample audio loaded! Click play to hear it');
@@ -5214,7 +5189,7 @@
                     this.trackTitle.textContent = "Sample Audio";
                 }
                 if (this.trackArtist) {
-                    this.trackArtist.textContent = "BlueMe Demo";
+                    this.trackArtist.textContent = "Test Track";
                 }
                 if (this.albumArt) {
                     this.albumArt.textContent = '🎵';
@@ -5225,7 +5200,7 @@
                     this.trackTitleMini.textContent = "Sample Audio";
                 }
                 if (this.trackArtistMini) {
-                    this.trackArtistMini.textContent = "BlueMe Demo";
+                    this.trackArtistMini.textContent = "Test Track";
                 }
                 
                 this.updateStatus('success', '🎵 Fallback sample loaded! Click play to test');
@@ -8619,7 +8594,7 @@
                 
                 const testTrackInfo = {
                     title: 'Test Track - Marquee Effect',
-                    artist: 'BlueMe Test',
+                    artist: 'Sample Artist',
                     duration: 180,
                     format: 'WAV',
                     size: '3.2 MB'
