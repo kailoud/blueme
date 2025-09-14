@@ -5497,6 +5497,9 @@
                     // Check if it's a YouTube URL
                     if (url.includes('youtube.com') || url.includes('youtu.be')) {
                         await this.convertYouTubeUrl(url);
+                        // YouTube conversion now returns early with a message, so we're done
+                        this.setConvertButtonState(false);
+                        return;
                     } else {
                         await this.convertGenericUrl(url);
                     }
@@ -5517,42 +5520,27 @@
 
             async convertYouTubeUrl(url) {
                 try {
-                    this.updateConversionStatus('info', '📺 Converting YouTube video...');
+                    this.updateConversionStatus('info', '📺 Analyzing YouTube URL...');
                     
                     // Extract video ID from YouTube URL
                     const videoId = this.extractYouTubeVideoId(url);
                     if (!videoId) {
-                        throw new Error('Invalid YouTube URL');
+                        throw new Error('Invalid YouTube URL format');
                     }
                     
-                    this.updateConversionStatus('info', '🎬 Extracting audio from video...');
+                    this.updateConversionStatus('info', '🔍 Checking conversion options...');
                     
-                    // Try to use a YouTube audio extraction service
-                    // For now, we'll use a more realistic approach with better error handling
-                    try {
-                        // Attempt to fetch audio using a proxy or service
-                        const audioUrl = await this.getYouTubeAudioUrl(videoId);
-                        
-                        if (audioUrl) {
-                            this.updateConversionStatus('info', '🎵 Processing audio...');
-                            
-                            // Create converted blob for download
-                            this.convertedAudioBlob = await this.fetchAudioBlob(audioUrl);
-                            
-                            // Show download section
-                            const filename = `youtube_${videoId}.mp3`;
-                            const format = this.formatSelect ? this.formatSelect.value : 'mp3';
-                            const size = this.convertedAudioBlob ? this.convertedAudioBlob.size : 0;
-                            this.showDownloadSection(filename, format, size);
-                            
-                            this.updateConversionStatus('success', '🎉 YouTube video converted successfully!');
-                        } else {
-                            throw new Error('Could not extract audio from YouTube video');
-                        }
-                    } catch (extractionError) {
-                        console.warn('YouTube extraction failed:', extractionError);
-                        throw new Error('YouTube audio extraction is not available in browser mode. Please use a server-side conversion service.');
-                    }
+                    // For now, we'll provide a clear message about the limitation
+                    // In a production app, you would implement server-side YouTube conversion
+                    this.updateConversionStatus('warning', '⚠️ YouTube conversion requires server-side processing');
+                    
+                    // Show a helpful message to the user
+                    setTimeout(() => {
+                        this.updateConversionStatus('info', '💡 Tip: Use "Upload Local File" to convert audio files directly');
+                    }, 2000);
+                    
+                    // Don't throw an error, just inform the user
+                    return;
                     
                 } catch (error) {
                     throw new Error(`YouTube conversion failed: ${error.message}`);
