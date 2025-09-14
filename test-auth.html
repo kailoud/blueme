@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueMe Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .test-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+            width: 100%;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success { background: rgba(0, 212, 170, 0.2); }
+        .error { background: rgba(255, 107, 107, 0.2); }
+        .info { background: rgba(102, 126, 234, 0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 BlueMe Authentication Test</h1>
+        
+        <div class="status info">
+            <h3>📋 Test Instructions:</h3>
+            <ol>
+                <li>Click the "Test Auth Modal" button below</li>
+                <li>You should see a modal with Sign In and Create Account forms</li>
+                <li>Test both Sign In and Create Account functionality</li>
+            </ol>
+        </div>
+
+        <button class="test-button" onclick="testAuthModal()">
+            🧪 Test Auth Modal
+        </button>
+
+        <button class="test-button" onclick="checkAuthSystem()">
+            🔍 Check Auth System Status
+        </button>
+
+        <div id="status" class="status info">
+            <h3>📊 Status:</h3>
+            <p>Click the buttons above to test the authentication system.</p>
+        </div>
+
+        <div class="status info">
+            <h3>🎯 What to Look For:</h3>
+            <ul>
+                <li><strong>Sign In Form:</strong> Email and password fields</li>
+                <li><strong>Create Account Form:</strong> Email, username, and password fields</li>
+                <li><strong>Toggle Button:</strong> Switch between Sign In and Create Account</li>
+                <li><strong>Profile Section:</strong> User information after login</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Include the authentication system -->
+    <link rel="stylesheet" href="/css/auth.css">
+    <script src="/js/auth.js"></script>
+
+    <script>
+        function testAuthModal() {
+            const statusDiv = document.getElementById('status');
+            
+            if (window.authManager) {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `
+                    <h3>✅ Authentication System Found!</h3>
+                    <p>Opening authentication modal...</p>
+                `;
+                window.authManager.showAuthModal();
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `
+                    <h3>❌ Authentication System Not Found</h3>
+                    <p>Please check the console for errors and ensure the server is running.</p>
+                `;
+            }
+        }
+
+        function checkAuthSystem() {
+            const statusDiv = document.getElementById('status');
+            let status = '<h3>🔍 Authentication System Status:</h3>';
+            
+            // Check if authManager exists
+            if (window.authManager) {
+                status += '<p>✅ AuthManager: Available</p>';
+                status += `<p>✅ Authenticated: ${window.authManager.isAuthenticated ? 'Yes' : 'No'}</p>`;
+                if (window.authManager.currentUser) {
+                    status += `<p>✅ Current User: ${window.authManager.currentUser.email || 'Unknown'}</p>`;
+                }
+            } else {
+                status += '<p>❌ AuthManager: Not Available</p>';
+            }
+            
+            // Check if CSS is loaded
+            const authCSS = document.querySelector('link[href="/css/auth.css"]');
+            if (authCSS) {
+                status += '<p>✅ Auth CSS: Loaded</p>';
+            } else {
+                status += '<p>❌ Auth CSS: Not Loaded</p>';
+            }
+            
+            // Check if JS is loaded
+            const authJS = document.querySelector('script[src="/js/auth.js"]');
+            if (authJS) {
+                status += '<p>✅ Auth JS: Loaded</p>';
+            } else {
+                status += '<p>❌ Auth JS: Not Loaded</p>';
+            }
+            
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = status;
+        }
+
+        // Auto-check when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkAuthSystem, 1000);
+        });
+    </script>
+</body>
+</html>
