@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 // Load File API polyfill for Node.js compatibility
 require('./polyfill.js');
 
