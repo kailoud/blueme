@@ -5114,9 +5114,9 @@
             loadSampleAudio() {
                 try {
                     // Use a simple data URL for a short audio tone
-                    // This creates a 2-second 440Hz sine wave as a WAV file
+                    // This creates a 10-second audio file as a WAV file
                     const sampleRate = 44100;
-                    const duration = 2; // 2 seconds
+                    const duration = 10; // 10 seconds
                     const length = sampleRate * duration;
                     const arrayBuffer = new ArrayBuffer(44 + length * 2);
                     const view = new DataView(arrayBuffer);
@@ -5142,10 +5142,16 @@
                     writeString(36, 'data');
                     view.setUint32(40, length * 2, true);
                     
-                    // Generate sine wave data
+                    // Generate more musical audio data
                     let offset = 44;
                     for (let i = 0; i < length; i++) {
-                        const sample = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.3; // 440Hz tone
+                        const t = i / sampleRate;
+                        // Create a more musical pattern with multiple frequencies
+                        const sample = (
+                            Math.sin(2 * Math.PI * 220 * t) * 0.1 + // A3
+                            Math.sin(2 * Math.PI * 330 * t) * 0.1 + // E4
+                            Math.sin(2 * Math.PI * 440 * t) * 0.1   // A4
+                        ) * Math.exp(-t * 0.1); // Gradual fade out
                         view.setInt16(offset, sample * 0x7FFF, true);
                         offset += 2;
                     }
@@ -5708,16 +5714,22 @@
             }
 
             async createPlaceholderAudio(title) {
-                // Create a simple audio placeholder using Web Audio API
+                // Create a more realistic audio placeholder using Web Audio API
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const sampleRate = audioContext.sampleRate;
-                const duration = 2; // 2 seconds
+                const duration = 30; // 30 seconds - more realistic length
                 const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
                 const data = buffer.getChannelData(0);
                 
-                // Generate a simple tone
+                // Generate a more complex audio pattern
                 for (let i = 0; i < data.length; i++) {
-                    data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.1; // 440Hz tone
+                    const t = i / sampleRate;
+                    // Create a more musical pattern with multiple frequencies
+                    data[i] = (
+                        Math.sin(2 * Math.PI * 220 * t) * 0.1 + // A3
+                        Math.sin(2 * Math.PI * 330 * t) * 0.1 + // E4
+                        Math.sin(2 * Math.PI * 440 * t) * 0.1   // A4
+                    ) * Math.exp(-t * 0.1); // Gradual fade out
                 }
                 
                 // Convert to WAV
@@ -5835,7 +5847,7 @@
                 // Create a placeholder audio file for URLs that can't be directly accessed
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const sampleRate = audioContext.sampleRate;
-                const duration = 3; // 3 seconds
+                const duration = 30; // 30 seconds - more realistic length
                 const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
                 const data = buffer.getChannelData(0);
                 
@@ -5847,7 +5859,7 @@
                         Math.sin(2 * Math.PI * 440 * t) * 0.1 + // A4
                         Math.sin(2 * Math.PI * 554.37 * t) * 0.1 + // C#5
                         Math.sin(2 * Math.PI * 659.25 * t) * 0.1 // E5
-                    ) * Math.exp(-t * 0.5); // Fade out
+                    ) * Math.exp(-t * 0.1); // Gradual fade out
                 }
                 
                 // Convert to WAV
