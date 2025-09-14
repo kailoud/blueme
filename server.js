@@ -166,7 +166,16 @@ const authLimiter = rateLimit({
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static('public'));
+// Serve static files with proper MIME types
+app.use(express.static('public', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 
 // Import authentication middleware and routes
 const { optionalAuth } = require('./middleware/auth');
@@ -941,6 +950,18 @@ app.get('/api/files', (req, res) => {
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
+
+// Ensure CSS files are served with correct MIME type
+app.get('*.css', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(path.join(__dirname, 'public', req.path));
+});
+
+// Ensure JS files are served with correct MIME type
+app.get('*.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'public', req.path));
+});
 
 // Simple root endpoint
 app.get('/', (req, res) => {
