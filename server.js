@@ -340,10 +340,12 @@ app.get('/api/playlists', async (req, res) => {
                 throw new Error(result.error);
             }
         } else {
-            console.log('⚠️ Supabase not configured, returning empty playlists');
+            // Return in-memory playlists
+            const playlists = global.guestPlaylists ? Array.from(global.guestPlaylists.values()) : [];
+            console.log('📥 Fetched playlists from memory:', playlists.length, 'playlists');
             res.json({
                 success: true,
-                playlists: []
+                playlists: playlists
             });
         }
     } catch (error) {
@@ -400,7 +402,13 @@ app.post('/api/playlists', async (req, res) => {
                 playlist_items: []
             };
             
-            console.log('⚠️ Supabase not configured, playlist created in memory only:', playlist.name);
+            // Store in global memory
+            if (!global.guestPlaylists) {
+                global.guestPlaylists = new Map();
+            }
+            global.guestPlaylists.set(playlist.id, playlist);
+            
+            console.log('✅ Playlist created in memory:', playlist.name);
             res.json({
                 success: true,
                 playlist
@@ -440,9 +448,35 @@ app.post('/api/playlists/:playlistId/items', async (req, res) => {
                 throw new Error(result.error);
             }
         } else {
-            // Fallback to in-memory storage (this won't work without the playlists array)
-            console.log('⚠️ Supabase not configured, cannot add tracks to playlists');
-            res.status(500).json({ error: 'Database not configured - cannot add tracks to playlists' });
+            // Fallback to in-memory storage for guest mode
+            console.log('⚠️ Supabase not configured, using in-memory storage for guest mode');
+            
+            // Simple in-memory playlist storage
+            if (!global.guestPlaylists) {
+                global.guestPlaylists = new Map();
+            }
+            
+            if (!global.guestPlaylists.has(playlistId)) {
+                return res.status(404).json({ error: 'Playlist not found' });
+            }
+            
+            const playlist = global.guestPlaylists.get(playlistId);
+            const playlistItem = {
+                id: crypto.randomUUID(),
+                playlist_id: playlistId,
+                position: playlist.playlist_items.length + 1,
+                audio_file_id: audioFileId,
+                added_at: new Date().toISOString()
+            };
+            
+            playlist.playlist_items.push(playlistItem);
+            playlist.updated_at = new Date().toISOString();
+            
+            console.log('✅ Track added to playlist in memory:', audioFile?.title || 'Unknown Track');
+            res.json({
+                success: true,
+                playlistItem: playlistItem
+            });
         }
     } catch (error) {
         console.error('Error adding to playlist:', error);
