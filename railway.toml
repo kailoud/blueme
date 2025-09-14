@@ -1,4 +1,11 @@
 [deploy]
 startCommand = "node start-railway.js"
-healthcheckPath = "/"
+healthcheckPath = "/api/health"
 healthcheckTimeout = 30
+
+[build]
+builder = "NIXPACKS"
+
+[env]
+NODE_ENV = "production"
+PORT = "3000"

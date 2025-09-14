@@ -1,15 +1,40 @@
 [build]
-  publish = "dist"
+  publish = "public"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
 
+# Proxy API calls to backend server
+[[redirects]]
+  from = "/api/*"
+  to = "https://blueme-backend-production.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
+# Serve static files with correct MIME types
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Content-Type = "text/css"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "*.json"
+  [headers.values]
+    Content-Type = "application/json"
+
+# SPA fallback for all other routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
+# Security headers
 [[headers]]
   for = "/*"
   [headers.values]
