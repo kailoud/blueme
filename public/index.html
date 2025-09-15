@@ -5422,7 +5422,7 @@
                 if (!file) return;
 
                 try {
-                    this.updateConversionStatus('info', '📱 Processing mobile file...');
+                    this.updateConversionStatus('info', '📱 Processing file...');
                     
                     // Check file type
                     if (!file.type.startsWith('audio/')) {
@@ -5430,38 +5430,50 @@
                         return;
                     }
 
-                    // Check file size (limit to 50MB for mobile)
+                    // Check file size (limit to 50MB)
                     const maxSize = 50 * 1024 * 1024; // 50MB
                     if (file.size > maxSize) {
                         this.updateConversionStatus('error', 'File too large. Maximum size is 50MB');
                         return;
                     }
 
-                    // Convert file to audio buffer
-                    const arrayBuffer = await file.arrayBuffer();
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    this.updateConversionStatus('info', '🔍 Uploading to server...');
 
-                    // Get format and quality from UI
-                    const format = this.formatSelect.value;
-                    const quality = parseInt(this.qualitySelect.value);
+                    // Upload to backend
+                    const formData = new FormData();
+                    formData.append('audio', file);
 
-                    // Convert to desired format
-                    const convertedBlob = await this.convertAudioBuffer(audioBuffer, format, quality);
-                    
-                    this.convertedAudioBlob = convertedBlob;
-                    
-                    // Show download section
-                    const filename = file.name.split('.')[0] || 'converted_audio';
-                    const outputFormat = this.formatSelect ? this.formatSelect.value : 'mp3';
-                    const size = convertedBlob ? convertedBlob.size : 0;
-                    this.showDownloadSection(filename, outputFormat, size);
-                    
-                    this.updateConversionStatus('success', `📱 Mobile file converted successfully!`);
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Upload failed');
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Create blob from the uploaded file for local playback
+                        const fileBlob = new Blob([file], { type: file.type });
+                        this.convertedAudioBlob = fileBlob;
+                        
+                        // Show download section
+                        const filename = result.file.filename || file.name.split('.')[0];
+                        const size = result.file.size || file.size;
+                        const format = file.type.split('/')[1] || 'mp3';
+                        this.showDownloadSection(filename, format, size);
+                        
+                        this.updateConversionStatus('success', `📱 File uploaded successfully!`);
+                    } else {
+                        throw new Error(result.error || 'Upload failed');
+                    }
                     
                 } catch (error) {
-                    console.error('❌ Mobile file upload error:', error);
-                    this.updateConversionStatus('error', `Mobile conversion failed: ${error.message}`);
+                    console.error('❌ File upload error:', error);
+                    this.updateConversionStatus('error', `Upload failed: ${error.message}`);
                 }
             }
 
@@ -5521,42 +5533,52 @@
                         throw new Error('Invalid YouTube URL format');
                     }
                     
-                    this.updateConversionStatus('info', '🔍 Checking conversion options...');
+                    this.updateConversionStatus('info', '🔍 Connecting to conversion server...');
                     
-                    // Since YouTube conversion requires server-side processing,
-                    // we'll create a working audio file for testing purposes
-                    this.updateConversionStatus('info', '🎵 Creating audio file...');
+                    // Call the real backend conversion endpoint
+                    const format = this.formatSelect ? this.formatSelect.value : 'mp3';
+                    const quality = this.qualitySelect ? this.qualitySelect.value : '192';
                     
-                    // Create a working audio file using Web Audio API
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const sampleRate = audioContext.sampleRate;
-                    const duration = 10; // 10 seconds
-                    const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
-                    const data = buffer.getChannelData(0);
+                    this.updateConversionStatus('info', '🎵 Converting YouTube video...');
                     
-                    // Generate a musical pattern
-                    for (let i = 0; i < data.length; i++) {
-                        const t = i / sampleRate;
-                        data[i] = (
-                            Math.sin(2 * Math.PI * 440 * t) * 0.1 + // A4
-                            Math.sin(2 * Math.PI * 554.37 * t) * 0.1 + // C#5
-                            Math.sin(2 * Math.PI * 659.25 * t) * 0.1 // E5
-                        ) * Math.exp(-t * 0.1); // Gradual fade out
+                    const response = await fetch('/api/convert-youtube', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            url: url,
+                            format: format,
+                            quality: quality
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Conversion failed');
                     }
                     
-                    // Convert to WAV blob
-                    const wavBlob = this.bufferToWav(buffer);
-                    this.convertedAudioBlob = wavBlob;
+                    const result = await response.json();
                     
-                    // Show download section
-                    const filename = `youtube_${videoId}`;
-                    const format = this.formatSelect ? this.formatSelect.value : 'mp3';
-                    const size = wavBlob ? wavBlob.size : 0;
-                    this.showDownloadSection(filename, format, size);
-                    
-                    this.updateConversionStatus('success', '🎉 Audio file created successfully!');
+                    if (result.success) {
+                        // Create blob from the audio data
+                        const audioBuffer = new Uint8Array(result.audioData);
+                        const audioBlob = new Blob([audioBuffer], { type: `audio/${format}` });
+                        
+                        this.convertedAudioBlob = audioBlob;
+                        
+                        // Show download section
+                        const filename = result.file.filename || `youtube_${videoId}`;
+                        const size = result.file.size || audioBlob.size;
+                        this.showDownloadSection(filename, format, size);
+                        
+                        this.updateConversionStatus('success', '🎉 YouTube video converted successfully!');
+                    } else {
+                        throw new Error(result.error || 'Conversion failed');
+                    }
                     
                 } catch (error) {
+                    console.error('YouTube conversion error:', error);
                     throw new Error(`YouTube conversion failed: ${error.message}`);
                 }
             }
