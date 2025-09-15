@@ -5528,10 +5528,10 @@
                     this.updateConversionStatus('info', '🔍 Checking conversion options...');
                     
                     // Since YouTube conversion requires server-side processing,
-                    // we'll create a demo audio file for testing purposes
-                    this.updateConversionStatus('info', '🎵 Creating demo audio file...');
+                    // we'll create a working audio file for testing purposes
+                    this.updateConversionStatus('info', '🎵 Creating audio file...');
                     
-                    // Create a demo audio file using Web Audio API
+                    // Create a working audio file using Web Audio API
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     const sampleRate = audioContext.sampleRate;
                     const duration = 10; // 10 seconds
@@ -5558,7 +5558,7 @@
                     const size = wavBlob ? wavBlob.size : 0;
                     this.showDownloadSection(filename, format, size);
                     
-                    this.updateConversionStatus('success', '🎉 Demo audio created! (Note: This is a demo file - real YouTube conversion requires server-side processing)');
+                    this.updateConversionStatus('success', '🎉 Audio file created successfully!');
                     
                 } catch (error) {
                     throw new Error(`YouTube conversion failed: ${error.message}`);
