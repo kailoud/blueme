@@ -4169,7 +4169,7 @@
                 }
                 
                 // Mobile file upload
-                const mobileAudioFile = document.getElementById('mobileAudioFile');
+                const mobileAudioFile = document.getElementById('audioFileInput');
                 if (mobileAudioFile) {
                     mobileAudioFile.addEventListener('change', (e) => this.handleMobileFileUpload(e));
                 }
@@ -5450,7 +5450,6 @@
                     const convertedBlob = await this.convertAudioBuffer(audioBuffer, format, quality);
                     
                     this.convertedAudioBlob = convertedBlob;
-                    this.convertedFileName = { textContent: `${file.name.split('.')[0]}.${format}` };
                     
                     // Show download section
                     const filename = file.name.split('.')[0] || 'converted_audio';
@@ -5459,9 +5458,6 @@
                     this.showDownloadSection(filename, outputFormat, size);
                     
                     this.updateConversionStatus('success', `📱 Mobile file converted successfully!`);
-                    
-                    // Add to audio library
-                    await this.addConvertedToLibrary();
                     
                 } catch (error) {
                     console.error('❌ Mobile file upload error:', error);
