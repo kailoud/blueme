@@ -5921,24 +5921,8 @@
                 };
                 this.showMarquee(trackInfo);
                 
-                // Auto-play the converted audio
-            setTimeout(() => {
-                    if (this.audioPlayer.readyState >= 2) {
-                        this.audioPlayer.play().then(() => {
-                            this.isPlaying = true;
-                            if (this.playBtn) {
-                                this.playBtn.innerHTML = '⏸';
-                            }
-                            if (this.albumArt) {
-                                this.albumArt.style.animation = 'glow 2s ease-in-out infinite alternate';
-                            }
-                            this.updateStatus('success', '🎵 Playing converted audio!');
-                        }).catch(error => {
-                            console.error('Auto-play failed:', error);
-                            this.updateStatus('info', 'Click play to start the converted audio');
-                        });
-                    }
-                }, 500);
+                // Don't auto-play - let user click play button
+                this.updateStatus('info', '🎵 Converted audio loaded! Click play to start listening');
             }
 
             // Authentication Methods
