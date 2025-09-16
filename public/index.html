@@ -5439,36 +5439,63 @@
 
                     this.updateConversionStatus('info', '🔍 Uploading to server...');
 
-                    // Upload to backend
-                    const formData = new FormData();
-                    formData.append('audio', file);
+                    try {
+                        // Upload to backend
+                        const formData = new FormData();
+                        formData.append('audio', file);
 
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
+                        const response = await fetch('/api/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Upload failed');
-                    }
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Upload failed');
+                        }
 
-                    const result = await response.json();
+                        const result = await response.json();
 
-                    if (result.success) {
-                        // Create blob from the uploaded file for local playback
-                        const fileBlob = new Blob([file], { type: file.type });
-                        this.convertedAudioBlob = fileBlob;
+                        if (result.success) {
+                            // Create blob from the uploaded file for local playback
+                            const fileBlob = new Blob([file], { type: file.type });
+                            this.convertedAudioBlob = fileBlob;
+                            
+                            // Show download section
+                            const filename = result.file.filename || file.name.split('.')[0];
+                            const size = result.file.size || file.size;
+                            const format = file.type.split('/')[1] || 'mp3';
+                            this.showDownloadSection(filename, format, size);
+                            
+                            this.updateConversionStatus('success', `📱 File uploaded successfully!`);
+                        } else {
+                            throw new Error(result.error || 'Upload failed');
+                        }
+                    } catch (uploadError) {
+                        // Backend not available, use client-side processing
+                        console.warn('Backend not available, using client-side processing:', uploadError);
+                        this.updateConversionStatus('info', '🔄 Processing file locally...');
+                        
+                        // Convert file to audio buffer
+                        const arrayBuffer = await file.arrayBuffer();
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                        // Get format and quality from UI
+                        const format = this.formatSelect ? this.formatSelect.value : 'mp3';
+                        const quality = parseInt(this.qualitySelect ? this.qualitySelect.value : '192');
+
+                        // Convert to desired format
+                        const convertedBlob = await this.convertAudioBuffer(audioBuffer, format, quality);
+                        
+                        this.convertedAudioBlob = convertedBlob;
                         
                         // Show download section
-                        const filename = result.file.filename || file.name.split('.')[0];
-                        const size = result.file.size || file.size;
-                        const format = file.type.split('/')[1] || 'mp3';
+                        const filename = file.name.split('.')[0] || 'converted_audio';
+                        const size = convertedBlob ? convertedBlob.size : 0;
                         this.showDownloadSection(filename, format, size);
                         
-                        this.updateConversionStatus('success', `📱 File uploaded successfully!`);
-                    } else {
-                        throw new Error(result.error || 'Upload failed');
+                        this.updateConversionStatus('success', `📱 File processed locally! (Backend not available)`);
                     }
                     
                 } catch (error) {
@@ -5541,40 +5568,56 @@
                     
                     this.updateConversionStatus('info', '🎵 Converting YouTube video...');
                     
-                    const response = await fetch('/api/convert-youtube', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            url: url,
-                            format: format,
-                            quality: quality
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Conversion failed');
-                    }
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        // Create blob from the audio data
-                        const audioBuffer = new Uint8Array(result.audioData);
-                        const audioBlob = new Blob([audioBuffer], { type: `audio/${format}` });
+                    try {
+                        const response = await fetch('/api/convert-youtube', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                url: url,
+                                format: format,
+                                quality: quality
+                            })
+                        });
                         
-                        this.convertedAudioBlob = audioBlob;
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Conversion failed');
+                        }
                         
-                        // Show download section
-                        const filename = result.file.filename || `youtube_${videoId}`;
-                        const size = result.file.size || audioBlob.size;
-                        this.showDownloadSection(filename, format, size);
+                        const result = await response.json();
                         
-                        this.updateConversionStatus('success', '🎉 YouTube video converted successfully!');
-                    } else {
-                        throw new Error(result.error || 'Conversion failed');
+                        if (result.success) {
+                            // Create blob from the audio data
+                            const audioBuffer = new Uint8Array(result.audioData);
+                            const audioBlob = new Blob([audioBuffer], { type: `audio/${format}` });
+                            
+                            this.convertedAudioBlob = audioBlob;
+                            
+                            // Show download section
+                            const filename = result.file.filename || `youtube_${videoId}`;
+                            const size = result.file.size || audioBlob.size;
+                            this.showDownloadSection(filename, format, size);
+                            
+                            this.updateConversionStatus('success', '🎉 YouTube video converted successfully!');
+                        } else {
+                            throw new Error(result.error || 'Conversion failed');
+                        }
+                    } catch (fetchError) {
+                        // Backend not available, show helpful message
+                        console.warn('Backend not available, showing info message:', fetchError);
+                        this.updateConversionStatus('warning', '⚠️ Backend server not running');
+                        
+                        setTimeout(() => {
+                            this.updateConversionStatus('info', '💡 To enable YouTube conversion, start the backend server with: npm start');
+                        }, 2000);
+                        
+                        setTimeout(() => {
+                            this.updateConversionStatus('info', '📁 Use "Upload Local File" for file conversion instead');
+                        }, 4000);
+                        
+                        return; // Exit without creating any files
                     }
                     
                 } catch (error) {
