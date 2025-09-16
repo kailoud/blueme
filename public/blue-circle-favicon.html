@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blue Circle Favicon Generator</title>
+</head>
+<body>
+    <h2>Blue Circle Favicon Generator</h2>
+    <canvas id="canvas" width="32" height="32" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    <br>
+    <button onclick="downloadPNG()">Download as PNG</button>
+    <button onclick="downloadICO()">Download as ICO</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Draw simple blue circle
+        ctx.fillStyle = '#667eea';
+        ctx.beginPath();
+        ctx.arc(16, 16, 16, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        function downloadPNG() {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'blue-circle-favicon.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+        
+        function downloadICO() {
+            // Create a 16x16 version for ICO
+            const icoCanvas = document.createElement('canvas');
+            icoCanvas.width = 16;
+            icoCanvas.height = 16;
+            const icoCtx = icoCanvas.getContext('2d');
+            
+            icoCtx.fillStyle = '#667eea';
+            icoCtx.beginPath();
+            icoCtx.arc(8, 8, 8, 0, 2 * Math.PI);
+            icoCtx.fill();
+            
+            icoCanvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'blue-circle-favicon.ico';
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>
