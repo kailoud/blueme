@@ -5581,12 +5581,11 @@
                             })
                         });
                         
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.error || 'Conversion failed');
-                        }
-                        
                         const result = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Conversion failed');
+                        }
                         
                         if (result.success) {
                             // Create blob from the audio data
@@ -5602,7 +5601,35 @@
                             
                             this.updateConversionStatus('success', '🎉 YouTube video converted successfully!');
                         } else {
-                            throw new Error(result.error || 'Conversion failed');
+                            // Handle the new response format with instructions
+                            if (result.message && result.instructions) {
+                                this.updateConversionStatus('warning', result.message);
+                                
+                                // Show instructions step by step
+                                setTimeout(() => {
+                                    this.updateConversionStatus('info', result.suggestion);
+                                }, 2000);
+                                
+                                setTimeout(() => {
+                                    this.updateConversionStatus('info', result.instructions[0]);
+                                }, 4000);
+                                
+                                setTimeout(() => {
+                                    this.updateConversionStatus('info', result.instructions[1]);
+                                }, 6000);
+                                
+                                setTimeout(() => {
+                                    this.updateConversionStatus('info', result.instructions[2]);
+                                }, 8000);
+                                
+                                setTimeout(() => {
+                                    this.updateConversionStatus('info', result.instructions[3]);
+                                }, 10000);
+                                
+                                return; // Exit without creating any files
+                            } else {
+                                throw new Error(result.error || 'Conversion failed');
+                            }
                         }
                     } catch (fetchError) {
                         // Backend not available, show helpful message
