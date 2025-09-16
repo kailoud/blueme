@@ -13,6 +13,7 @@ const http = require('http');
 const https = require('https');
 const socketIo = require('socket.io');
 const ytdl = require('@distube/ytdl-core');
+const YTDlpWrap = require('yt-dlp-wrap').default;
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 
@@ -721,6 +722,51 @@ app.options('/api/convert-youtube', (req, res) => {
     res.sendStatus(200);
 });
 
+// Helper function to try yt-dlp as fallback
+async function convertWithYtDlp(url, format, quality) {
+    try {
+        console.log('🔄 Trying yt-dlp as fallback...');
+        const ytDlpWrap = new YTDlpWrap();
+        
+        // Get video info first
+        const info = await ytDlpWrap.getVideoInfo(url);
+        const videoTitle = info.title || 'Unknown Title';
+        const sanitizedTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        
+        console.log('📺 Video title (yt-dlp):', videoTitle);
+        
+        // Download audio
+        const outputPath = path.join('uploads', `${sanitizedTitle}_${Date.now()}.${format}`);
+        
+        await ytDlpWrap.exec([
+            url,
+            '--extract-audio',
+            '--audio-format', format,
+            '--audio-quality', quality,
+            '--output', outputPath,
+            '--no-playlist'
+        ]);
+        
+        if (fs.existsSync(outputPath)) {
+            const audioBuffer = fs.readFileSync(outputPath);
+            fs.unlinkSync(outputPath); // Clean up temp file
+            
+            return {
+                success: true,
+                audioBuffer,
+                videoTitle,
+                sanitizedTitle,
+                duration: info.duration || 0
+            };
+        }
+        
+        throw new Error('yt-dlp failed to create output file');
+    } catch (error) {
+        console.error('yt-dlp conversion failed:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // Convert YouTube URL to audio
 app.post('/api/convert-youtube', async (req, res) => {
     // Set CORS headers explicitly for this endpoint
@@ -738,15 +784,17 @@ app.post('/api/convert-youtube', async (req, res) => {
 
         console.log('🎵 Converting YouTube URL:', url);
 
-        // Try to validate and get info with better error handling
-        let info;
+        let audioBuffer, videoTitle, sanitizedTitle, duration;
+        let conversionMethod = 'ytdl-core';
+
+        // Try ytdl-core first
         try {
             if (!ytdl.validateURL(url)) {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
             
             // Get video info with timeout and updated headers
-            info = await Promise.race([
+            const info = await Promise.race([
                 ytdl.getInfo(url, {
                     requestOptions: {
                         headers: {
@@ -764,163 +812,171 @@ app.post('/api/convert-youtube', async (req, res) => {
                     setTimeout(() => reject(new Error('Video info timeout')), 10000)
                 )
             ]);
-        } catch (infoError) {
-            console.error('Failed to get video info:', infoError);
-            let errorMessage = 'Unable to access this YouTube video.';
-            
-            if (infoError.message.includes('timeout')) {
-                errorMessage = 'YouTube video info request timed out. Please try again.';
-            } else if (infoError.message.includes('private') || infoError.message.includes('restricted')) {
-                errorMessage = 'This YouTube video is private or restricted.';
-            } else if (infoError.message.includes('unavailable')) {
-                errorMessage = 'This YouTube video is unavailable.';
-            }
-            
-            return res.status(500).json({ error: errorMessage });
-        }
-        const videoTitle = info.videoDetails.title;
-        const sanitizedTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        
-        console.log('📺 Video title:', videoTitle);
-        console.log('🔧 Processing format:', format, 'quality:', quality);
 
-        // Download audio stream with updated headers to avoid 403 errors
-        const audioStream = ytdl(url, {
-            filter: 'audioonly',
-            quality: 'highestaudio',
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'DNT': '1',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1',
-                    'Sec-Fetch-Dest': 'document',
-                    'Sec-Fetch-Mode': 'navigate',
-                    'Sec-Fetch-Site': 'none',
-                    'Cache-Control': 'max-age=0'
+            videoTitle = info.videoDetails.title;
+            sanitizedTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            duration = info.videoDetails.lengthSeconds;
+            
+            console.log('📺 Video title:', videoTitle);
+            console.log('🔧 Processing format:', format, 'quality:', quality);
+
+            // Download audio stream with updated headers
+            const audioStream = ytdl(url, {
+                filter: 'audioonly',
+                quality: 'highestaudio',
+                requestOptions: {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept-Encoding': 'gzip, deflate, br',
+                        'DNT': '1',
+                        'Connection': 'keep-alive',
+                        'Upgrade-Insecure-Requests': '1',
+                        'Sec-Fetch-Dest': 'document',
+                        'Sec-Fetch-Mode': 'navigate',
+                        'Sec-Fetch-Site': 'none',
+                        'Cache-Control': 'max-age=0'
+                    }
                 }
-            }
-        });
+            });
 
-        // Convert stream to buffer instead of writing to local file
-        const chunks = [];
-        audioStream.on('data', (chunk) => chunks.push(chunk));
-        
-        audioStream.on('end', async () => {
-            try {
-                const audioBuffer = Buffer.concat(chunks);
-                console.log('✅ Audio buffer created, size:', audioBuffer.length);
+            // Convert stream to buffer
+            const chunks = [];
+            audioStream.on('data', (chunk) => chunks.push(chunk));
+            
+            await new Promise((resolve, reject) => {
+                audioStream.on('end', () => {
+                    audioBuffer = Buffer.concat(chunks);
+                    console.log('✅ Audio buffer created with ytdl-core, size:', audioBuffer.length);
+                    resolve();
+                });
                 
-                // If Supabase is configured, use it for storage
-                if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-                    try {
-                        const { audioManager } = require('./config/supabase');
-                        
-                        // Create a mock file object for Supabase upload
-                        const mockFile = {
-                            buffer: audioBuffer,
-                            originalname: `${sanitizedTitle}.${format}`,
-                            mimetype: `audio/${format}`,
-                            size: audioBuffer.length
-                        };
+                audioStream.on('error', (error) => {
+                    console.error('ytdl-core stream error:', error);
+                    reject(error);
+                });
+                
+                // Timeout for ytdl-core
+                setTimeout(() => {
+                    reject(new Error('ytdl-core timeout'));
+                }, 30000);
+            });
 
-                        const uploadResult = await audioManager.uploadFile(mockFile, {
-                            title: videoTitle,
-                            artist: 'YouTube',
-                            duration: info.videoDetails.lengthSeconds,
-                            source: 'youtube',
-                            originalUrl: url
-                        });
+        } catch (ytdlError) {
+            console.error('ytdl-core failed:', ytdlError.message);
+            console.log('🔄 Falling back to yt-dlp...');
+            
+            // Try yt-dlp as fallback
+            const ytDlpResult = await convertWithYtDlp(url, format, quality);
+            
+            if (ytDlpResult.success) {
+                audioBuffer = ytDlpResult.audioBuffer;
+                videoTitle = ytDlpResult.videoTitle;
+                sanitizedTitle = ytDlpResult.sanitizedTitle;
+                duration = ytDlpResult.duration;
+                conversionMethod = 'yt-dlp';
+                console.log('✅ Audio buffer created with yt-dlp, size:', audioBuffer.length);
+            } else {
+                throw new Error(`Both ytdl-core and yt-dlp failed. ytdl-core: ${ytdlError.message}, yt-dlp: ${ytDlpResult.error}`);
+            }
+        }
 
-                        if (uploadResult.success) {
-                            console.log('☁️ File uploaded to Supabase successfully');
-                            res.json({
-                                success: true,
-                                message: 'YouTube audio converted and stored successfully',
-                                file: {
-                                    filename: uploadResult.file.fileName,
-                                    originalName: videoTitle,
-                                    size: uploadResult.file.size,
-                                    url: uploadResult.file.url,
-                                    format: format,
-                                    quality: quality,
-                                    duration: uploadResult.file.duration
-                                }
-                            });
-                        } else {
-                            throw new Error(uploadResult.error);
-                        }
-                    } catch (supabaseError) {
-                        console.error('Supabase upload error:', supabaseError);
-                        // Fallback: return JSON with base64 audio data
-                        const base64Audio = audioBuffer.toString('base64');
+        // Process the audio buffer (same logic for both methods)
+        try {
+            console.log('✅ Audio buffer created, size:', audioBuffer.length);
+            
+            // If Supabase is configured, use it for storage
+            if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+                try {
+                    const { audioManager } = require('./config/supabase');
+                    
+                    // Create a mock file object for Supabase upload
+                    const mockFile = {
+                        buffer: audioBuffer,
+                        originalname: `${sanitizedTitle}.${format}`,
+                        mimetype: `audio/${format}`,
+                        size: audioBuffer.length
+                    };
+
+                    const uploadResult = await audioManager.uploadFile(mockFile, {
+                        title: videoTitle,
+                        artist: 'YouTube',
+                        duration: duration,
+                        source: 'youtube',
+                        originalUrl: url
+                    });
+
+                    if (uploadResult.success) {
+                        console.log('☁️ File uploaded to Supabase successfully');
                         res.json({
                             success: true,
-                            message: 'YouTube audio converted successfully (local storage)',
+                            message: `YouTube audio converted and stored successfully (${conversionMethod})`,
                             file: {
-                                filename: `${sanitizedTitle}.${format}`,
+                                filename: uploadResult.file.fileName,
                                 originalName: videoTitle,
-                                size: audioBuffer.length,
+                                size: uploadResult.file.size,
+                                url: uploadResult.file.url,
                                 format: format,
                                 quality: quality,
-                                duration: info.videoDetails.lengthSeconds,
-                                audioData: base64Audio,
-                                mimeType: `audio/${format}`
+                                duration: uploadResult.file.duration
                             }
                         });
+                    } else {
+                        throw new Error(uploadResult.error);
                     }
-                } else {
-                    // Fallback: save file locally and return URL
-                    console.log('📁 Saving audio file locally');
-                    const uploadDir = 'uploads/';
-                    if (!fs.existsSync(uploadDir)) {
-                        fs.mkdirSync(uploadDir, { recursive: true });
-                    }
-                    
-                    const filename = `${sanitizedTitle}_${Date.now()}.${format}`;
-                    const filepath = path.join(uploadDir, filename);
-                    
-                    fs.writeFileSync(filepath, audioBuffer);
-                    
+                } catch (supabaseError) {
+                    console.error('Supabase upload error:', supabaseError);
+                    // Fallback: return JSON with base64 audio data
+                    const base64Audio = audioBuffer.toString('base64');
                     res.json({
                         success: true,
-                        message: 'YouTube audio converted successfully (local storage)',
+                        message: `YouTube audio converted successfully (${conversionMethod}, local storage)`,
                         file: {
-                            filename: filename,
+                            filename: `${sanitizedTitle}.${format}`,
                             originalName: videoTitle,
                             size: audioBuffer.length,
                             format: format,
                             quality: quality,
-                            duration: info.videoDetails.lengthSeconds,
-                            url: `/uploads/${filename}`,
+                            duration: duration,
+                            audioData: base64Audio,
                             mimeType: `audio/${format}`
                         }
                     });
                 }
+            } else {
+                // Fallback: save file locally and return URL
+                console.log('📁 Saving audio file locally');
+                const uploadDir = 'uploads/';
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
                 
-            } catch (error) {
-                console.error('Audio processing error:', error);
-                res.status(500).json({ error: 'Audio processing failed' });
+                const filename = `${sanitizedTitle}_${Date.now()}.${format}`;
+                const filepath = path.join(uploadDir, filename);
+                
+                fs.writeFileSync(filepath, audioBuffer);
+                
+                res.json({
+                    success: true,
+                    message: `YouTube audio converted successfully (${conversionMethod}, local storage)`,
+                    file: {
+                        filename: filename,
+                        originalName: videoTitle,
+                        size: audioBuffer.length,
+                        format: format,
+                        quality: quality,
+                        duration: duration,
+                        url: `/uploads/${filename}`,
+                        mimeType: `audio/${format}`
+                    }
+                });
             }
-        });
-
-        audioStream.on('error', (error) => {
-            console.error('YouTube stream error:', error);
-            if (!res.headersSent) {
-                res.status(500).json({ error: 'YouTube audio stream failed: ' + error.message });
-            }
-        });
-
-        // Add timeout for the entire operation
-        setTimeout(() => {
-            if (!res.headersSent) {
-                console.error('YouTube conversion timeout');
-                res.status(500).json({ error: 'YouTube conversion timeout - please try again' });
-            }
-        }, 60000); // 60 second timeout
+            
+        } catch (error) {
+            console.error('Audio processing error:', error);
+            res.status(500).json({ error: 'Audio processing failed' });
+        }
 
     } catch (error) {
         console.error('YouTube conversion error:', error);
@@ -933,6 +989,10 @@ app.post('/api/convert-youtube', async (req, res) => {
         } else if (error.message.includes('Video unavailable')) {
             res.status(500).json({ 
                 error: 'This YouTube video is unavailable or private. Please try a different video.' 
+            });
+        } else if (error.message.includes('403')) {
+            res.status(500).json({ 
+                error: 'YouTube is blocking requests. Please try again in a few minutes or use a different video.' 
             });
         } else {
             res.status(500).json({ 
