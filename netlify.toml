@@ -8,7 +8,7 @@
 # Proxy API calls to backend server
 [[redirects]]
   from = "/api/*"
-  to = "https://blueme-backend-production.up.railway.app/api/:splat"
+  to = "https://blueme-production.up.railway.app/api/:splat"
   status = 200
   force = true
 
