@@ -745,9 +745,21 @@ app.post('/api/convert-youtube', async (req, res) => {
                 return res.status(400).json({ error: 'Invalid YouTube URL' });
             }
             
-            // Get video info with timeout
+            // Get video info with timeout and updated headers
             info = await Promise.race([
-                ytdl.getInfo(url),
+                ytdl.getInfo(url, {
+                    requestOptions: {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Accept-Encoding': 'gzip, deflate, br',
+                            'DNT': '1',
+                            'Connection': 'keep-alive',
+                            'Upgrade-Insecure-Requests': '1'
+                        }
+                    }
+                }),
                 new Promise((_, reject) => 
                     setTimeout(() => reject(new Error('Video info timeout')), 10000)
                 )
@@ -772,13 +784,23 @@ app.post('/api/convert-youtube', async (req, res) => {
         console.log('📺 Video title:', videoTitle);
         console.log('🔧 Processing format:', format, 'quality:', quality);
 
-        // Download audio stream with better headers
+        // Download audio stream with updated headers to avoid 403 errors
         const audioStream = ytdl(url, {
             filter: 'audioonly',
             quality: 'highestaudio',
             requestOptions: {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Cache-Control': 'max-age=0'
                 }
             }
         });
