@@ -6120,8 +6120,21 @@
                 console.log('✅ Simple profile section created');
             }
 
-
-
+            updateUIWithAuthState() {
+                console.log('🔄 Updating UI with current auth state...');
+                
+                if (window.authManager && window.authManager.isAuthenticated) {
+                    console.log('✅ User is authenticated:', window.authManager.user);
+                    this.isAuthenticated = true;
+                    this.currentUser = window.authManager.user;
+                    this.updateAuthUI();
+                } else {
+                    console.log('❌ User is not authenticated, showing guest mode');
+                    this.isAuthenticated = false;
+                    this.currentUser = null;
+                    this.updateAuthUI();
+                }
+            }
 
             async checkDownloadLimit() {
                 // For now, allow unlimited downloads
@@ -9429,10 +9442,11 @@
                 app.updateAuthUI();
                 app.ensurePlaylistSection();
                 
-                // Check if authentication manager is available
+                // Check if authentication manager is available and update UI
                 setTimeout(() => {
                     if (window.authManager) {
                         console.log('✅ Authentication manager is available');
+                        this.updateUIWithAuthState();
                     } else {
                         console.log('❌ Authentication manager not found');
                     }
@@ -9483,7 +9497,13 @@
                     transition: all 0.3s ease;
                 `;
                 signInBtn.onclick = () => {
-                    window.location.href = '/auth.html';
+                    // Use the embedded auth modal instead of redirecting
+                    if (window.authManager) {
+                        window.authManager.showAuthModal();
+                    } else {
+                        // Fallback to auth page if auth manager not available
+                        window.location.href = '/auth.html';
+                    }
                 };
                 
                 // Add after the convert button

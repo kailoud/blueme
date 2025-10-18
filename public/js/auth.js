@@ -98,11 +98,20 @@ class AuthManager {
                 body: JSON.stringify({ email, password, username, avatar })
             });
 
-            this.storeAuth(response.token, response.user);
-            this.showNotification('Account created successfully!', 'success');
-            this.hideAuthModal();
-            
-            return response;
+            if (response.success) {
+                this.storeAuth(response.token, response.user);
+                this.showNotification('Account created successfully!', 'success');
+                this.hideAuthModal();
+                
+                // Refresh the page to update UI with authenticated state
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+                
+                return response;
+            } else {
+                throw new Error(response.error || 'Registration failed');
+            }
         } catch (error) {
             this.showNotification(error.message, 'error');
             throw error;
@@ -119,11 +128,20 @@ class AuthManager {
                 body: JSON.stringify({ email, password })
             });
 
-            this.storeAuth(response.token, response.user);
-            this.showNotification('Welcome back!', 'success');
-            this.hideAuthModal();
-            
-            return response;
+            if (response.success) {
+                this.storeAuth(response.token, response.user);
+                this.showNotification('Welcome back!', 'success');
+                this.hideAuthModal();
+                
+                // Refresh the page to update UI with authenticated state
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+                
+                return response;
+            } else {
+                throw new Error(response.error || 'Login failed');
+            }
         } catch (error) {
             this.showNotification(error.message, 'error');
             throw error;
@@ -137,6 +155,11 @@ class AuthManager {
         this.clearAuth();
         this.showNotification('Logged out successfully', 'info');
         this.hideAuthModal();
+        
+        // Refresh the page to update UI with guest state
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     }
 
     /**
@@ -472,11 +495,33 @@ class AuthManager {
         
         document.getElementById('register-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = document.getElementById('register-email').value;
-            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value.trim();
+            const username = document.getElementById('register-username').value.trim();
             const password = document.getElementById('register-password').value;
             const confirmPassword = document.getElementById('register-confirm-password').value;
             const avatar = document.getElementById('selected-avatar').value;
+            
+            // Enhanced validation
+            if (!email) {
+                this.showNotification('Email is required', 'error');
+                return;
+            }
+            
+            if (!this.isValidEmail(email)) {
+                this.showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (!password) {
+                this.showNotification('Password is required', 'error');
+                return;
+            }
+            
+            // Validate password length
+            if (password.length < 6) {
+                this.showNotification('Password must be at least 6 characters', 'error');
+                return;
+            }
             
             // Validate password confirmation
             if (password !== confirmPassword) {
@@ -484,9 +529,9 @@ class AuthManager {
                 return;
             }
             
-            // Validate password length
-            if (password.length < 6) {
-                this.showNotification('Password must be at least 6 characters', 'error');
+            // Validate password strength
+            if (!this.isStrongPassword(password)) {
+                this.showNotification('Password must contain at least one letter and one number', 'error');
                 return;
             }
             
@@ -671,6 +716,23 @@ class AuthManager {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    /**
+     * Validate email format
+     */
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    /**
+     * Validate password strength
+     */
+    isStrongPassword(password) {
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /\d/.test(password);
+        return hasLetter && hasNumber;
     }
 }
 

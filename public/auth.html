@@ -400,10 +400,28 @@
         // Check if user is already logged in
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    window.location.href = '/';
-                    return;
+                // Check for stored authentication data
+                const token = localStorage.getItem('blueme_token');
+                const user = localStorage.getItem('blueme_user');
+                
+                if (token && user) {
+                    // Verify token is still valid
+                    const response = await fetch('/api/auth/status', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.authenticated) {
+                        window.location.href = '/';
+                        return;
+                    } else {
+                        // Token is invalid, clear storage
+                        localStorage.removeItem('blueme_token');
+                        localStorage.removeItem('blueme_user');
+                    }
                 }
                 
                 isLoading = false;
@@ -467,17 +485,36 @@
             const password = document.getElementById('loginPassword').value;
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password
+                // Use server-side login API
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
                 });
 
-                if (error) throw error;
+                const result = await response.json();
 
-                showStatus('success', 'Welcome back! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1500);
+                if (!response.ok) {
+                    throw new Error(result.error || 'Login failed');
+                }
+
+                if (result.success) {
+                    // Store authentication data
+                    localStorage.setItem('blueme_token', result.token);
+                    localStorage.setItem('blueme_user', JSON.stringify(result.user));
+                    
+                    showStatus('success', 'Welcome back! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'Login failed');
+                }
 
             } catch (error) {
                 showStatus('error', error.message);
@@ -529,45 +566,36 @@
             }
 
             try {
-                const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: {
-                            full_name: name
-                        }
-                    }
+                // Use server-side registration API
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        username: name.toLowerCase().replace(/\s+/g, '_')
+                    })
                 });
 
-                if (error) throw error;
+                const result = await response.json();
 
-                if (data.user && !data.user.email_confirmed_at) {
-                    showStatus('info', 'Please check your email to confirm your account');
-                } else if (data.user) {
-                    // Create user profile in custom users table
-                    try {
-                        const { error: profileError } = await supabase
-                            .from('users')
-                            .insert({
-                                id: data.user.id,
-                                email: data.user.email,
-                                username: name.toLowerCase().replace(/\s+/g, '_'),
-                                created_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            });
+                if (!response.ok) {
+                    throw new Error(result.error || 'Registration failed');
+                }
 
-                        if (profileError) {
-                            console.error('Profile creation error:', profileError);
-                            // Don't fail the signup if profile creation fails
-                        }
-                    } catch (profileError) {
-                        console.error('Profile creation error:', profileError);
-                    }
-
+                if (result.success) {
+                    // Store authentication data
+                    localStorage.setItem('blueme_token', result.token);
+                    localStorage.setItem('blueme_user', JSON.stringify(result.user));
+                    
                     showStatus('success', 'Account created! Redirecting...');
                     setTimeout(() => {
                         window.location.href = '/';
                     }, 1500);
+                } else {
+                    throw new Error(result.error || 'Registration failed');
                 }
 
             } catch (error) {
@@ -626,12 +654,7 @@
             }
         }
 
-        // Listen for auth state changes
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                window.location.href = '/';
-            }
-        });
+        // Note: Using server-side authentication instead of Supabase client-side auth
     </script>
 </body>
 </html>
